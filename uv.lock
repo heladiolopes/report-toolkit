@@ -1409,6 +1409,19 @@ wheels = [
 ]
 
 [[package]]
+name = "plotly"
+version = "7.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "narwhals" },
+    { name = "packaging" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/49/c3/72b369f5ed7701b04ab0ea3dcf83e9bbce71c0b3bc6f07f87568550d09ea/plotly-7.1.0.tar.gz", hash = "sha256:f860166a4a3d78c69cb1f4a15f28a5c8283eade98a282a698f3bb853a449ace5", size = 6689315, upload-time = "2026-09-15T19:21:21.75Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/7d/905a3a3d51087515719058c94cfbda2ff0fc14417c20d557ae3e82d8b250/plotly-7.1.0-py3-none-any.whl", hash = "sha256:dbb7fa18afce40d0a8e80d1bf162eceb3faa0ce5a77fe741ad09a74cf78f53f3", size = 9692368, upload-time = "2026-09-15T19:21:18.331Z" },
+]
+
+[[package]]
 name = "pyparsing"
 version = "3.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1469,6 +1482,7 @@ all = [
     { name = "matplotlib", version = "3.11.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pandas", version = "3.0.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "plotly" },
 ]
 altair = [
     { name = "altair", version = "6.2.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -1487,6 +1501,9 @@ pandas = [
     { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pandas", version = "3.0.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
+plotly = [
+    { name = "plotly" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -1498,9 +1515,11 @@ requires-dist = [
     { name = "mistune", specifier = ">=3,<4" },
     { name = "pandas", marker = "extra == 'all'", specifier = ">=2" },
     { name = "pandas", marker = "extra == 'pandas'", specifier = ">=2" },
+    { name = "plotly", marker = "extra == 'all'", specifier = ">=5" },
+    { name = "plotly", marker = "extra == 'plotly'", specifier = ">=5" },
     { name = "vl-convert-python", marker = "extra == 'offline'", specifier = ">=1" },
 ]
-provides-extras = ["pandas", "altair", "matplotlib", "all", "offline"]
+provides-extras = ["pandas", "altair", "matplotlib", "plotly", "all", "offline"]
 
 [[package]]
 name = "rpds-py"

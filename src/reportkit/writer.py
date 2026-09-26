@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from html import escape
+from html.parser import HTMLParser
 from pathlib import Path
 
 import mistune
 
 from .adapters import AdapterRegistry, default_registry
-from .model import Artifact, Columns, Document, Heading, List, Markdown, Node, Section
+from .model import Artifact, Columns, Document, Heading, List, Markdown, Node, RawHTML, Section
 
 
 _PAGE_CSS = "body { margin: 0; background: #f4f6fa; }"
@@ -39,6 +40,27 @@ _CSS = """
 """.strip()
 
 
+class _FirstHeading(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.title: str | None = None
+        self._tag: str | None = None
+        self._text: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if self.title is None and self._tag is None and tag in {f"h{level}" for level in range(1, 7)}:
+            self._tag = tag
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == self._tag:
+            self.title = "".join(self._text).strip()
+            self._tag = None
+
+    def handle_data(self, data: str) -> None:
+        if self._tag is not None:
+            self._text.append(data)
+
+
 class HTMLWriter:
     def __init__(self, *, registry: AdapterRegistry | None = None, inline_altair: bool = False) -> None:
         if registry is not None and inline_altair:
@@ -52,12 +74,16 @@ class HTMLWriter:
         content = self._render_document(document)
         if fragment:
             return f"<style>\n{_CSS}\n</style>\n{content}"
-        title = escape(document.title or "Report")
+        title = document.title
+        if title is None:
+            heading = _FirstHeading()
+            heading.feed(content)
+            title = heading.title or "Report"
         return (
             "<!doctype html>\n<html lang=\"en\">\n<head>\n"
             '<meta charset="utf-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-            f"<title>{title}</title>\n<style>\n{_PAGE_CSS}\n{_CSS}\n</style>\n"
+            f"<title>{escape(title)}</title>\n<style>\n{_PAGE_CSS}\n{_CSS}\n</style>\n"
             f"</head>\n<body>\n{content}\n</body>\n</html>\n"
         )
 
@@ -68,16 +94,9 @@ class HTMLWriter:
 
     def _render_document(self, document: Document) -> str:
         parts = ['<article class="reportkit">']
-        if document.title is not None:
-            parts.append(f"<header><h1>{escape(document.title)}</h1>")
-            if document.description is not None:
-                parts.append(f'<p class="report-description">{escape(document.description)}</p>')
-            parts.extend(self._metadata(document))
-            parts.append("</header>")
-        else:
-            if document.description is not None:
-                parts.append(f'<p class="report-description">{escape(document.description)}</p>')
-            parts.extend(self._metadata(document))
+        if document.description is not None:
+            parts.append(f'<p class="report-description">{escape(document.description)}</p>')
+        parts.extend(self._metadata(document))
         parts.extend(self._render_node(node, 2) for node in document.children)
         parts.append("</article>")
         return "\n".join(parts)
@@ -99,10 +118,10 @@ class HTMLWriter:
             return f"<h{node.level}>{escape(node.title)}</h{node.level}>"
         if isinstance(node, Markdown):
             return self._markdown(node.content).strip()
+        if isinstance(node, RawHTML):
+            return node.content
         if isinstance(node, List):
-            tag = "ol" if node.ordered else "ul"
-            items = "".join(f"<li>{escape(item)}</li>" for item in node.items)
-            return f"<{tag}>{items}</{tag}>"
+            return self._render_list(node.items, ordered=node.ordered)
         if isinstance(node, Artifact):
             rendered = self.registry.resolve(node.value).render(node.value)
             caption = f"<figcaption>{escape(node.caption)}</figcaption>" if node.caption else ""
@@ -124,3 +143,16 @@ class HTMLWriter:
                 f"{children}\n</div>"
             )
         raise TypeError(f"Cannot render node type {type(node).__name__}")
+
+    def _render_list(self, items: tuple, *, ordered: bool) -> str:
+        tag = "ol" if ordered else "ul"
+        rendered = []
+        index = 0
+        while index < len(items):
+            rendered.append(f"<li>{escape(items[index])}")
+            if index + 1 < len(items) and isinstance(items[index + 1], tuple):
+                rendered.append(self._render_list(items[index + 1], ordered=ordered))
+                index += 1
+            rendered.append("</li>")
+            index += 1
+        return f"<{tag}>{''.join(rendered)}</{tag}>"

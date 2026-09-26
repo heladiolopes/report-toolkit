@@ -10,7 +10,7 @@ class IntegrationTests(unittest.TestCase):
         import pandas as pd
 
         frame = pd.DataFrame({"revenue": [12, 15]})
-        report = Report("Tables")
+        report = Report()
         report.add(frame.style.format({"revenue": "${:.2f}"}))
         report.add(frame)
         html = HTMLWriter().render(report.document)
@@ -22,7 +22,7 @@ class IntegrationTests(unittest.TestCase):
         import altair as alt
 
         chart = alt.Chart(alt.Data(values=[{"x": 1, "y": 2}])).mark_point().encode(x="x:Q", y="y:Q")
-        report = Report("Charts")
+        report = Report()
         report.add(chart)
         report.add(chart)
         html = HTMLWriter().render(report.document)
@@ -38,7 +38,7 @@ class IntegrationTests(unittest.TestCase):
         import altair as alt
 
         chart = alt.Chart(alt.Data(values=[{"x": 1}])).mark_bar().encode(x="x:Q")
-        report = Report("Offline")
+        report = Report()
         report.add(chart)
         html = HTMLWriter(inline_altair=True).render(report.document)
         self.assertIn("vegaEmbed(", html)
@@ -50,11 +50,23 @@ class IntegrationTests(unittest.TestCase):
 
         figure = Figure(figsize=(2, 1))
         figure.subplots().plot([1, 2], [3, 4])
-        report = Report("Plot")
+        report = Report()
         report.add(figure, caption="Trend")
         html = HTMLWriter().render(report.document)
         self.assertIn("data:image/png;base64,iVBOR", html)
         self.assertIn("<figcaption>Trend</figcaption>", html)
+
+    @unittest.skipUnless(importlib.util.find_spec("plotly"), "plotly is not installed")
+    def test_plotly_uses_cdn_fragment(self):
+        import plotly.graph_objects as go
+
+        report = Report()
+        report.add(go.Figure(data=go.Bar(x=["Jan"], y=[12])), caption="Revenue")
+        html = HTMLWriter().render(report.document)
+        self.assertIn("<figcaption>Revenue</figcaption>", html)
+        self.assertIn("cdn.plot.ly/plotly-", html)
+        self.assertIn("Plotly.newPlot(", html)
+        self.assertEqual(html.count("<!doctype html>"), 1)
 
 
 if __name__ == "__main__":

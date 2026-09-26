@@ -3,11 +3,22 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from copy import copy
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Iterator, Iterable
+from typing import Any, Iterable, Iterator
 
-from .model import Artifact, Columns, Container, Document, Heading, List, Markdown, Section
+from .model import (
+    Artifact,
+    Columns,
+    Container,
+    Document,
+    Heading,
+    List,
+    Markdown,
+    RawHTML,
+    Section,
+)
 
 
 class Report:
@@ -19,7 +30,9 @@ class Report:
         author: str | None = None,
         date: date | datetime | str | None = None,
     ) -> None:
-        self.document = Document(title=title, description=description, author=author, date=date)
+        self.document = Document(
+            title=title, description=description, author=author, date=date
+        )
         self._stack: list[Container] = [self.document]
 
     def _append(self, node: Any) -> Any:
@@ -31,11 +44,54 @@ class Report:
     def markdown(self, content: str) -> Markdown:
         return self._append(Markdown(content=content))
 
-    def list(self, items: Iterable[str], *, ordered: bool = False) -> List:
+    def paragraph(self, text: str) -> Markdown:
+        return self.markdown(text)
+
+    def list(self, items: Iterable, *, ordered: bool = False) -> List:
         return self._append(List(items=items, ordered=ordered))
 
-    def add(self, value: Any, *, caption: str | None = None) -> Artifact:
+    def ordered(self, items: Iterable) -> List:
+        return self.list(items, ordered=True)
+
+    def unordered(self, items: Iterable) -> List:
+        return self.list(items, ordered=False)
+
+    def raw_html(self, content: str) -> RawHTML:
+        return self._append(RawHTML(content=content))
+
+    def add(self, value: Any, *, caption: str | None = None) -> Artifact | RawHTML:
+        if isinstance(value, str):
+            if caption is not None:
+                raise ValueError('raw HTML strings do not accept a caption')
+            return self.raw_html(value)
         return self._append(Artifact(value=value, caption=caption))
+
+    def concat(self, other: Report) -> Report:
+        if not isinstance(other, Report):
+            raise TypeError('can only concatenate another Report')
+        result = Report(
+            self.document.title,
+            description=self.document.description,
+            author=self.document.author,
+            date=self.document.date,
+        )
+        for source in (self.document, other.document):
+            for node in source.children:
+                result.document.append(self._copy_node(node))
+        return result
+
+    def __add__(self, other: Report) -> Report:
+        return self.concat(other)
+
+    @staticmethod
+    def _copy_node(node: Any) -> Any:
+        copied = copy(node)
+        copied._parent = None
+        if isinstance(copied, Container):
+            copied._children = ()
+            for child in node.children:
+                copied.append(Report._copy_node(child))
+        return copied
 
     @contextmanager
     def section(self, title: str) -> Iterator[Section]:

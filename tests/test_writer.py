@@ -36,6 +36,7 @@ class WriterTests(unittest.TestCase):
         fragment = self.writer.render(report.document, fragment=True)
         self.assertTrue(html.startswith("<!doctype html>"))
         self.assertIn("<title>Sales &amp; Growth</title>", html)
+        self.assertNotIn("<h1>Sales &amp; Growth</h1>", html)
         self.assertIn("Quarter &lt;one&gt;", html)
         self.assertIn('datetime="2026-09-25"', html)
         self.assertIn("<h2>Summary &lt;here&gt;</h2>", html)
@@ -49,7 +50,7 @@ class WriterTests(unittest.TestCase):
         self.assertIn("<style>", fragment)
 
     def test_nested_sections_and_file_output(self):
-        report = Report("Nested")
+        report = Report()
         with report.section("Outer"):
             with report.section("Inner"):
                 report.markdown("Text")
@@ -60,8 +61,40 @@ class WriterTests(unittest.TestCase):
             path = Path(folder) / "report.html"
             self.assertEqual(self.writer.write(report.document, path), path)
             self.assertEqual(path.read_text(encoding="utf-8"), html)
-            self.assertIn("<title>Nested</title>", report.to_html())
+            self.assertIn("<title>Outer</title>", report.to_html())
             self.assertEqual(report.write(path), path)
+
+    def test_nested_lists_and_raw_html(self):
+        report = Report()
+        report.ordered(["Parent & one", ["Child", ["Grandchild"]], "Second"])
+        report.unordered(["Another", ["Nested"]])
+        report.add("<strong>trusted</strong>")
+        report.raw_html("<hr>")
+        report.markdown("<strong>escaped</strong>")
+        html = self.writer.render(report.document)
+        self.assertIn("<ol><li>Parent &amp; one<ol><li>Child<ol><li>Grandchild</li></ol></li></ol></li><li>Second</li></ol>", html)
+        self.assertIn("<ul><li>Another<ul><li>Nested</li></ul></li></ul>", html)
+        self.assertIn("<strong>trusted</strong>", html)
+        self.assertIn("<hr>", html)
+        self.assertIn("&lt;strong&gt;escaped&lt;/strong&gt;", html)
+
+    def test_report_title_inference_and_fallback(self):
+        report = Report()
+        report.paragraph("Intro")
+        report.markdown("## Markdown *title* & details")
+        report.heading(1, "Later")
+        self.assertIn("<title>Markdown title &amp; details</title>", report.to_html())
+        named = Report("Chosen & title")
+        named.heading(1, "Other heading")
+        self.assertIn("<title>Chosen &amp; title</title>", named.to_html())
+        self.assertNotIn("<h1>Chosen &amp; title</h1>", named.to_html())
+        self.assertIn("<title>Report</title>", Report().to_html())
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "report.html"
+            named.write(path)
+            self.assertIn("<title>Chosen &amp; title</title>", path.read_text(encoding="utf-8"))
+            self.writer.write(named.document, path)
+            self.assertIn("<title>Chosen &amp; title</title>", path.read_text(encoding="utf-8"))
 
     def test_unsupported_artifact_has_actionable_error(self):
         report = Report()
