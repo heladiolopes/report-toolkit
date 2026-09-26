@@ -13,9 +13,9 @@ from .model import (
     Columns,
     Container,
     Document,
-    Heading,
     List,
     Markdown,
+    Panel,
     RawHTML,
     Section,
 )
@@ -34,12 +34,30 @@ class Report:
             title=title, description=description, author=author, date=date
         )
         self._stack: list[Container] = [self.document]
+        self._sections: list[list[Section]] = [[]]
+
+    def _current_container(self) -> Container:
+        sections = self._sections[-1]
+        return sections[-1] if sections else self._stack[-1]
 
     def _append(self, node: Any) -> Any:
-        return self._stack[-1].append(node)
+        return self._current_container().append(node)
 
-    def heading(self, level: int, title: str) -> Heading:
-        return self._append(Heading(level=level, title=title))
+    def heading(self, level: int, title: str, *, normalize: bool = False) -> Section:
+        """Start a section lasting until an equal or shallower heading in this scope."""
+        if not isinstance(normalize, bool):
+            raise TypeError('normalize must be a boolean')
+        node = Section(title=title, level=level)
+        if normalize:
+            node.title = ' '.join(
+                title.replace('-', ' ').replace('_', ' ').split()
+            ).title()
+        sections = self._sections[-1]
+        while sections and sections[-1].level >= level:
+            sections.pop()
+        self._append(node)
+        sections.append(node)
+        return node
 
     def markdown(self, content: str) -> Markdown:
         return self._append(Markdown(content=content))
@@ -94,29 +112,63 @@ class Report:
         return copied
 
     @contextmanager
-    def section(self, title: str) -> Iterator[Section]:
-        node = self._append(Section(title=title))
+    def _scope(self, node: Container) -> Iterator[None]:
+        self._append(node)
         self._stack.append(node)
+        self._sections.append([])
         try:
-            yield node
+            yield
         finally:
+            self._sections.pop()
             self._stack.pop()
 
     @contextmanager
-    def columns(self, count: int) -> Iterator[Columns]:
-        node = self._append(Columns(count=count))
-        self._stack.append(node)
-        try:
+    def section(self, title: str) -> Iterator[Section]:
+        parent = self._current_container()
+        while parent is not None and not isinstance(parent, Section):
+            parent = parent._parent
+        level = min(parent.level + 1, 6) if parent is not None else 2
+        node = Section(title=title, level=level)
+        with self._scope(node):
             yield node
-        finally:
-            self._stack.pop()
 
-    def to_html(self, *, fragment: bool = False) -> str:
+    @contextmanager
+    def columns(self, count: int) -> Iterator[Columns]:
+        node = Columns(count=count)
+        with self._scope(node):
+            yield node
+
+    @contextmanager
+    def panel(self, title: str) -> Iterator[Panel]:
+        node = Panel(title=title)
+        with self._scope(node):
+            yield node
+
+    def to_tree(self) -> str:
+        """Return a readable node hierarchy without rendering artifact values."""
+        from ._tree import format_tree
+
+        return format_tree(self.document)
+
+    def to_html(
+        self, *, fragment: bool = False, toc: bool = False, toc_depth: int = 6
+    ) -> str:
         from .writer import HTMLWriter
 
-        return HTMLWriter().render(self.document, fragment=fragment)
+        return HTMLWriter(toc=toc, toc_depth=toc_depth).render(
+            self.document, fragment=fragment
+        )
 
-    def write(self, path: str | Path, *, fragment: bool = False) -> Path:
+    def write(
+        self,
+        path: str | Path,
+        *,
+        fragment: bool = False,
+        toc: bool = False,
+        toc_depth: int = 6,
+    ) -> Path:
         from .writer import HTMLWriter
 
-        return HTMLWriter().write(self.document, path, fragment=fragment)
+        return HTMLWriter(toc=toc, toc_depth=toc_depth).write(
+            self.document, path, fragment=fragment
+        )

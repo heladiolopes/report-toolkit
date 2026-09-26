@@ -33,21 +33,23 @@ def main() -> None:
         author='Analytics team',
         date=date.today(),
     )
-    report.heading(1, 'Sales analysis')
     report.heading(2, 'Summary')
     report.markdown('Revenue **increased** over the period, with a dip in March.')
     report.unordered(
         ['Highest month: April', 'Lowest month: January', ['Revenue: 120']]
     )
     report.add(sales.style.format({'revenue': '${:.2f}'}), caption='Monthly revenue')
-    with report.section('Trends'):
-        with report.columns(2):
+    report.heading(2, 'Trends')
+    with report.columns(2):
+        with report.panel('Interactive trend'):
             report.add(chart, caption='Interactive view')
+        with report.panel('Static trend'):
             report.add(figure, caption='Static view')
-        report.add(plot, caption='Plotly view')
+    report.add(plot, caption='Plotly view')
 
     output = Path('examples/sales_report.html')
-    HTMLWriter().write(report.document, output)
+    print(report.to_tree())
+    HTMLWriter(toc=True, toc_depth=2).write(report.document, output)
     print(output.resolve())
 
 

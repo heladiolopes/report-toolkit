@@ -29,19 +29,20 @@ figure.subplots().plot([1, 2], [120, 145])
 plot = go.Figure(data=go.Bar(x=["Jan", "Feb"], y=[120, 145]))
 
 report = Report("Sales analysis", description="Monthly revenue", author="Analyst", date=date.today())
-report.heading(1, "Sales analysis")
 report.heading(2, "Summary")
 report.markdown("Revenue **increased** in February.")
 report.unordered(["January: 120", "February: 145", ["Increase: 25"]])
 report.add(sales.style.format({"revenue": "${:.2f}"}), caption="Revenue by month")
 
-with report.section("Trends"):
-    with report.columns(2):
+report.heading(2, "Trends")
+with report.columns(2):
+    with report.panel("Interactive trend"):
         report.add(chart, caption="Interactive chart")
+    with report.panel("Static trend"):
         report.add(figure, caption="Static figure")
-    report.add(plot, caption="Plotly view")
+report.add(plot, caption="Plotly view")
 
-HTMLWriter().write(report.document, "sales.html")
+HTMLWriter(toc=True, toc_depth=2).write(report.document, "sales.html")
 ```
 
 ## Complete showcase
@@ -53,9 +54,11 @@ python -m pip install -e '.[all]'
 python examples/report_showcase.py
 ```
 
-It writes `examples/report_showcase.html` and demonstrates formatted tables, Altair, Matplotlib, Plotly, nested lists, raw HTML, columns, and report concatenation. Comments marked `# todo:` identify features used by the reference showcase that reportkit does not support yet.
+It writes `examples/report_showcase.html` and demonstrates formatted tables, Altair, Matplotlib, Plotly, nested lists, raw HTML, titled panels, automatic heading sections, a table of contents, and report concatenation. Comments marked `# todo:` identify features used by the reference showcase that reportkit does not support yet.
 
-`Report.to_html()` and `Report.write(path)` are shortcuts using the default writer. The title passed to `Report(...)` becomes the browser page title. Without one, the writer uses the first rendered heading, or `Report` when there is no heading. The page title does not add a visible heading. The writer also supports reusable body content:
+Both examples print the composer tree to the terminal before writing HTML. Use `print(report.to_tree())` to inspect any report's structure, including nested lists, text previews, and artifact types and captions.
+
+`Report.to_html()` and `Report.write(path)` are shortcuts using the default writer. The title passed to `Report(...)` appears at the top of the page and sets the browser tab title. Description and metadata follow, then the optional table of contents, then all report content. Without an explicit title, there is no visible report title and the browser tab uses `Report`; content headings are never used to infer a title. The writer also supports reusable body content:
 
 ```python
 fragment = HTMLWriter().render(report.document, fragment=True)
@@ -65,14 +68,28 @@ The fragment includes scoped CSS and the report body, without an HTML document w
 
 ## API notes
 
-- `Report(title, description=..., author=..., date=...)` stores optional metadata. The title sets the browser page title.
-- `heading(level, title)` accepts levels 1 through 6.
+- `Report(title, description=..., author=..., date=...)` stores optional metadata. The title is the single conceptual level-0 report title, displayed above the TOC and excluded from it. It remains document metadata, not a section; `heading(0, ...)` is invalid. Reports may have any number of level-1 sections.
+- `heading(level, title, normalize=False)` accepts levels 1 through 6 and returns a `Section`. Following content belongs to that section until an equal or shallower heading starts. Larger level numbers create subsections (h2 within h1); equal numbers create siblings, and smaller numbers return to the nearest lower-numbered ancestor or the current context root. Skipped levels do not create intermediate sections. `normalize=True` replaces hyphens and underscores with spaces, collapses whitespace, and applies title case (`this-is_an-id` becomes `This Is An Id`). By default, spelling and acronyms are preserved.
 - `markdown(content)` and `paragraph(text)` render Markdown with raw HTML escaped.
 - `list(items, ordered=False)`, `ordered(items)`, and `unordered(items)` accept strings and nested lists. A nested list follows its parent item and inherits the outer list style; item text is escaped.
 - `raw_html(content)` and `add(string)` insert trusted HTML without escaping. Raw strings cannot have captions.
 - `add(value, caption=None)` stores non-string artifacts until rendering.
-- `concat(other)` and `+` return a new report with both reports' content and the left report's metadata. The node tree is copied, while artifact objects remain shared.
-- `section(title)` and `columns(count)` are context managers. Every direct child of a columns block is one grid item; additional items wrap to the next row.
+- `concat(other)` and `+` return a new report with both reports' content and the left report's metadata. The node tree is copied, while artifact objects remain shared. Existing heading groups are preserved without regrouping across report boundaries.
+- `section(title)`, `columns(count)`, and `panel(title)` are context managers. Each isolates automatic heading grouping and restores the previous position on exit. An explicit section's heading is one level deeper than its enclosing heading or section (default 2, maximum 6).
+- Every direct child of a columns block is one grid item; additional items wrap to the next row. A panel groups multiple elements into one item with a title above its content and horizontal scrolling for wide content. Panels also work outside columns; their titles are labels, not document headings.
+- `HTMLWriter(toc=True, toc_depth=6)` adds a nested table of contents after metadata. It includes section titles up to the specified absolute level, whether created through `heading()` or `section()`. Every eligible section is included, even when its title matches the report title. TOC links target content sections, never the report title. Markdown, raw HTML, artifact internals, and panel labels are excluded. Empty contents are omitted. Headings receive deterministic, unique anchors within each render.
+- `Report.to_html(toc=True, toc_depth=2)` and `Report.write(path, toc=True, toc_depth=2)` expose the same options, including with `fragment=True`.
+
+Both `heading(...)` and `section(...)` create the same backend `Section`, storing `title`, `level`, and `children`. There is no backend `Heading` node or export. For direct model construction, use `Section(title, level=2)`; the level is keyword-only and defaults to 2. The public tree and `to_tree()` output contain sections and their content. For example, use another level-2 heading to start a sibling of a level-2 heading; opening `section(...)` there creates a subsection.
+
+Successful writes emit one INFO record through `reportkit.writer` with the destination path and actual file size in readable units (for example, `4.2 KiB` or `1.5 MiB`). The library does not configure logging. To see these messages in an application:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+report.write("sales.html", toc=True)
+```
 
 Unsupported artifacts raise `TypeError` during rendering. To support another type, register an adapter that returns `RenderedArtifact(html=...)`:
 

@@ -2,7 +2,7 @@
 
 from .adapters import Adapter, AdapterRegistry, RenderedArtifact, default_registry
 from .composer import Report
-from .model import Artifact, Columns, Container, Document, Heading, List, Markdown, Node, RawHTML, Section
+from .model import Artifact, Columns, Container, Document, List, Markdown, Node, Panel, RawHTML, Section
 from .writer import HTMLWriter
 
 __all__ = [
@@ -13,10 +13,10 @@ __all__ = [
     "Container",
     "Document",
     "HTMLWriter",
-    "Heading",
     "List",
     "Markdown",
     "Node",
+    "Panel",
     "RawHTML",
     "RenderedArtifact",
     "Report",

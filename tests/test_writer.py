@@ -36,10 +36,10 @@ class WriterTests(unittest.TestCase):
         fragment = self.writer.render(report.document, fragment=True)
         self.assertTrue(html.startswith("<!doctype html>"))
         self.assertIn("<title>Sales &amp; Growth</title>", html)
-        self.assertNotIn("<h1>Sales &amp; Growth</h1>", html)
+        self.assertIn('<h1 class="report-title">Sales &amp; Growth</h1>', html)
         self.assertIn("Quarter &lt;one&gt;", html)
         self.assertIn('datetime="2026-09-25"', html)
-        self.assertIn("<h2>Summary &lt;here&gt;</h2>", html)
+        self.assertIn('<h2 id="reportkit-summary-here">Summary &lt;here&gt;</h2>', html)
         self.assertIn("<strong>Revenue</strong>", html)
         self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", html)
         self.assertIn("<ol><li>North</li><li>South &amp; West</li></ol>", html)
@@ -55,13 +55,13 @@ class WriterTests(unittest.TestCase):
             with report.section("Inner"):
                 report.markdown("Text")
         html = self.writer.render(report.document)
-        self.assertIn("<h2>Outer</h2>", html)
-        self.assertIn("<h3>Inner</h3>", html)
+        self.assertIn('<h2 id="reportkit-outer">Outer</h2>', html)
+        self.assertIn('<h3 id="reportkit-inner">Inner</h3>', html)
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "report.html"
             self.assertEqual(self.writer.write(report.document, path), path)
             self.assertEqual(path.read_text(encoding="utf-8"), html)
-            self.assertIn("<title>Outer</title>", report.to_html())
+            self.assertIn("<title>Report</title>", report.to_html())
             self.assertEqual(report.write(path), path)
 
     def test_nested_lists_and_raw_html(self):
@@ -78,16 +78,16 @@ class WriterTests(unittest.TestCase):
         self.assertIn("<hr>", html)
         self.assertIn("&lt;strong&gt;escaped&lt;/strong&gt;", html)
 
-    def test_report_title_inference_and_fallback(self):
+    def test_explicit_report_title_and_untitled_fallback(self):
         report = Report()
         report.paragraph("Intro")
         report.markdown("## Markdown *title* & details")
         report.heading(1, "Later")
-        self.assertIn("<title>Markdown title &amp; details</title>", report.to_html())
+        self.assertIn("<title>Report</title>", report.to_html())
         named = Report("Chosen & title")
         named.heading(1, "Other heading")
         self.assertIn("<title>Chosen &amp; title</title>", named.to_html())
-        self.assertNotIn("<h1>Chosen &amp; title</h1>", named.to_html())
+        self.assertIn('<h1 class="report-title">Chosen &amp; title</h1>', named.to_html())
         self.assertIn("<title>Report</title>", Report().to_html())
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "report.html"

@@ -49,22 +49,6 @@ class Document(Container):
 
 
 @dataclass(eq=False)
-class Heading(Node):
-    level: int
-    title: str
-
-    def __post_init__(self) -> None:
-        if (
-            isinstance(self.level, bool)
-            or not isinstance(self.level, int)
-            or not 1 <= self.level <= 6
-        ):
-            raise ValueError('heading level must be an integer from 1 to 6')
-        if not isinstance(self.title, str):
-            raise TypeError('heading title must be a string')
-
-
-@dataclass(eq=False)
 class Markdown(Node):
     content: str
 
@@ -122,10 +106,26 @@ class Artifact(Node):
 @dataclass(eq=False)
 class Section(Container):
     title: str
+    level: int = field(default=2, kw_only=True)
 
     def __post_init__(self) -> None:
         if not isinstance(self.title, str):
             raise TypeError('section title must be a string')
+        if (
+            isinstance(self.level, bool)
+            or not isinstance(self.level, int)
+            or not 1 <= self.level <= 6
+        ):
+            raise ValueError('section level must be an integer from 1 to 6')
+
+
+@dataclass(eq=False)
+class Panel(Container):
+    title: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.title, str):
+            raise TypeError('panel title must be a string')
 
 
 @dataclass(eq=False)

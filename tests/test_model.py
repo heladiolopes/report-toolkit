@@ -1,6 +1,6 @@
 import unittest
 
-from reportkit import Columns, Document, Heading, List, Markdown, RawHTML, Report, Section
+from reportkit import Columns, Document, List, Markdown, RawHTML, Report, Section
 
 
 class ModelTests(unittest.TestCase):
@@ -14,8 +14,10 @@ class ModelTests(unittest.TestCase):
                 report.add(object(), caption="Right")
         report.list(["done"])
 
-        self.assertEqual([type(n) for n in report.document.children], [Heading, Section, List])
-        self.assertIs(report.document.children[1], section)
+        self.assertEqual([type(n) for n in report.document.children], [Section])
+        heading = report.document.children[0]
+        self.assertEqual([type(n) for n in heading.children], [Section, List])
+        self.assertIs(heading.children[0], section)
         self.assertIs(section.children[1], columns)
         self.assertEqual(len(columns.children), 2)
         self.assertEqual(columns.children[0].caption, "Left")
@@ -34,14 +36,14 @@ class ModelTests(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, "title"):
             Report(title=123)
         root = Document()
-        node = Heading(1, "One")
+        node = Section("One", level=1)
         root.append(node)
         with self.assertRaisesRegex(ValueError, "one container"):
             Section("Two").append(node)
         with self.assertRaisesRegex(ValueError, "cannot be nested"):
             root.append(Document())
-        with self.assertRaisesRegex(ValueError, "heading level"):
-            Heading(0, "Invalid")
+        with self.assertRaisesRegex(ValueError, "section level"):
+            Section("Invalid", level=0)
         with self.assertRaisesRegex(ValueError, "column count"):
             Columns(0)
         with self.assertRaisesRegex(TypeError, "iterable"):
@@ -103,7 +105,7 @@ class ModelTests(unittest.TestCase):
         self.assertIs(copied_columns.children[0].value, value)
         self.assertIs(copied_section._parent, combined.document)
         self.assertIs(copied_columns._parent, copied_section)
-        copied_section.append(Heading(3, "Only in combined"))
+        copied_section.append(Section("Only in combined", level=3))
         left.heading(1, "Only in left")
         self.assertEqual(len(left.document.children[0].children), 1)
         self.assertEqual(len(combined.document.children), 2)
