@@ -127,7 +127,7 @@ class Report:
         parent = self._current_container()
         while parent is not None and not isinstance(parent, Section):
             parent = parent._parent
-        level = min(parent.level + 1, 6) if parent is not None else 2
+        level = min(parent.level + 1, 6) if parent is not None else 1
         node = Section(title=title, level=level)
         with self._scope(node):
             yield node

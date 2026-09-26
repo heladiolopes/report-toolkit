@@ -180,6 +180,7 @@ def experiment_plot() -> go.Figure:
 
 def introduction() -> Report:
     report = Report(
+        title='Report Showcase',
         description='An end-to-end example of text, tables, charts, and composition',
         author='reportkit contributors',
         date=date.today(),

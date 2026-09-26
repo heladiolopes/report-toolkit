@@ -6,15 +6,22 @@ from pathlib import Path
 from unittest.mock import patch
 from xml.etree import ElementTree
 
-from reportkit import AdapterRegistry, HTMLWriter, Panel, RenderedArtifact, Report, Section
+from reportkit import (
+    AdapterRegistry,
+    HTMLWriter,
+    Panel,
+    RenderedArtifact,
+    Report,
+    Section,
+)
 
 
 class StructureTests(unittest.TestCase):
     def test_frontends_create_equivalent_sections(self):
         automatic, explicit = Report('Report title'), Report('Report title')
-        section = automatic.heading(2, 'Summary')
+        section = automatic.heading(1, 'Summary')
         automatic.paragraph('Body')
-        automatic.heading(3, 'Details')
+        automatic.heading(2, 'Details')
         automatic.paragraph('Nested body')
         with explicit.section('Summary') as other:
             explicit.paragraph('Body')
@@ -22,7 +29,7 @@ class StructureTests(unittest.TestCase):
                 explicit.paragraph('Nested body')
         self.assertIs(type(section), Section)
         self.assertIs(type(other), Section)
-        self.assertEqual((section.title, section.level), ('Summary', 2))
+        self.assertEqual((section.title, section.level), ('Summary', 1))
         self.assertEqual(automatic.to_tree(), explicit.to_tree())
         self.assertEqual(automatic.to_html(toc=True), explicit.to_html(toc=True))
         html = automatic.to_html(toc=True)
@@ -119,7 +126,9 @@ class StructureTests(unittest.TestCase):
         second = right.heading(3, 'Second')
         right.paragraph('Body')
         combined = left + right
-        self.assertEqual([n.title for n in combined.document.children], ['First', 'Second'])
+        self.assertEqual(
+            [n.title for n in combined.document.children], ['First', 'Second']
+        )
         copied = combined.document.children[0]
         self.assertIsNot(copied, first)
         self.assertIsNot(copied.children[0], first.children[0])
@@ -145,14 +154,28 @@ class NavigationTests(unittest.TestCase):
                     report.heading(1, 'Sales & growth')
                     html = report.to_html(toc=True, fragment=fragment)
                     nav = self.navigation(html)
-                    self.assertEqual([a.text for a in nav.iter('a')],
-                                     ['Sales & growth', 'Summary', 'Details', 'Conclusion', 'Sales & growth'])
-                    self.assertEqual([a.text for a in nav.findall('./ul/li/a')],
-                                     ['Sales & growth', 'Conclusion', 'Sales & growth'])
+                    self.assertEqual(
+                        [a.text for a in nav.iter('a')],
+                        [
+                            'Sales & growth',
+                            'Summary',
+                            'Details',
+                            'Conclusion',
+                            'Sales & growth',
+                        ],
+                    )
+                    self.assertEqual(
+                        [a.text for a in nav.findall('./ul/li/a')],
+                        ['Sales & growth', 'Conclusion', 'Sales & growth'],
+                    )
                     self.assertEqual(html.count('href="#reportkit-sales-growth"'), 1)
-                    self.assertIn('<h1 id="reportkit-sales-growth">Sales &amp; growth</h1>', html)
+                    self.assertIn(
+                        '<h1 id="reportkit-sales-growth">Sales &amp; growth</h1>', html
+                    )
                     if not fragment:
-                        expected = 'Sales &amp; growth' if title is not None else 'Report'
+                        expected = (
+                            'Sales &amp; growth' if title is not None else 'Report'
+                        )
                         self.assertIn(f'<title>{expected}</title>', html)
 
     def test_title_only_report_has_no_toc(self):
@@ -171,12 +194,18 @@ class NavigationTests(unittest.TestCase):
                 article = ElementTree.fromstring(
                     re.search(r'<article\b.*?</article>', html, re.S).group()
                 )
-                self.assertEqual([node.tag for node in article],
-                                 ['header', 'p', 'div', 'nav', 'p', 'section', 'section'])
+                self.assertEqual(
+                    [node.tag for node in article],
+                    ['header', 'p', 'div', 'nav', 'p', 'section', 'section'],
+                )
                 self.assertEqual(article.find('./header/h1').text, 'Title <&>')
-                self.assertEqual(len(article.findall('.//h1[@class="report-title"]')), 1)
-                self.assertEqual([a.text for a in article.findall('./nav/ul/li/a')],
-                                 ['First', 'Second'])
+                self.assertEqual(
+                    len(article.findall('.//h1[@class="report-title"]')), 1
+                )
+                self.assertEqual(
+                    [a.text for a in article.findall('./nav/ul/li/a')],
+                    ['First', 'Second'],
+                )
                 self.assertIn('Title &lt;&amp;&gt;', html)
         without_toc = report.to_html()
         self.assertNotIn('<nav', without_toc)
@@ -191,8 +220,9 @@ class NavigationTests(unittest.TestCase):
             html = report.to_html(toc=True, fragment=fragment)
             self.assertNotIn('<header', html)
             self.assertNotIn('<h1 class="report-title">', html)
-            self.assertEqual([a.text for a in self.navigation(html).iter('a')],
-                             ['Section heading'])
+            self.assertEqual(
+                [a.text for a in self.navigation(html).iter('a')], ['Section heading']
+            )
             if not fragment:
                 self.assertIn('<title>Report</title>', html)
 
@@ -203,18 +233,28 @@ class NavigationTests(unittest.TestCase):
         html = (left + right).to_html(toc=True)
         self.assertEqual(html.count('<h1 class="report-title">'), 1)
         self.assertIn('<h1 class="report-title">Left title</h1>', html)
-        self.assertEqual([a.text for a in self.navigation(html).iter('a')],
-                         ['Left title', 'Right title'])
+        self.assertEqual(
+            [a.text for a in self.navigation(html).iter('a')],
+            ['Left title', 'Right title'],
+        )
 
     def test_toc_hierarchy_skipped_levels_and_depth(self):
         report = Report('Report title', author='Author')
-        for level, title in [(1, 'One'), (4, 'Four'), (2, 'Two'), (3, 'Three'), (1, 'Next')]:
+        for level, title in [
+            (1, 'One'),
+            (4, 'Four'),
+            (2, 'Two'),
+            (3, 'Three'),
+            (1, 'Next'),
+        ]:
             report.heading(level, title)
         html = report.to_html(toc=True)
         nav = self.navigation(html)
         roots = nav.findall('./ul/li')
         self.assertEqual([n.find('a').text for n in roots], ['One', 'Next'])
-        self.assertEqual([n.text for n in roots[0].findall('./ul/li/a')], ['Four', 'Two'])
+        self.assertEqual(
+            [n.text for n in roots[0].findall('./ul/li/a')], ['Four', 'Two']
+        )
         self.assertEqual(roots[0].find('./ul/li[2]/ul/li/a').text, 'Three')
         self.assertLess(html.index('>Author<'), html.index('<nav'))
         self.assertLess(html.index('<nav'), html.index('<section'))
@@ -229,9 +269,20 @@ class NavigationTests(unittest.TestCase):
         writer = HTMLWriter(toc=True)
         html = writer.render(report.document)
         ids = re.findall(r'<h1 id="([^"]+)"', html)
-        self.assertEqual(ids, ['reportkit-a', 'reportkit-a-2', 'reportkit-a-2-2',
-                               'reportkit-heading', 'reportkit-heading-2', 'reportkit-são-paulo-east'])
-        self.assertEqual([a.attrib['href'][1:] for a in self.navigation(html).iter('a')], ids)
+        self.assertEqual(
+            ids,
+            [
+                'reportkit-a',
+                'reportkit-a-2',
+                'reportkit-a-2-2',
+                'reportkit-heading',
+                'reportkit-heading-2',
+                'reportkit-são-paulo-east',
+            ],
+        )
+        self.assertEqual(
+            [a.attrib['href'][1:] for a in self.navigation(html).iter('a')], ids
+        )
         self.assertIn('São Paulo &amp; &lt;East&gt;', html)
         self.assertEqual(writer.render(report.document), html)
         self.assertEqual(report.to_tree(), before)
@@ -250,8 +301,10 @@ class NavigationTests(unittest.TestCase):
                             pass
         html = report.to_html(toc=True)
         self.assertEqual(re.findall(r'<h([1-6]) id=', html), ['4', '5', '6', '6'])
-        self.assertEqual([a.text for a in self.navigation(html).iter('a')],
-                         ['Four', 'Five', 'Six', 'Still six'])
+        self.assertEqual(
+            [a.text for a in self.navigation(html).iter('a')],
+            ['Four', 'Five', 'Six', 'Still six'],
+        )
 
     def test_toc_sources_panel_labels_and_page_title(self):
         report = Report()
@@ -263,7 +316,9 @@ class NavigationTests(unittest.TestCase):
         with report.section('Explicit'):
             pass
         html = report.to_html(toc=True)
-        self.assertEqual([a.text for a in self.navigation(html).iter('a')], ['Structure', 'Explicit'])
+        self.assertEqual(
+            [a.text for a in self.navigation(html).iter('a')], ['Structure', 'Explicit']
+        )
         self.assertIn('<title>Report</title>', html)
         self.assertIn('<div class="report-panel-title">Panel &lt;label&gt;</div>', html)
         self.assertNotIn('<nav', report.to_html())
@@ -307,12 +362,18 @@ class NavigationTests(unittest.TestCase):
             with report.panel('Right'):
                 report.add(object(), caption='Below')
         html = HTMLWriter(registry=registry, toc=True).render(report.document)
-        article = ElementTree.fromstring(re.search(r'<article\b.*?</article>', html, re.S).group())
+        article = ElementTree.fromstring(
+            re.search(r'<article\b.*?</article>', html, re.S).group()
+        )
         columns = article.find('.//div[@class="report-columns"]')
         self.assertEqual(len(columns), 2)
-        self.assertEqual([p.text for p in columns[0].findall('./div/p')], ['First', 'Second'])
+        self.assertEqual(
+            [p.text for p in columns[0].findall('./div/p')], ['First', 'Second']
+        )
         self.assertEqual(columns[1].find('./div/figure/figcaption').text, 'Below')
-        self.assertEqual([a.text for a in self.navigation(html).iter('a')], ['Overview'])
+        self.assertEqual(
+            [a.text for a in self.navigation(html).iter('a')], ['Overview']
+        )
 
 
 class LoggingTests(unittest.TestCase):
@@ -331,9 +392,13 @@ class LoggingTests(unittest.TestCase):
         from reportkit.writer import _format_size
 
         for size, expected in [
-            (0, '0 B'), (1023, '1023 B'), (1024, '1.0 KiB'),
-            (1536, '1.5 KiB'), (1024 ** 2, '1.0 MiB'),
-            (1024 ** 3, '1.0 GiB'), (1024 ** 4, '1.0 TiB'),
+            (0, '0 B'),
+            (1023, '1023 B'),
+            (1024, '1.0 KiB'),
+            (1536, '1.5 KiB'),
+            (1024**2, '1.0 MiB'),
+            (1024**3, '1.0 GiB'),
+            (1024**4, '1.0 TiB'),
         ]:
             with self.subTest(size=size):
                 self.assertEqual(_format_size(size), expected)
