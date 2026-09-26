@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reportkit"
+version = "1.0.0"
+description = "Compose analytical reports in Python and render them as HTML"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{name = "reportkit contributors"}]
+dependencies = ["mistune>=3,<4"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Text Processing :: Markup :: HTML",
+]
+
+[project.optional-dependencies]
+pandas = ["pandas>=2"]
+altair = ["altair>=5"]
+matplotlib = ["matplotlib>=3.7"]
+all = ["pandas>=2", "altair>=5", "matplotlib>=3.7"]
+offline = ["altair>=5", "vl-convert-python>=1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
