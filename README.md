@@ -45,6 +45,17 @@ report.add(plot, caption="Plotly view")
 HTMLWriter(toc=True, toc_depth=2).write(report.document, "sales.html")
 ```
 
+## Markdown templates
+
+Separate recurring report narrative from Python analysis with
+`Report.from_template(path, context=...)` or
+`Report.from_template_string(source, context=...)`. Templates support literal
+text variables, analytical artifacts with captions, headings, columns, and panels.
+YAML metadata requires the optional `templates` extra (also included in `all`).
+
+See the [template guide](docs/markdown-templates.md) and run
+`uv run --extra all python examples/template_report.py` for a complete example.
+
 ## Complete showcase
 
 Run [examples/report_showcase.py](examples/report_showcase.py) after installing the `all` extra:

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from copy import copy
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any
 
 from .model import (
     Artifact,
@@ -20,8 +21,73 @@ from .model import (
     Section,
 )
 
+_UNSET = object()
+
 
 class Report:
+    @classmethod
+    def from_template(
+        cls,
+        path: str | Path,
+        *,
+        context: Mapping[str, Any] | None = None,
+        title=_UNSET,
+        description=_UNSET,
+        author=_UNSET,
+        date=_UNSET,
+    ) -> Report:
+        """Compose a report from a UTF-8 Markdown template file."""
+        from ._template import compose
+
+        path = Path(path)
+        return compose(
+            cls,
+            path.read_text(encoding='utf-8'),
+            context,
+            str(path),
+            {
+                key: value
+                for key, value in {
+                    'title': title,
+                    'description': description,
+                    'author': author,
+                    'date': date,
+                }.items()
+                if value is not _UNSET
+            },
+        )
+
+    @classmethod
+    def from_template_string(
+        cls,
+        source: str,
+        *,
+        context: Mapping[str, Any] | None = None,
+        title=_UNSET,
+        description=_UNSET,
+        author=_UNSET,
+        date=_UNSET,
+    ) -> Report:
+        """Compose a report from Markdown template text."""
+        from ._template import compose
+
+        return compose(
+            cls,
+            source,
+            context,
+            '<template>',
+            {
+                key: value
+                for key, value in {
+                    'title': title,
+                    'description': description,
+                    'author': author,
+                    'date': date,
+                }.items()
+                if value is not _UNSET
+            },
+        )
+
     def __init__(
         self,
         title: str | None = None,

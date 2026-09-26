@@ -17,8 +17,12 @@ pandas = ["pandas>=2"]
 altair = ["altair>=5"]
 matplotlib = ["matplotlib>=3.7"]
 plotly = ["plotly>=5"]
-all = ["pandas>=2", "altair>=5", "matplotlib>=3.7", "plotly>=5"]
+templates = ["PyYAML>=6,<7"]
+all = ["pandas>=2", "altair>=5", "matplotlib>=3.7", "plotly>=5", "PyYAML>=6,<7"]
 offline = ["altair>=5", "vl-convert-python>=1"]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.9", "build>=1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -34,4 +38,3 @@ indent-style = "space"
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "**/{tests,docs,tools}/*" = ["E402"]
-
