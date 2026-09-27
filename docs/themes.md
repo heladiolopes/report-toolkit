@@ -11,11 +11,14 @@ fragment = report.to_html(fragment=True, theme='paper')
 
 | Preset | Appearance |
 | --- | --- |
-| `light` | White and neutral gray with Times-based typography; the default |
-| `dark` | Near-black surfaces with Times-based typography and blue links |
-| `paper` | Warm cream with serif typography |
-| `ink` | Warm charcoal with serif typography |
+| `light` | White and neutral gray with sans-serif typography; the default |
+| `dark` | Near-black surfaces with sans-serif typography and blue links |
+| `paper` | Warm cream with sans-serif typography |
+| `ink` | Warm charcoal with sans-serif typography |
 | `auto` | `light` or `dark`, following the reader's system preference |
+| `carbon` | Carbon-inspired type hierarchy on white, using the existing report fonts |
+| `carbon-dark` | The same type hierarchy on neutral dark surfaces |
+| `auto-carbon` | System-following `carbon` / `carbon-dark` pair |
 | `auto-paper` | `paper` or `ink`, following the reader's system preference |
 
 Automatic themes use CSS `prefers-color-scheme` and fall back to light styling
@@ -26,6 +29,36 @@ The light and dark themes use compact content spacing and bordered table cells,
 with a 1040px maximum report width and 5px report corners. Page padding remains
 roomy, and the TOC retains its existing typography and colors. The `paper` and
 `ink` alternatives retain their warmer palettes and previous spacing.
+
+## Carbon-inspired presets
+
+```python
+report.write('carbon.html', theme='carbon')
+report.write('carbon-dark.html', theme='carbon-dark')
+report.write('carbon-adaptive.html', theme='auto-carbon')
+```
+
+These presets adapt [Carbon's typography guidance](https://preview.carbondesignsystem.com/building-blocks/foundations/typography/overview)
+and [type styles](https://preview.carbondesignsystem.com/building-blocks/foundations/typography/type-sets)
+using ReportKit's Roboto / Noto Sans report font stack and monospace code stack.
+They do not load IBM Plex or any external fonts. Available font weights depend
+on the locally installed fonts, so this is an adaptation rather than an exact
+Carbon reproduction. Report width, padding, corners, and TOC styles are inherited
+from the corresponding light or dark preset.
+
+| Element | Size / line height | Weight |
+| --- | --- | --- |
+| Report title | 42px / 50px | 300 |
+| H1 | 32px / 40px | 400 |
+| H2 | 28px / 36px | 400 |
+| H3 | 20px / 28px | 400 |
+| H4 | 16px / 24px | 600 |
+| H5–H6 | 14px / 20px | 600 |
+| Body | 16px / 24px | 400 |
+| Captions | 14px / 18px | 400 |
+| Code | 14px / 20px | 400 |
+
+Sizes for headings, captions, and code use rem units, shown here with a 16px root.
 
 ## Define a custom theme
 
@@ -82,18 +115,32 @@ keys are listed below; unknown keys raise `ValueError` to catch spelling mistake
 | `table_size`, `cell_padding` | Table font size and cell whitespace |
 | `panel_background`, `panel_padding` | Panel surfaces and internal spacing |
 | `shadow_geometry` | Shadow offsets and blur, combined with `shadow_color` |
-| `title_size`, `heading_line_height`, `heading_margin` | Report title size and section heading rhythm |
+| `title_size`, `title_weight`, `title_line_height` | Report title typography |
+| `heading_line_height`, `heading_margin` | Shared section heading rhythm |
+| `h1_weight` through `h6_weight`, `h1_line_height` through `h6_line_height` | Individual heading weights and line heights; defaults use the shared heading line height |
+| `caption_line_height`, `code_line_height` | Caption/metadata and code leading; defaults inherit surrounding leading |
 | `h2_border_width`, `h2_padding` | Second-level heading rule width and bottom padding |
 | `paragraph_margin`, `list_margin`, `nested_list_margin`, `list_item_spacing` | Content spacing |
 | `link_decoration`, `accent_hover` | Link decoration and hover color |
 | `table_border_width`, `table_line_height` | Cell borders (bottom rules remain 1px) and table line height |
 | `pre_padding`, `pre_background`, `pre_radius`, `pre_margin`, `code_size` | Code block styling and code font size |
 | `blockquote_margin`, `blockquote_padding`, `blockquote_border_width`, `blockquote_background` | Blockquote styling |
-| `toc_font_family`, `toc_line_height`, `toc_text`, `toc_background`, `toc_accent` | Independent TOC typography and colors |
+| `toc_font_family`, `toc_line_height`, `toc_text`, `toc_background`, `toc_accent` | TOC overrides; defaults inherit the theme’s typography, text, surface, and accent |
 
 The responsive layout uses compact padding and one column below 700px. Custom
-CSS can override responsive rules when necessary. Font stacks use local fonts;
-the built-in themes do not download fonts.
+CSS can override responsive rules when necessary. All presets use
+`Roboto, "Noto Sans", sans-serif` for report text and headings: Roboto is preferred,
+followed by Noto Sans and the browser's sans-serif fallback. Code retains its
+monospace stack, and the TOC inherits the report font. Font stacks use local
+fonts; the built-in themes do not download fonts. Override `font_family` to
+choose a different order or font for a custom theme.
+
+TOC links use the theme's link color without underlines by default. On hover or
+keyboard focus, they use the theme's link hover color and an underline. Keyboard focus also has a visible outline.
+The TOC inherits the theme's font, line height, corner radius, and surface color
+in both top and sidebar layouts. The `toc_*` tokens remain available for explicit
+overrides; `toc_accent` controls the link color, and `accent_hover` controls
+the hover and focus color.
 
 ## CSS customization and fragments
 

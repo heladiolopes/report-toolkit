@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Theme gallery</title>
 <style>
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) {
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) {
   --reportkit-page-background: #0a0a0a;
   --reportkit-background: #111111;
   --reportkit-surface: #171717;
@@ -17,7 +17,7 @@
   --reportkit-border: #2a2a2a;
   --reportkit-table-header: #1a1a1a;
   --reportkit-shadow-color: #00000099;
-  --reportkit-font-family: Times, "Times New Roman", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --reportkit-font-family: Roboto, "Noto Sans", sans-serif;
   --reportkit-code-font: "JetBrains Mono", "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
   --reportkit-font-size: 16px;
   --reportkit-line-height: 1.5;
@@ -67,61 +67,99 @@
   --reportkit-toc-text: #e0e7ef;
   --reportkit-toc-background: #202e40;
   --reportkit-toc-accent: #91baff;
+  --reportkit-title-weight: bold;
+  --reportkit-title-line-height: var(--reportkit-heading-line-height);
+  --reportkit-caption-line-height: inherit;
+  --reportkit-code-line-height: inherit;
+  --reportkit-h1-weight: bold;
+  --reportkit-h1-line-height: var(--reportkit-heading-line-height);
+  --reportkit-h2-weight: bold;
+  --reportkit-h2-line-height: var(--reportkit-heading-line-height);
+  --reportkit-h3-weight: bold;
+  --reportkit-h3-line-height: var(--reportkit-heading-line-height);
+  --reportkit-h4-weight: bold;
+  --reportkit-h4-line-height: var(--reportkit-heading-line-height);
+  --reportkit-h5-weight: bold;
+  --reportkit-h5-line-height: var(--reportkit-heading-line-height);
+  --reportkit-h6-weight: bold;
+  --reportkit-h6-line-height: var(--reportkit-heading-line-height);
   color-scheme: dark;
 }
 body { margin: 0; background: #0a0a0a; color-scheme: dark; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]), .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) * { box-sizing: border-box; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) { max-width: var(--reportkit-content-width); margin: var(--reportkit-page-margin); padding: var(--reportkit-content-padding); background: var(--reportkit-background); border: 1px solid var(--reportkit-border); border-radius: var(--reportkit-radius); box-shadow: var(--reportkit-shadow-geometry) var(--reportkit-shadow-color); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) { color: var(--reportkit-text); font: var(--reportkit-font-size)/var(--reportkit-line-height) var(--reportkit-font-family); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h1, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h2, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h3, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h4, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h5, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h6 { color: var(--reportkit-heading); line-height: var(--reportkit-heading-line-height); margin: var(--reportkit-heading-margin); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h1 { font-size: var(--reportkit-h1-size); margin-top: 0; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-title { font-size: var(--reportkit-title-size); margin: 0 0 .5em; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h2 { font-size: var(--reportkit-h2-size); border-bottom: var(--reportkit-h2-border-width) solid var(--reportkit-border); padding-bottom: var(--reportkit-h2-padding); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) p { margin: var(--reportkit-paragraph-margin); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) ul, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) ol { margin: var(--reportkit-list-margin); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) ul ul, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) ul ol, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) ol ul, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) ol ol { margin: var(--reportkit-nested-list-margin); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) li + li { margin-top: var(--reportkit-list-item-spacing); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) a { color: var(--reportkit-accent); text-decoration: var(--reportkit-link-decoration); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) a:hover { color: var(--reportkit-accent-hover); text-decoration: underline; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-description { color: var(--reportkit-description); font-size: 1.1rem; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-meta { color: var(--reportkit-muted); font-size: var(--reportkit-caption-size); display: flex; flex-wrap: wrap; gap: 1.2rem; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-section { margin-top: var(--reportkit-section-spacing); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-columns { display: grid; grid-template-columns: repeat(var(--reportkit-columns), minmax(0, 1fr)); gap: var(--reportkit-column-gap); align-items: start; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-column-item { min-width: 0; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-panel { min-width: 0; overflow-x: auto; background: var(--reportkit-panel-background); padding: var(--reportkit-panel-padding); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-panel-title { color: var(--reportkit-heading); font-weight: 650; margin-bottom: .75rem; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-toc { margin: 1.5rem 0; padding: 1rem 1.5rem; background: var(--reportkit-toc-background); border-radius: 6px; color: var(--reportkit-toc-text); font-family: var(--reportkit-toc-font-family); line-height: var(--reportkit-toc-line-height); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-toc a, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-toc a:hover { color: var(--reportkit-toc-accent); text-decoration: underline; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-toc li + li { margin-top: 0; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-toc-title { font-weight: 650; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-toc ul { padding-left: 1.5rem; margin: revert; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-artifact { margin: var(--reportkit-figure-margin); min-width: 0; overflow-x: auto; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) figcaption { color: var(--reportkit-muted); font-size: var(--reportkit-caption-size); margin-top: .5rem; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .reportkit-figure-image { display: block; max-width: 100%; height: auto; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) table { border-collapse: collapse; width: 100%; font-size: var(--reportkit-table-size); line-height: var(--reportkit-table-line-height); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) th, .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) td { border: var(--reportkit-table-border-width) solid var(--reportkit-border); border-bottom: 1px solid var(--reportkit-border); padding: var(--reportkit-cell-padding); text-align: left; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) th { background: var(--reportkit-table-header); font-weight: 650; }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) pre { overflow-x: auto; padding: var(--reportkit-pre-padding); background: var(--reportkit-pre-background); border-radius: var(--reportkit-pre-radius); margin: var(--reportkit-pre-margin); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) code { font-size: var(--reportkit-code-size); font-family: var(--reportkit-code-font); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h3 { font-size: var(--reportkit-h3-size); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h4 { font-size: var(--reportkit-h4-size); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h5 { font-size: var(--reportkit-h5-size); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) h6 { font-size: var(--reportkit-h6-size); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) blockquote { margin: var(--reportkit-blockquote-margin); padding: var(--reportkit-blockquote-padding); border-left: var(--reportkit-blockquote-border-width) solid var(--reportkit-accent); background: var(--reportkit-blockquote-background); }
-.reportkit:where([data-reportkit-theme="94e3ad2469687845"]) hr { border: 0; border-top: 1px solid var(--reportkit-border); }
-@media (max-width: 700px) { .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) { margin: 0; border: 0; border-radius: 0; padding: 24px 18px; } .reportkit:where([data-reportkit-theme="94e3ad2469687845"]) .report-columns { grid-template-columns: 1fr; } }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]), .reportkit:where([data-reportkit-theme="920df281af76f120"]) * { box-sizing: border-box; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) { max-width: var(--reportkit-content-width); margin: var(--reportkit-page-margin); padding: var(--reportkit-content-padding); background: var(--reportkit-background); border: 1px solid var(--reportkit-border); border-radius: var(--reportkit-radius); box-shadow: var(--reportkit-shadow-geometry) var(--reportkit-shadow-color); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) { color: var(--reportkit-text); font: var(--reportkit-font-size)/var(--reportkit-line-height) var(--reportkit-font-family); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) h1, .reportkit:where([data-reportkit-theme="920df281af76f120"]) h2, .reportkit:where([data-reportkit-theme="920df281af76f120"]) h3, .reportkit:where([data-reportkit-theme="920df281af76f120"]) h4, .reportkit:where([data-reportkit-theme="920df281af76f120"]) h5, .reportkit:where([data-reportkit-theme="920df281af76f120"]) h6 { color: var(--reportkit-heading); line-height: var(--reportkit-heading-line-height); margin: var(--reportkit-heading-margin); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) h1 { font-size: var(--reportkit-h1-size); font-weight: var(--reportkit-h1-weight); line-height: var(--reportkit-h1-line-height); margin-top: 0; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-title { font-size: var(--reportkit-title-size); font-weight: var(--reportkit-title-weight); line-height: var(--reportkit-title-line-height); margin: 0 0 .5em; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) h2 { font-size: var(--reportkit-h2-size); font-weight: var(--reportkit-h2-weight); line-height: var(--reportkit-h2-line-height); border-bottom: var(--reportkit-h2-border-width) solid var(--reportkit-border); padding-bottom: var(--reportkit-h2-padding); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) p { margin: var(--reportkit-paragraph-margin); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) ul, .reportkit:where([data-reportkit-theme="920df281af76f120"]) ol { margin: var(--reportkit-list-margin); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) ul ul, .reportkit:where([data-reportkit-theme="920df281af76f120"]) ul ol, .reportkit:where([data-reportkit-theme="920df281af76f120"]) ol ul, .reportkit:where([data-reportkit-theme="920df281af76f120"]) ol ol { margin: var(--reportkit-nested-list-margin); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) li + li { margin-top: var(--reportkit-list-item-spacing); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) a { color: var(--reportkit-accent); text-decoration: var(--reportkit-link-decoration); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) a:hover { color: var(--reportkit-accent-hover); text-decoration: underline; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-description { color: var(--reportkit-description); font-size: 1.1rem; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-meta { color: var(--reportkit-muted); font-size: var(--reportkit-caption-size); line-height: var(--reportkit-caption-line-height); display: flex; flex-wrap: wrap; gap: 1.2rem; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-section { margin-top: var(--reportkit-section-spacing); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-columns { display: grid; grid-template-columns: repeat(var(--reportkit-columns), minmax(0, 1fr)); gap: var(--reportkit-column-gap); align-items: start; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-column-item { min-width: 0; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-panel { min-width: 0; overflow-x: auto; background: var(--reportkit-panel-background); padding: var(--reportkit-panel-padding); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-panel-title { color: var(--reportkit-heading); font-weight: 650; margin-bottom: .75rem; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-toc { margin: 1.5rem 0; padding: 1rem 1.5rem; background: var(--reportkit-toc-background); border-radius: 6px; color: var(--reportkit-toc-text); font-family: var(--reportkit-toc-font-family); line-height: var(--reportkit-toc-line-height); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-toc a, .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-toc a:hover { color: var(--reportkit-toc-accent); text-decoration: underline; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-toc li + li { margin-top: 0; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-toc-title { font-weight: 650; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-toc ul { padding-left: 1.5rem; margin: revert; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-artifact { margin: var(--reportkit-figure-margin); min-width: 0; overflow-x: auto; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) figcaption { color: var(--reportkit-muted); font-size: var(--reportkit-caption-size); line-height: var(--reportkit-caption-line-height); margin-top: .5rem; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .reportkit-figure-image { display: block; max-width: 100%; height: auto; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) table { border-collapse: collapse; width: 100%; font-size: var(--reportkit-table-size); line-height: var(--reportkit-table-line-height); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) th, .reportkit:where([data-reportkit-theme="920df281af76f120"]) td { border: var(--reportkit-table-border-width) solid var(--reportkit-border); border-bottom: 1px solid var(--reportkit-border); padding: var(--reportkit-cell-padding); text-align: left; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) th { background: var(--reportkit-table-header); font-weight: 650; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) pre { line-height: var(--reportkit-code-line-height); overflow-x: auto; padding: var(--reportkit-pre-padding); background: var(--reportkit-pre-background); border-radius: var(--reportkit-pre-radius); margin: var(--reportkit-pre-margin); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) code { font-size: var(--reportkit-code-size); font-family: var(--reportkit-code-font); line-height: var(--reportkit-code-line-height); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) h3 { font-size: var(--reportkit-h3-size); font-weight: var(--reportkit-h3-weight); line-height: var(--reportkit-h3-line-height); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) h4 { font-size: var(--reportkit-h4-size); font-weight: var(--reportkit-h4-weight); line-height: var(--reportkit-h4-line-height); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) h5 { font-size: var(--reportkit-h5-size); font-weight: var(--reportkit-h5-weight); line-height: var(--reportkit-h5-line-height); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) h6 { font-size: var(--reportkit-h6-size); font-weight: var(--reportkit-h6-weight); line-height: var(--reportkit-h6-line-height); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) blockquote { margin: var(--reportkit-blockquote-margin); padding: var(--reportkit-blockquote-padding); border-left: var(--reportkit-blockquote-border-width) solid var(--reportkit-accent); background: var(--reportkit-blockquote-background); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) hr { border: 0; border-top: 1px solid var(--reportkit-border); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-toc-backlink { font-size: .7em; white-space: nowrap; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-toc a { overflow-wrap: anywhere; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]).report-layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: 1.5rem; align-items: start; max-width: calc(var(--reportkit-content-width) + 17.5rem); padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]).report-layout > article.reportkit:where([data-reportkit-theme="920df281af76f120"]) { min-width: 0; width: 100%; margin: 0; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar { position: sticky; top: 1rem; min-width: 0; }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar > summary { cursor: pointer; padding: 1rem; background: var(--reportkit-toc-background); color: var(--reportkit-toc-text); }
+.reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar .report-toc { margin: 0; max-height: calc(100vh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
+@media (min-width: 1100px) { .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar > summary { display: none; } }
+@media (max-width: 1099px) {
+    .reportkit:where([data-reportkit-theme="920df281af76f120"]).report-layout { grid-template-columns: minmax(0, 1fr); max-width: var(--reportkit-content-width); }
+    .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar { position: static; }
+    .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar .report-toc { max-height: 60vh; }
+    .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar .report-toc-title { display: none; }
+}
+@media print {
+    .reportkit:where([data-reportkit-theme="920df281af76f120"]).report-layout { display: block; max-width: none; }
+    .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar { position: static; }
+    .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar > summary { display: none; }
+    .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-sidebar .report-toc { max-height: none; overflow: visible; }
+    .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-toc-backlink { display: none; }
+}
+
+@media (max-width: 700px) { .reportkit:where([data-reportkit-theme="920df281af76f120"]) { margin: 0; border: 0; border-radius: 0; padding: 24px 18px; } .reportkit:where([data-reportkit-theme="920df281af76f120"]) .report-columns { grid-template-columns: 1fr; } }
 
 </style>
 </head>
 <body>
-<article class="reportkit" data-reportkit-theme="94e3ad2469687845">
+<article class="reportkit" data-reportkit-theme="920df281af76f120">
 <header class="report-header"><h1 class="report-title">Theme gallery</h1></header>
-<p class="report-description">Neutral light and dark themes, plus warm paper and ink alternatives.</p>
+<p class="report-description">Light, dark, warm, and Carbon-inspired report themes.</p>
 <div class="report-meta">
 <span>ReportKit</span>
 </div>
-<nav class="report-toc" aria-label="Table of contents"><div class="report-toc-title">Table of contents</div><ul><li><a href="#reportkit-overview">Overview</a><ul><li><a href="#reportkit-details">Details</a></li></ul></li></ul></nav>
-<section class="report-section"><h1 id="reportkit-overview">Overview</h1>
+<nav class="report-toc" id="reportkit_toc" tabindex="-1" aria-label="Table of contents"><div class="report-toc-title">Table of contents</div><ul><li><a href="#reportkit-overview">Overview</a><ul><li><a href="#reportkit-details">Details</a></li></ul></li></ul></nav>
+<section class="report-section"><h1 id="reportkit-overview">Overview <a class="report-toc-backlink" href="#reportkit_toc" aria-label="Back to table of contents">↑</a></h1>
 <p>Readable <strong>reports</strong> with <a href="#reportkit-details">links</a>, <code>inline code</code>, and captions.</p>
 <blockquote>
 <p>A note highlighted using the report’s theme.</p>
@@ -134,7 +172,7 @@ body { margin: 0; background: #0a0a0a; color-scheme: dark; }
 <table><thead><tr><th>Month</th><th>Revenue</th></tr></thead><tbody><tr><td>March</td><td>$12,400</td></tr><tr><td>April</td><td>$17,200</td></tr></tbody></table>
 </div></div>
 </div>
-<section class="report-section"><h2 id="reportkit-details">Details</h2>
+<section class="report-section"><h2 id="reportkit-details">Details <a class="report-toc-backlink" href="#reportkit_toc" aria-label="Back to table of contents">↑</a></h2>
 <pre><code class="language-python">report.write(&quot;report.html&quot;, theme=&quot;auto&quot;)
 </code></pre>
 <figure><svg viewBox="0 0 400 80" role="img" aria-label="Sample bars"><rect x="0" y="10" width="240" height="24" fill="#477caf"/><rect x="0" y="46" width="340" height="24" fill="#70a690"/></svg><figcaption>Chart colors remain under the author’s control.</figcaption></figure>

@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from copy import copy
 from datetime import date, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from .model import (
     Artifact,
@@ -225,13 +225,19 @@ class Report:
         fragment: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
+        numbered_headings: bool = False,
+        toc_position: Literal['top', 'sidebar'] = 'top',
         theme: str | Theme | AutoTheme = 'light',
     ) -> str:
         from .writer import HTMLWriter
 
-        return HTMLWriter(toc=toc, toc_depth=toc_depth, theme=theme).render(
-            self.document, fragment=fragment
-        )
+        return HTMLWriter(
+            toc=toc,
+            toc_depth=toc_depth,
+            theme=theme,
+            numbered_headings=numbered_headings,
+            toc_position=toc_position,
+        ).render(self.document, fragment=fragment)
 
     def write(
         self,
@@ -240,10 +246,16 @@ class Report:
         fragment: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
+        numbered_headings: bool = False,
+        toc_position: Literal['top', 'sidebar'] = 'top',
         theme: str | Theme | AutoTheme = 'light',
     ) -> Path:
         from .writer import HTMLWriter
 
-        return HTMLWriter(toc=toc, toc_depth=toc_depth, theme=theme).write(
-            self.document, path, fragment=fragment
-        )
+        return HTMLWriter(
+            toc=toc,
+            toc_depth=toc_depth,
+            theme=theme,
+            numbered_headings=numbered_headings,
+            toc_position=toc_position,
+        ).write(self.document, path, fragment=fragment)

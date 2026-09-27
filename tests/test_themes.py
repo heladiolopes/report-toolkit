@@ -22,10 +22,24 @@ class ThemeTests(unittest.TestCase):
         original = self.report.to_html()
         self.assertEqual(original, self.report.to_html(theme='light'))
         with tempfile.TemporaryDirectory() as directory:
-            for name in ('light', 'dark', 'paper', 'ink', 'auto', 'auto-paper'):
+            for name in (
+                'light',
+                'dark',
+                'paper',
+                'ink',
+                'auto',
+                'auto-paper',
+                'carbon',
+                'carbon-dark',
+                'auto-carbon',
+            ):
                 for fragment in (False, True):
                     with self.subTest(name=name, fragment=fragment):
                         html = self.report.to_html(theme=name, fragment=fragment)
+                        self.assertIn(
+                            '--reportkit-font-family: Roboto, "Noto Sans", sans-serif;',
+                            html,
+                        )
                         writer = HTMLWriter(theme=get_theme(name))
                         self.assertEqual(
                             html, writer.render(self.report.document, fragment=fragment)
@@ -48,11 +62,8 @@ class ThemeTests(unittest.TestCase):
         self.assertEqual(before, self.report.to_tree())
         self.assertEqual(original, self.report.to_html())
 
-    def test_default_restyle_preserves_page_and_navigation(self):
-        for name, text, surface, accent in (
-            ('light', '#1d2939', '#f4f6fa', '#1259a8'),
-            ('dark', '#e0e7ef', '#202e40', '#91baff'),
-        ):
+    def test_default_navigation_inherits_theme(self):
+        for name in ('light', 'dark'):
             with self.subTest(theme=name):
                 html = self.report.to_html(theme=name, toc=True)
                 for declaration in (
@@ -62,11 +73,11 @@ class ThemeTests(unittest.TestCase):
                     '--reportkit-radius: 5px;',
                     '--reportkit-title-size: 2.5rem;',
                     '--reportkit-table-border-width: 1px;',
-                    '--reportkit-toc-font-family: system-ui, sans-serif;',
-                    '--reportkit-toc-line-height: 1.65;',
-                    f'--reportkit-toc-text: {text};',
-                    f'--reportkit-toc-background: {surface};',
-                    f'--reportkit-toc-accent: {accent};',
+                    '--reportkit-toc-font-family: var(--reportkit-font-family);',
+                    '--reportkit-toc-line-height: var(--reportkit-line-height);',
+                    '--reportkit-toc-text: var(--reportkit-text);',
+                    '--reportkit-toc-background: var(--reportkit-surface);',
+                    '--reportkit-toc-accent: var(--reportkit-accent);',
                 ):
                     self.assertIn(declaration, html)
                 self.assertIn('font-family: var(--reportkit-toc-font-family)', html)
@@ -77,13 +88,49 @@ class ThemeTests(unittest.TestCase):
             with self.subTest(theme=name):
                 theme = get_theme(name)
                 self.assertEqual(theme.tokens['radius'], '12px')
-                self.assertEqual(theme.tokens['font_family'], 'Georgia, serif')
+                self.assertEqual(
+                    theme.tokens['toc_font_family'], 'var(--reportkit-font-family)'
+                )
                 self.assertEqual(theme.tokens['line_height'], '1.65')
                 self.assertEqual(theme.tokens['cell_padding'], '.55rem .75rem')
                 self.assertEqual(theme.tokens['table_border_width'], '0')
                 self.assertEqual(
                     theme.tokens['pre_background'], 'var(--reportkit-surface)'
                 )
+
+    def test_carbon_typography_inherits_fonts_layout_and_toc(self):
+        for name, base in (('carbon', 'light'), ('carbon-dark', 'dark')):
+            theme = get_theme(name)
+            original = get_theme(base)
+            for key in original.tokens:
+                if key.startswith('toc_') or key in (
+                    'font_family',
+                    'code_font',
+                    'content_width',
+                    'content_padding',
+                    'page_margin',
+                    'radius',
+                ):
+                    self.assertEqual(theme.tokens[key], original.tokens[key])
+            custom = theme.with_overrides(
+                name='custom', tokens={'h2_weight': '600', 'h2_line_height': '2.5rem'}
+            )
+            html = self.report.to_html(theme=custom)
+            self.assertIn('--reportkit-h2-weight: 600;', html)
+            self.assertIn('--reportkit-h2-line-height: 2.5rem;', html)
+            self.assertIn('font-weight: var(--reportkit-h2-weight)', html)
+            self.assertIn('line-height: var(--reportkit-h2-line-height)', html)
+            self.assertNotIn('@font-face', html)
+            self.assertNotIn('@import', html)
+        pair = get_theme('auto-carbon')
+        self.assertEqual(pair.light, get_theme('carbon'))
+        self.assertEqual(pair.dark, get_theme('carbon-dark'))
+        html = self.report.to_html(theme=pair)
+        light, dark = html.split('@media (prefers-color-scheme: dark)', 1)
+        self.assertIn('--reportkit-background: #ffffff;', light)
+        self.assertIn('--reportkit-background: #161616;', dark)
+        self.assertIn('--reportkit-title-size: 2.625rem;', html)
+        self.assertIn('--reportkit-title-weight: 300;', html)
 
     def test_custom_tokens_are_copied_and_overrides_inherit(self):
         tokens = {'accent': '#2457a7'}
@@ -105,7 +152,8 @@ class ThemeTests(unittest.TestCase):
 
     def test_custom_fragment_scopes_depend_on_content_not_only_name(self):
         themes = [
-            get_theme(name).with_overrides(name='custom') for name in ('light', 'dark')
+            get_theme(name).with_overrides(name='custom')
+            for name in ('carbon', 'carbon-dark')
         ]
         fragments = [self.report.to_html(theme=t, fragment=True) for t in themes]
         scopes = [
@@ -176,7 +224,7 @@ class ThemeTests(unittest.TestCase):
                 c * weight for c, weight in zip(linear, (0.2126, 0.7152, 0.0722))
             )
 
-        for name in ('light', 'dark', 'paper', 'ink'):
+        for name in ('light', 'dark', 'paper', 'ink', 'carbon', 'carbon-dark'):
             tokens = get_theme(name).tokens
             for foreground in ('text', 'heading', 'accent', 'description', 'muted'):
                 for background in ('background', 'surface', 'table_header'):

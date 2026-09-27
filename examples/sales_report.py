@@ -87,7 +87,13 @@ def build_report() -> Report:
 def main() -> None:
     report = build_report()
     print(report.to_tree())
-    output = report.write(Path(__file__).with_suffix('.html'), toc=True, toc_depth=2)
+    output = report.write(
+        Path(__file__).with_suffix('.html'),
+        toc=True,
+        toc_depth=2,
+        toc_position='sidebar',
+        numbered_headings=True,
+    )
     print(f'Wrote {output.resolve()}')
 
 

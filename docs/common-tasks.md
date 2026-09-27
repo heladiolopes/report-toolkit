@@ -249,3 +249,37 @@ report.write('paper.html', theme='auto-paper')
 Fixed presets are `light`, `dark`, `paper`, and `ink`. Automatic pairs follow the
 reader's system preference. See [Themes](themes.md) to define a custom theme,
 customize fonts and spacing, or pair your own light and dark styles.
+
+
+### Number headings and move the TOC to a sidebar
+
+```python
+report.write(
+    'report.html',
+    toc=True,
+    numbered_headings=True,
+    toc_position='sidebar',
+)
+```
+
+Heading numbers follow the report hierarchy and also appear in the TOC. Omit
+`numbered_headings` to keep headings unnumbered. Use `toc_position='top'` (the
+default) for a TOC below the report metadata with ↑ links from headings back to
+the TOC.
+
+Long sidebar TOCs scroll independently of the report on wide screens. On narrow
+screens, the TOC moves above the content card and scrolls naturally with the page.
+It stays fully visible without a toggle or JavaScript.
+
+### Run browser navigation tests
+
+Browser tests are optional and skip if Playwright or Chromium is unavailable.
+Install and run them without adding a runtime dependency:
+
+```sh
+uv run --with playwright python -m playwright install chromium
+uv run --with playwright pytest tests/test_navigation_options.py -q
+```
+
+These tests exercise long TOCs, desktop and mobile layouts,
+print layout, and navigation in full documents and fragments.

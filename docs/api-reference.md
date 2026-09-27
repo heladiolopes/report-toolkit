@@ -105,8 +105,8 @@ artifact objects remain shared. Heading groups retain their existing boundaries.
 
 ```python
 report.to_tree() -> str
-report.to_html(*, fragment=False, toc=False, toc_depth=6, theme='light') -> str
-report.write(path, *, fragment=False, toc=False, toc_depth=6, theme='light') -> pathlib.Path
+report.to_html(*, fragment=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', theme='light') -> str
+report.write(path, *, fragment=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', theme='light') -> pathlib.Path
 ```
 
 `to_tree()` formats the hierarchy, abbreviated text, lists, and artifact types
@@ -125,6 +125,23 @@ message through `reportkit.writer` with the destination and actual file size.
 The TOC includes structural section headings up to this absolute level. Report
 titles, panel labels, and Markdown/artifact-internal headings are excluded.
 Empty TOCs are omitted. Section anchors are unique and deterministic per render.
+
+`numbered_headings=True` adds hierarchical numbers (`1.`, `1.1.`, `2.`) to
+structural headings and matching TOC entries. Numbering defaults to off, works
+without a TOC, and does not change anchors or the document model. Skipped heading
+levels do not introduce zero components. The value must be a boolean
+(`TypeError` otherwise).
+
+`toc_position` accepts `'top'` (default) or `'sidebar'` (`ValueError`
+otherwise), even when `toc=False`. With a top TOC, every structural heading
+includes an ↑ backlink, including headings beyond `toc_depth`. No backlinks
+are rendered if the TOC is empty or disabled.
+
+The sidebar sits outside the main content card, remains sticky on wide screens,
+and scrolls independently when its entries exceed the viewport height. Below
+1100px it moves above the card and remains fully visible, scrolling naturally
+with the page. No toggle or JavaScript is needed. Print output also shows the
+complete TOC without scroll limits. These options work with `fragment=True`.
 
 ## Template constructors
 
@@ -212,7 +229,7 @@ and invalid front matter raise it. Messages include the source filename (or
 ## HTMLWriter
 
 ```python
-HTMLWriter(*, registry=None, inline_altair=False, toc=False, toc_depth=6, theme='light')
+HTMLWriter(*, registry=None, inline_altair=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', theme='light')
 writer.render(document, *, fragment=False) -> str
 writer.write(document, path, *, fragment=False) -> pathlib.Path
 ```
@@ -242,7 +259,8 @@ get_theme(name) -> Theme | AutoTheme
 
 `HTMLWriter`, `Report.to_html()`, and `Report.write()` accept `theme` as a preset
 name, `Theme`, or `AutoTheme`. The default is `'light'`. `get_theme()` accepts
-`light`, `dark`, `paper`, `ink`, `auto`, and `auto-paper`; unknown names raise
+`light`, `dark`, `paper`, `ink`, `auto`, `auto-paper`, `carbon`, `carbon-dark`,
+and `auto-carbon`; unknown names raise
 `ValueError`. Unsupported theme argument types raise `TypeError`.
 
 `Theme` copies and freezes its token mapping, filling omitted tokens with the

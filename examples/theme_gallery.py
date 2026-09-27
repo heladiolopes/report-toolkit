@@ -9,7 +9,7 @@ from reportkit import AutoTheme, Report, get_theme
 def build_report() -> Report:
     report = Report(
         'Theme gallery',
-        description='Neutral light and dark themes, plus warm paper and ink alternatives.',
+        description='Light, dark, warm, and Carbon-inspired report themes.',
         author='ReportKit',
     )
     report.heading(1, 'Overview')
@@ -55,7 +55,17 @@ def main() -> None:
     )
     themes = {
         name: get_theme(name)
-        for name in ('light', 'dark', 'paper', 'ink', 'auto', 'auto-paper')
+        for name in (
+            'light',
+            'dark',
+            'paper',
+            'ink',
+            'auto',
+            'auto-paper',
+            'carbon',
+            'carbon-dark',
+            'auto-carbon',
+        )
     }
     themes['custom'] = AutoTheme(light=custom_light, dark=custom_dark)
     for name, theme in themes.items():
@@ -63,7 +73,7 @@ def main() -> None:
     # Also exercise differently themed fragments sharing one host page.
     fragments = ''.join(
         report.to_html(theme=name, fragment=True)
-        for name in ('light', 'dark', 'paper', 'ink')
+        for name in ('light', 'dark', 'paper', 'ink', 'carbon', 'carbon-dark')
     )
     (directory / 'fragments.html').write_text(
         '<!doctype html><html lang="en"><meta charset="utf-8"><title>Theme fragments</title><body>'

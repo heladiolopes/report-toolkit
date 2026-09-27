@@ -7,6 +7,7 @@ import re
 from datetime import date, datetime
 from html import escape
 from pathlib import Path
+from typing import Literal
 
 import mistune
 
@@ -26,7 +27,7 @@ from .model import (
 from .themes import AutoTheme, Theme, _resolve_theme, _stylesheet, _theme_id
 
 _logger = logging.getLogger(__name__)
-_Outline = dict[Section, tuple[int, str]]
+_Outline = dict[Section, tuple[int, str, str]]
 _TOCEntry = tuple[str, list['_TOCEntry']]
 
 
@@ -49,6 +50,8 @@ class HTMLWriter:
         inline_altair: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
+        numbered_headings: bool = False,
+        toc_position: Literal['top', 'sidebar'] = 'top',
     ) -> None:
         if not isinstance(toc, bool):
             raise TypeError('toc must be a boolean')
@@ -58,6 +61,12 @@ class HTMLWriter:
             or not 1 <= toc_depth <= 6
         ):
             raise ValueError('toc_depth must be an integer from 1 to 6')
+        if not isinstance(numbered_headings, bool):
+            raise TypeError('numbered_headings must be a boolean')
+        if toc_position not in ('top', 'sidebar'):
+            raise ValueError("toc_position must be 'top' or 'sidebar'")
+        self.numbered_headings = numbered_headings
+        self.toc_position = toc_position
         self.theme = _resolve_theme(theme)
         self.toc = toc
         self.toc_depth = toc_depth
@@ -102,7 +111,17 @@ class HTMLWriter:
 
     def _render_document(self, document: Document) -> str:
         outline = self._outline(document)
-        body = '\n'.join(self._render_node(node, outline) for node in document.children)
+        navigation = self._render_toc(outline) if self.toc else ''
+        # Section slugs never contain underscores, so this TOC ID cannot collide.
+        backlink = (
+            ' <a class="report-toc-backlink" href="#reportkit_toc" '
+            'aria-label="Back to table of contents">↑</a>'
+            if navigation and self.toc_position == 'top'
+            else ''
+        )
+        body = '\n'.join(
+            self._render_node(node, outline, backlink) for node in document.children
+        )
         parts = [
             f'<article class="reportkit" data-reportkit-theme="{_theme_id(self.theme)}">'
         ]
@@ -115,18 +134,28 @@ class HTMLWriter:
                 f'<p class="report-description">{escape(document.description)}</p>'
             )
         parts.extend(self._metadata(document))
-        if self.toc:
-            navigation = self._render_toc(outline)
-            if navigation:
-                parts.append(navigation)
+        if navigation and self.toc_position == 'top':
+            parts.append(navigation)
         parts.append(body)
         parts.append('</article>')
-        return '\n'.join(parts)
+        content = '\n'.join(parts)
+        if navigation and self.toc_position == 'sidebar':
+            return (
+                f'<div class="reportkit report-layout" data-reportkit-theme="{_theme_id(self.theme)}">'
+                '<div class="report-sidebar">'
+                + navigation
+                + '</div>'
+                + content
+                + '</div>'
+            )
+        return content
 
     def _outline(self, document: Document) -> _Outline:
-        """Collect section levels and anchors without changing the tree."""
+        """Collect heading levels, anchors, and display labels without changing the tree."""
         outline: _Outline = {}
         used: set[str] = set()
+        # Counts belong to outline parents, not absolute HTML heading levels.
+        stack: list[tuple[int, list[int], int]] = [(0, [], 0)]
 
         def visit(node: Node) -> None:
             if isinstance(node, Section):
@@ -141,7 +170,17 @@ class HTMLWriter:
                     anchor = f'{base}-{suffix}'
                     suffix += 1
                 used.add(anchor)
-                outline[node] = (level, anchor)
+                while stack[-1][0] >= level:
+                    stack.pop()
+                parent_level, prefix, count = stack[-1]
+                count += 1
+                stack[-1] = (parent_level, prefix, count)
+                number = [*prefix, count]
+                stack.append((level, number, 0))
+                label = node.title
+                if self.numbered_headings:
+                    label = '.'.join(map(str, number)) + '. ' + label
+                outline[node] = (level, anchor, label)
             if isinstance(node, Container):
                 for child in node.children:
                     visit(child)
@@ -153,13 +192,13 @@ class HTMLWriter:
         # Each entry holds its link and child entries; the stack tracks ancestors.
         entries: list[_TOCEntry] = []
         stack = [(0, entries)]
-        for node, (level, anchor) in outline.items():
+        for level, anchor, label in outline.values():
             if level > self.toc_depth:
                 continue
             while stack[-1][0] >= level:
                 stack.pop()
             children: list[_TOCEntry] = []
-            link = f'<a href="#{anchor}">{escape(node.title)}</a>'
+            link = f'<a href="#{anchor}">{escape(label)}</a>'
             stack[-1][1].append((link, children))
             stack.append((level, children))
         if not entries:
@@ -179,7 +218,7 @@ class HTMLWriter:
             )
 
         return (
-            '<nav class="report-toc" aria-label="Table of contents">'
+            '<nav class="report-toc" id="reportkit_toc" tabindex="-1" aria-label="Table of contents">'
             '<div class="report-toc-title">Table of contents</div>'
             + render_entries(entries)
             + '</nav>'
@@ -203,7 +242,7 @@ class HTMLWriter:
         parts.append('</div>')
         return parts
 
-    def _render_node(self, node: Node, outline: _Outline) -> str:
+    def _render_node(self, node: Node, outline: _Outline, backlink: str = '') -> str:
         if isinstance(node, Markdown):
             return self._markdown(node.content).strip()
         if isinstance(node, RawHTML):
@@ -219,17 +258,17 @@ class HTMLWriter:
             )
             return f'<figure class="report-artifact">{rendered.html}{caption}</figure>'
         if isinstance(node, Section):
-            heading, anchor = outline[node]
+            heading, anchor, label = outline[node]
             children = '\n'.join(
-                self._render_node(child, outline) for child in node.children
+                self._render_node(child, outline, backlink) for child in node.children
             )
             return (
-                f'<section class="report-section"><h{heading} id="{anchor}">{escape(node.title)}</h{heading}>\n'
+                f'<section class="report-section"><h{heading} id="{anchor}">{escape(label)}{backlink}</h{heading}>\n'
                 f'{children}\n</section>'
             )
         if isinstance(node, Panel):
             children = '\n'.join(
-                self._render_node(child, outline) for child in node.children
+                self._render_node(child, outline, backlink) for child in node.children
             )
             return (
                 f'<div class="report-panel"><div class="report-panel-title">{escape(node.title)}</div>\n'
@@ -237,7 +276,7 @@ class HTMLWriter:
             )
         if isinstance(node, Columns):
             children = '\n'.join(
-                f'<div class="report-column-item">{self._render_node(child, outline)}</div>'
+                f'<div class="report-column-item">{self._render_node(child, outline, backlink)}</div>'
                 for child in node.children
             )
             return (

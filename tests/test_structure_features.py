@@ -170,7 +170,9 @@ class NavigationTests(unittest.TestCase):
                     )
                     self.assertEqual(html.count('href="#reportkit-sales-growth"'), 1)
                     self.assertIn(
-                        '<h1 id="reportkit-sales-growth">Sales &amp; growth</h1>', html
+                        '<h1 id="reportkit-sales-growth">Sales &amp; growth '
+                        '<a class="report-toc-backlink"',
+                        html,
                     )
                     if not fragment:
                         expected = (
