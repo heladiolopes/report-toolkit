@@ -241,14 +241,14 @@ The library logs through `reportkit.writer` and does not configure logging itsel
 ## Choose a report theme
 
 ```python
-report.write('dark.html', theme='dark')
-report.write('adaptive.html', theme='auto')
-report.write('paper.html', theme='auto-paper')
+report.write('dark.html', style={'mode': 'dark'})
+report.write('adaptive.html', style={'mode': 'auto'})
+report.write('paper.html', style={'palette': 'parchment', 'mode': 'auto'})
 ```
 
-Fixed presets are `light`, `dark`, `paper`, and `ink`. Automatic pairs follow the
-reader's system preference. See [Themes](themes.md) to define a custom theme,
-customize fonts and spacing, or pair your own light and dark styles.
+Palettes are `slate`, `azure`, `parchment`, and `ember`; each supports `light`,
+`dark`, and `auto` modes. Automatic mode follows the reader's system preference.
+See [Themes](themes.md) to customize structural themes and paired color palettes.
 
 
 ### Number headings and move the TOC to a sidebar

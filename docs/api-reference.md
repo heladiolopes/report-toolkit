@@ -105,8 +105,8 @@ artifact objects remain shared. Heading groups retain their existing boundaries.
 
 ```python
 report.to_tree() -> str
-report.to_html(*, fragment=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', theme='light') -> str
-report.write(path, *, fragment=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', theme='light') -> pathlib.Path
+report.to_html(*, fragment=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None) -> str
+report.write(path, *, fragment=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None) -> pathlib.Path
 ```
 
 `to_tree()` formats the hierarchy, abbreviated text, lists, and artifact types
@@ -229,7 +229,7 @@ and invalid front matter raise it. Messages include the source filename (or
 ## HTMLWriter
 
 ```python
-HTMLWriter(*, registry=None, inline_altair=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', theme='light')
+HTMLWriter(*, registry=None, inline_altair=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None)
 writer.render(document, *, fragment=False) -> str
 writer.write(document, path, *, fragment=False) -> pathlib.Path
 ```
@@ -251,28 +251,39 @@ API is outside this reference. Combining a custom registry with
 ## Themes
 
 ```python
-Theme(*, name, mode='light', tokens={}, css='')
+Style(*, theme='default', palette='slate', mode='light')
+Theme(*, name, tokens={}, css='')
 theme.with_overrides(*, name, tokens=None, css=None) -> Theme
-AutoTheme(*, light, dark)
-get_theme(name) -> Theme | AutoTheme
+Palette(*, name, light={}, dark={})
+palette.with_overrides(*, name, light=None, dark=None) -> Palette
+get_theme(name) -> Theme
+get_palette(name) -> Palette
 ```
 
-`HTMLWriter`, `Report.to_html()`, and `Report.write()` accept `theme` as a preset
-name, `Theme`, or `AutoTheme`. The default is `'light'`. `get_theme()` accepts
-`light`, `dark`, `paper`, `ink`, `auto`, `auto-paper`, `carbon`, `carbon-dark`,
-and `auto-carbon`; unknown names raise
-`ValueError`. Unsupported theme argument types raise `TypeError`.
+`HTMLWriter`, `Report.to_html()`, and `Report.write()` accept `style` as a
+`Style`, a mapping with the same fields, or `None`. Omitted mapping fields use
+the `Style` defaults. Unknown mapping fields raise `ValueError`.
+`Style.theme` accepts a name or `Theme`; `Style.palette` accepts a name or
+`Palette`. `get_theme()` accepts `default`; `get_palette()` accepts `slate`,
+`azure`, `parchment`, and `ember`. Modes are `light`, `dark`, and `auto`.
+Automatic mode uses CSS media queries with a light fallback.
 
-`Theme` copies and freezes its token mapping, filling omitted tokens with the
-light defaults. Names must be nonempty strings; modes are `light` or `dark`.
-Tokens must be a mapping of supported keys to nonempty CSS strings, and `css`
-must be a string. Incorrect types raise `TypeError`; unknown keys, empty names
-or values, and unsupported modes raise `ValueError`.
+All three configuration objects are immutable. `Theme` copies and freezes its
+structural tokens, filling omitted tokens from `default`. `Palette` copies and
+freezes both color mappings, filling missing tokens from the corresponding
+`slate` mode. Names must be nonempty strings; tokens must be mappings of supported
+keys to nonempty CSS strings; theme `css` must be a string. Incorrect types raise
+`TypeError`; unknown names or keys, empty names or values, and unsupported modes
+raise `ValueError`. Color tokens in themes and structural tokens in palettes
+are rejected. CSS syntax itself is not validated.
 
-`with_overrides()` merges tokens, preserves the mode, and inherits CSS unless
-replacement CSS is supplied. `AutoTheme` requires light and dark `Theme` objects
-(`TypeError` for other types, `ValueError` for mismatched modes). It follows the
-reader's system preference through CSS, with a light fallback.
+`with_overrides()` merges supplied token mappings, preserving omitted fields.
+For themes, supplied CSS replaces the original; `css=''` clears it. Custom
+objects need no global registration. `HTMLWriter.style` contains the resolved
+configuration with theme and palette names replaced by objects.
+
+This API replaces `theme=`, `AutoTheme`, `Theme.mode`, and all old preset names
+without compatibility aliases. See the [migration examples](themes.md#migration).
 
 See [Themes](themes.md) for every token, custom CSS scoping, examples, and chart
 styling boundaries.

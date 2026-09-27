@@ -9,4 +9,5 @@ dist/
 examples/*.html
 
 docs/plan/*.md
+docs/themes/*.md
 

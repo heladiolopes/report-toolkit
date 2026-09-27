@@ -214,9 +214,9 @@ class NavigationBrowserTests(unittest.TestCase):
         self.addCleanup(page.close)
         html = ''.join(
             long_report().to_html(
-                toc=True, toc_position='sidebar', fragment=True, theme=theme
+                toc=True, toc_position='sidebar', fragment=True, style={'mode': mode}
             )
-            for theme in ('light', 'dark')
+            for mode in ('light', 'dark')
         )
         page.set_content(html)
         self.assertEqual(page.locator('nav').count(), 2)

@@ -24,7 +24,7 @@ from .model import (
 _UNSET = object()
 
 if TYPE_CHECKING:
-    from .themes import AutoTheme, Theme
+    from .themes import Style
 
 
 class Report:
@@ -227,14 +227,14 @@ class Report:
         toc_depth: int = 6,
         numbered_headings: bool = False,
         toc_position: Literal['top', 'sidebar'] = 'top',
-        theme: str | Theme | AutoTheme = 'light',
+        style: Style | Mapping[str, object] | None = None,
     ) -> str:
         from .writer import HTMLWriter
 
         return HTMLWriter(
             toc=toc,
             toc_depth=toc_depth,
-            theme=theme,
+            style=style,
             numbered_headings=numbered_headings,
             toc_position=toc_position,
         ).render(self.document, fragment=fragment)
@@ -248,14 +248,14 @@ class Report:
         toc_depth: int = 6,
         numbered_headings: bool = False,
         toc_position: Literal['top', 'sidebar'] = 'top',
-        theme: str | Theme | AutoTheme = 'light',
+        style: Style | Mapping[str, object] | None = None,
     ) -> Path:
         from .writer import HTMLWriter
 
         return HTMLWriter(
             toc=toc,
             toc_depth=toc_depth,
-            theme=theme,
+            style=style,
             numbered_headings=numbered_headings,
             toc_position=toc_position,
         ).write(self.document, path, fragment=fragment)

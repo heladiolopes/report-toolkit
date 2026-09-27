@@ -14,7 +14,9 @@ class TreeTests(unittest.TestCase):
                 report.add(object(), caption='Chart')
             report.ordered(['Parent', ['Child', ['Grandchild']], 'Sibling'])
 
-        self.assertEqual(report.to_tree(), """Document(title='Example')
+        self.assertEqual(
+            report.to_tree(),
+            """Document(title='Example')
 └── Section(level=1, title='Overview')
     ├── Markdown('First line second line')
     └── Section(level=2, title='Details')
@@ -27,7 +29,8 @@ class TreeTests(unittest.TestCase):
             │       └── Item('Child')
             │           └── List(ordered=True)
             │               └── Item('Grandchild')
-            └── Item('Sibling')""")
+            └── Item('Sibling')""",
+        )
 
     def test_artifact_values_are_not_inspected_or_rendered(self):
         class Artifact:

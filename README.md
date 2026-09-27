@@ -54,9 +54,11 @@ require network access for their JavaScript. Raw HTML is covered in the
 
 ## Themes
 
-Export with `theme='dark'`, `'paper'`, or `'ink'`, or use `theme='auto'` to follow
-the reader's system appearance. The default remains `'light'`. Define reusable
-custom themes with token and CSS overrides; see [Themes](docs/themes.md) and the
+Export with `style={'mode': 'dark'}`, or use `style={'mode': 'auto'}` to follow
+the reader's system appearance. Choose `slate`, `azure`, `parchment`, or `ember`
+with `style={'palette': 'parchment'}`. The default preserves the previous light
+appearance. Define reusable `Style`, `Theme`, and `Palette` objects;
+see [Themes](docs/themes.md) for customization and migration from `theme=`, and the
 [theme gallery](examples/theme_gallery.py).
 
 ## Development

@@ -1,7 +1,14 @@
-.PHONY: test build
+.PHONY: lint format test build
+
+lint:
+	uv run ruff check src/
+
+format:
+	uv run ruff format src/
 
 test:
-	PYTHONPATH=src python -m unittest discover -s tests -v
+	uv run pytest
 
 build:
-	python -m build
+	uv build
+

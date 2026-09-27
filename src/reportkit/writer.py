@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Mapping
 from datetime import date, datetime
 from html import escape
 from pathlib import Path
@@ -24,7 +25,7 @@ from .model import (
     RawHTML,
     Section,
 )
-from .themes import AutoTheme, Theme, _resolve_theme, _stylesheet, _theme_id
+from .themes import Style, _resolve_style, _style_id, _stylesheet
 
 _logger = logging.getLogger(__name__)
 _Outline = dict[Section, tuple[int, str, str]]
@@ -46,7 +47,7 @@ class HTMLWriter:
         self,
         *,
         registry: AdapterRegistry | None = None,
-        theme: str | Theme | AutoTheme = 'light',
+        style: Style | Mapping[str, object] | None = None,
         inline_altair: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
@@ -67,7 +68,7 @@ class HTMLWriter:
             raise ValueError("toc_position must be 'top' or 'sidebar'")
         self.numbered_headings = numbered_headings
         self.toc_position = toc_position
-        self.theme = _resolve_theme(theme)
+        self.style = _resolve_style(style)
         self.toc = toc
         self.toc_depth = toc_depth
         if registry is not None and inline_altair:
@@ -83,7 +84,7 @@ class HTMLWriter:
         if not isinstance(document, Document):
             raise TypeError('HTMLWriter.render expects a Document')
         content = self._render_document(document)
-        css = _stylesheet(self.theme, fragment=fragment)
+        css = _stylesheet(self.style, fragment=fragment)
         if fragment:
             return f'<style>\n{css}\n</style>\n{content}'
         title = document.title if document.title is not None else 'Report'
@@ -123,7 +124,7 @@ class HTMLWriter:
             self._render_node(node, outline, backlink) for node in document.children
         )
         parts = [
-            f'<article class="reportkit" data-reportkit-theme="{_theme_id(self.theme)}">'
+            f'<article class="reportkit" data-reportkit-theme="{_style_id(self.style)}">'
         ]
         if document.title is not None:
             parts.append(
@@ -141,7 +142,7 @@ class HTMLWriter:
         content = '\n'.join(parts)
         if navigation and self.toc_position == 'sidebar':
             return (
-                f'<div class="reportkit report-layout" data-reportkit-theme="{_theme_id(self.theme)}">'
+                f'<div class="reportkit report-layout" data-reportkit-theme="{_style_id(self.style)}">'
                 '<div class="report-sidebar">'
                 + navigation
                 + '</div>'

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import base64
+from collections.abc import Callable
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Any, Callable, Protocol
+from typing import Any, Protocol
 from uuid import uuid4
 
 

@@ -1,4 +1,4 @@
-"""Reusable HTML themes. CSS and token values are trusted author-provided code."""
+"""Composable HTML styles. CSS and token values are trusted author-provided code."""
 
 from __future__ import annotations
 
@@ -10,28 +10,18 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Literal
 
-_DEFAULT_TOKENS = {
-    'page_background': '#f4f6fa',
-    'background': '#ffffff',
-    'surface': '#f4f6fa',
-    'text': '#1d2939',
-    'heading': '#14233b',
-    'accent': '#1259a8',
-    'description': '#52637a',
-    'muted': '#617189',
-    'border': '#e5eaf0',
-    'table_header': '#f7f9fc',
-    'shadow_color': '#1d29390c',
+_THEME_DEFAULTS = {
     'font_family': 'Roboto, "Noto Sans", sans-serif',
-    'code_font': 'ui-monospace, monospace',
+    'code_font': '"JetBrains Mono", "SFMono-Regular", "Consolas", "Liberation '
+    'Mono", monospace',
     'font_size': '16px',
-    'line_height': '1.65',
+    'line_height': '1.5',
     'content_width': '1040px',
     'page_margin': '32px auto',
     'content_padding': '48px clamp(20px, 5vw, 72px)',
-    'radius': '12px',
-    'h1_size': '2.25rem',
-    'h2_size': '1.65rem',
+    'radius': '5px',
+    'h1_size': '2em',
+    'h2_size': '1.5em',
     'h3_size': '1.17em',
     'h4_size': '1em',
     'h5_size': '.83em',
@@ -39,146 +29,138 @@ _DEFAULT_TOKENS = {
     'section_spacing': '2rem',
     'column_gap': '1.5rem',
     'caption_size': '.875rem',
-    'table_size': '.9rem',
-    'cell_padding': '.55rem .75rem',
+    'table_size': '1em',
+    'cell_padding': '.25rem .75rem',
     'figure_margin': '1.5rem 0',
-    'panel_background': 'transparent',
     'panel_padding': '0',
+    'shadow_geometry': '0 18px 42px',
+    'title_size': '2.5rem',
+    'heading_line_height': '1.2',
+    'heading_margin': '1.5em 0 .5em',
+    'h2_border_width': '0',
+    'h2_padding': '0',
+    'paragraph_margin': '0 0 .75rem',
+    'list_margin': '0 0 .75rem',
+    'list_item_spacing': '.25rem',
+    'nested_list_margin': '0 0 .75rem',
+    'link_decoration': 'none',
+    'table_border_width': '1px',
+    'table_line_height': '1.25',
+    'pre_padding': '0',
+    'pre_radius': '0',
+    'pre_margin': '0 0 .75rem',
+    'code_size': '1em',
+    'blockquote_margin': '0 40px .75rem',
+    'blockquote_padding': '0',
+    'blockquote_border_width': '0',
+    'toc_font_family': 'var(--reportkit-font-family)',
+    'toc_line_height': 'var(--reportkit-line-height)',
+    'title_weight': 'bold',
+    'title_line_height': 'var(--reportkit-heading-line-height)',
+    'caption_line_height': 'inherit',
+    'code_line_height': 'inherit',
+    'h1_weight': 'bold',
+    'h1_line_height': 'var(--reportkit-heading-line-height)',
+    'h2_weight': 'bold',
+    'h2_line_height': 'var(--reportkit-heading-line-height)',
+    'h3_weight': 'bold',
+    'h3_line_height': 'var(--reportkit-heading-line-height)',
+    'h4_weight': 'bold',
+    'h4_line_height': 'var(--reportkit-heading-line-height)',
+    'h5_weight': 'bold',
+    'h5_line_height': 'var(--reportkit-heading-line-height)',
+    'h6_weight': 'bold',
+    'h6_line_height': 'var(--reportkit-heading-line-height)',
+}
+
+_SLATE_LIGHT = {
+    'page_background': '#f5f5f5',
+    'background': '#ffffff',
+    'surface': '#f3f3f3',
+    'text': '#262626',
+    'heading': '#0a0a0a',
+    'accent': '#2563eb',
+    'description': '#6b6b6b',
+    'muted': '#6b6b6b',
+    'border': '#dddddd',
+    'table_header': '#f5f5f5',
+    'shadow_color': '#00000014',
+    'panel_background': 'transparent',
+    'accent_hover': '#1d4ed8',
+    'pre_background': 'transparent',
+    'blockquote_background': 'transparent',
+    'toc_text': 'var(--reportkit-text)',
+    'toc_background': 'var(--reportkit-surface)',
+    'toc_accent': 'var(--reportkit-accent)',
+}
+
+_SLATE_DARK = {
+    'page_background': '#111418',
+    'background': '#1a1f24',
+    'surface': '#22282f',
+    'text': '#f2f4f5',
+    'heading': '#f2f4f5',
+    'accent': '#4d8cf5',
+    'description': '#a9b0b7',
+    'muted': '#a9b0b7',
+    'border': '#30363d',
+    'table_header': '#22282f',
+    'shadow_color': '#00000099',
+    'panel_background': 'transparent',
+    'accent_hover': '#93c5fd',
+    'pre_background': 'transparent',
+    'blockquote_background': 'transparent',
+    'toc_text': 'var(--reportkit-text)',
+    'toc_background': 'var(--reportkit-surface)',
+    'toc_accent': 'var(--reportkit-accent)',
 }
 
 
-# Keep the alternative presets' presentation independent of default restyling.
-_DEFAULT_TOKENS.update(
-    {
-        'shadow_geometry': '0 12px 36px',
-        'title_size': 'clamp(var(--reportkit-h1-size), 5vw, 3rem)',
-        'heading_line_height': '1.25',
-        'heading_margin': '1.7em 0 .55em',
-        'h2_border_width': '1px',
-        'h2_padding': '.25em',
-        'paragraph_margin': '.6em 0 1.1em',
-        'list_margin': 'revert',
-        'list_item_spacing': '0',
-        'nested_list_margin': 'revert',
-        'link_decoration': 'underline',
-        'accent_hover': 'var(--reportkit-heading)',
-        'table_border_width': '0',
-        'table_line_height': 'inherit',
-        'pre_padding': '1rem',
-        'pre_background': 'var(--reportkit-surface)',
-        'pre_radius': '6px',
-        'pre_margin': '1em 0',
-        'code_size': '.9em',
-        'blockquote_margin': '1rem 0',
-        'blockquote_padding': '.25rem 1rem',
-        'blockquote_border_width': '3px',
-        'blockquote_background': 'var(--reportkit-surface)',
-        'toc_font_family': 'var(--reportkit-font-family)',
-        'toc_line_height': 'var(--reportkit-line-height)',
-        'toc_text': 'var(--reportkit-text)',
-        'toc_background': 'var(--reportkit-surface)',
-        'toc_accent': 'var(--reportkit-accent)',
-    }
-)
-_ALTERNATIVE_DEFAULTS = dict(_DEFAULT_TOKENS)
-_DEFAULT_TOKENS.update(
-    {
-        'page_background': '#f5f5f5',
-        'surface': '#f3f3f3',
-        'text': '#262626',
-        'heading': '#0a0a0a',
-        'accent': '#2563eb',
-        'accent_hover': '#1d4ed8',
-        'description': '#6b6b6b',
-        'muted': '#6b6b6b',
-        'border': '#dddddd',
-        'table_header': '#f5f5f5',
-        'shadow_color': '#00000014',
-        'shadow_geometry': '0 18px 42px',
-        'font_family': 'Roboto, "Noto Sans", sans-serif',
-        'code_font': '"JetBrains Mono", "SFMono-Regular", "Consolas", "Liberation Mono", monospace',
-        'line_height': '1.5',
-        'radius': '5px',
-        'h1_size': '2em',
-        'h2_size': '1.5em',
-        'title_size': '2.5rem',
-        'heading_line_height': '1.2',
-        'heading_margin': '1.5em 0 .5em',
-        'h2_border_width': '0',
-        'h2_padding': '0',
-        'paragraph_margin': '0 0 .75rem',
-        'list_margin': '0 0 .75rem',
-        'list_item_spacing': '.25rem',
-        'nested_list_margin': '0 0 .75rem',
-        'link_decoration': 'none',
-        'table_size': '1em',
-        'cell_padding': '.25rem .75rem',
-        'table_border_width': '1px',
-        'table_line_height': '1.25',
-        'pre_padding': '0',
-        'pre_background': 'transparent',
-        'pre_radius': '0',
-        'pre_margin': '0 0 .75rem',
-        'code_size': '1em',
-        'blockquote_margin': '0 40px .75rem',
-        'blockquote_padding': '0',
-        'blockquote_border_width': '0',
-        'blockquote_background': 'transparent',
-    }
-)
+def _name(value: str, kind: str) -> None:
+    if not isinstance(value, str):
+        raise TypeError(f'{kind} name must be a string')
+    if not value.strip():
+        raise ValueError(f'{kind} name must not be empty')
 
 
-_DEFAULT_TOKENS.update(
-    {
-        'title_weight': 'bold',
-        'title_line_height': 'var(--reportkit-heading-line-height)',
-        'caption_line_height': 'inherit',
-        'code_line_height': 'inherit',
-    }
-)
-for _level in range(1, 7):
-    _DEFAULT_TOKENS[f'h{_level}_weight'] = 'bold'
-    _DEFAULT_TOKENS[f'h{_level}_line_height'] = 'var(--reportkit-heading-line-height)'
-
-
-def _tokens(values: Mapping[str, str]) -> dict[str, str]:
+def _tokens(
+    values: Mapping[str, str], defaults: Mapping[str, str], kind: str
+) -> dict[str, str]:
     if not isinstance(values, Mapping):
-        raise TypeError('theme tokens must be a mapping')
+        raise TypeError(f'{kind} tokens must be a mapping')
     result = dict(values)
     for key, value in result.items():
-        if key not in _DEFAULT_TOKENS:
-            raise ValueError(f'Unknown theme token: {key!r}')
+        if key not in defaults:
+            raise ValueError(f'Unknown {kind} token: {key!r}')
         if not isinstance(value, str):
-            raise TypeError(f'Theme token {key!r} must be a string')
+            raise TypeError(f'{kind} token {key!r} must be a string')
         if not value.strip():
-            raise ValueError(f'Theme token {key!r} must not be empty')
+            raise ValueError(f'{kind} token {key!r} must not be empty')
     return result
 
 
 @dataclass(frozen=True, kw_only=True)
 class Theme:
-    """An immutable theme; omitted tokens inherit the default light styling.
+    """Immutable structural presentation, inheriting the default theme.
 
-    Use ``get_theme('dark').with_overrides(...)`` to inherit dark styling.
-    ``css`` is trusted CSS, with ``&`` replaced by the report root selector.
+    ``css`` is trusted CSS; ``&`` is replaced by the report root selector.
+    Colors belong in a Palette rather than the theme token mapping.
     """
 
     name: str
-    mode: Literal['light', 'dark'] = 'light'
     tokens: Mapping[str, str] = field(default_factory=dict)
     css: str = ''
 
     def __post_init__(self) -> None:
-        if not isinstance(self.name, str):
-            raise TypeError('theme name must be a string')
-        if not self.name.strip():
-            raise ValueError('theme name must not be empty')
-        if self.mode not in ('light', 'dark'):
-            raise ValueError("theme mode must be 'light' or 'dark'")
+        _name(self.name, 'theme')
         if not isinstance(self.css, str):
             raise TypeError('theme css must be a string')
         object.__setattr__(
-            self, 'tokens', MappingProxyType(_DEFAULT_TOKENS | _tokens(self.tokens))
+            self,
+            'tokens',
+            MappingProxyType(
+                _THEME_DEFAULTS | _tokens(self.tokens, _THEME_DEFAULTS, 'theme')
+            ),
         )
 
     def with_overrides(
@@ -188,229 +170,246 @@ class Theme:
         tokens: Mapping[str, str] | None = None,
         css: str | None = None,
     ) -> Theme:
-        """Derive a theme, merging tokens and replacing CSS when supplied."""
+        """Merge structural tokens, inheriting CSS unless a replacement is supplied."""
         return Theme(
             name=name,
-            mode=self.mode,
-            tokens=dict(self.tokens) | (_tokens(tokens) if tokens is not None else {}),
+            tokens=dict(self.tokens)
+            | (_tokens(tokens, _THEME_DEFAULTS, 'theme') if tokens is not None else {}),
             css=self.css if css is None else css,
         )
 
 
 @dataclass(frozen=True, kw_only=True)
-class AutoTheme:
-    """Select a light or dark theme using the reader's system preference."""
+class Palette:
+    """Immutable light/dark colors; omitted tokens inherit the matching slate mode."""
 
-    light: Theme
-    dark: Theme
+    name: str
+    light: Mapping[str, str] = field(default_factory=dict)
+    dark: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        for mode in ('light', 'dark'):
-            theme = getattr(self, mode)
-            if not isinstance(theme, Theme):
-                raise TypeError(f'{mode} must be a Theme')
-            if theme.mode != mode:
-                raise ValueError(f'{mode} theme must have mode={mode!r}')
+        _name(self.name, 'palette')
+        for mode, defaults in (('light', _SLATE_LIGHT), ('dark', _SLATE_DARK)):
+            object.__setattr__(
+                self,
+                mode,
+                MappingProxyType(
+                    defaults | _tokens(getattr(self, mode), defaults, 'palette')
+                ),
+            )
+
+    def with_overrides(
+        self,
+        *,
+        name: str,
+        light: Mapping[str, str] | None = None,
+        dark: Mapping[str, str] | None = None,
+    ) -> Palette:
+        """Merge each supplied color mapping and inherit the other mode."""
+        return Palette(
+            name=name,
+            light=dict(self.light)
+            | (_tokens(light, _SLATE_LIGHT, 'palette') if light is not None else {}),
+            dark=dict(self.dark)
+            | (_tokens(dark, _SLATE_DARK, 'palette') if dark is not None else {}),
+        )
 
 
-_LIGHT = Theme(name='light')
-_DARK = Theme(
-    name='dark',
-    mode='dark',
-    tokens={
-        'page_background': '#0a0a0a',
-        'background': '#111111',
-        'surface': '#171717',
-        'text': '#e5e5e5',
-        'heading': '#fafafa',
-        'accent': '#60a5fa',
-        'accent_hover': '#93c5fd',
-        'description': '#a3a3a3',
-        'muted': '#a3a3a3',
-        'border': '#2a2a2a',
-        'table_header': '#1a1a1a',
-        'shadow_color': '#00000099',
-        'shadow_geometry': '0 20px 48px',
-    },
-)
-_PAPER = Theme(
-    name='paper',
-    tokens={
-        **_ALTERNATIVE_DEFAULTS,
-        'page_background': '#eee9de',
-        'background': '#fffcf5',
-        'surface': '#f2ecdf',
-        'text': '#38352e',
-        'heading': '#30291f',
-        'accent': '#795020',
-        'description': '#655d50',
-        'muted': '#6d6252',
-        'border': '#d9cfbe',
-        'table_header': '#f2ecdf',
-        'font_family': 'Roboto, "Noto Sans", sans-serif',
-        'shadow_color': '#30291f0c',
-    },
-)
-_INK = Theme(
-    name='ink',
-    mode='dark',
-    tokens={
-        **_ALTERNATIVE_DEFAULTS,
-        'page_background': '#191817',
-        'background': '#252320',
-        'surface': '#302d28',
-        'text': '#e8e1d5',
-        'heading': '#fff6e8',
-        'accent': '#e8bd80',
-        'description': '#d0c5b4',
-        'muted': '#bfb3a0',
-        'border': '#51493e',
-        'table_header': '#373229',
-        'font_family': 'Roboto, "Noto Sans", sans-serif',
-        'shadow_color': '#00000033',
-    },
-)
-# Adapt Carbon's type scale to the existing report fonts and page layout.
-_CARBON_TYPE = {
-    'title_size': '2.625rem',
-    'title_line_height': '3.125rem',
-    'title_weight': '300',
-    'h1_size': '2rem',
-    'h1_line_height': '2.5rem',
-    'h1_weight': '400',
-    'h2_size': '1.75rem',
-    'h2_line_height': '2.25rem',
-    'h2_weight': '400',
-    'h3_size': '1.25rem',
-    'h3_line_height': '1.75rem',
-    'h3_weight': '400',
-    'h4_size': '1rem',
-    'h4_line_height': '1.5rem',
-    'h4_weight': '600',
-    'h5_size': '.875rem',
-    'h5_line_height': '1.25rem',
-    'h5_weight': '600',
-    'h6_size': '.875rem',
-    'h6_line_height': '1.25rem',
-    'h6_weight': '600',
-    'font_size': '16px',
-    'line_height': '1.5',
-    'caption_size': '.875rem',
-    'caption_line_height': '1.125rem',
-    'code_size': '.875rem',
-    'code_line_height': '1.25rem',
-}
-_CARBON = _LIGHT.with_overrides(
-    name='carbon',
-    tokens={
-        **_CARBON_TYPE,
-        'page_background': '#f4f4f4',
-        'background': '#ffffff',
-        'surface': '#f4f4f4',
-        'text': '#161616',
-        'heading': '#161616',
-        'accent': '#0f62fe',
-        'accent_hover': '#0043ce',
-        'description': '#525252',
-        'muted': '#525252',
-        'border': '#e0e0e0',
-        'table_header': '#f4f4f4',
-    },
-)
-_CARBON_DARK = _DARK.with_overrides(
-    name='carbon-dark',
-    tokens={
-        **_CARBON_TYPE,
-        'page_background': '#0f0f0f',
-        'background': '#161616',
-        'surface': '#262626',
-        'text': '#f4f4f4',
-        'heading': '#f4f4f4',
-        'accent': '#78a9ff',
-        'accent_hover': '#a6c8ff',
-        'description': '#c6c6c6',
-        'muted': '#c6c6c6',
-        'border': '#393939',
-        'table_header': '#262626',
-    },
-)
-_PRESETS = {
-    theme.name: theme for theme in (_LIGHT, _DARK, _PAPER, _INK, _CARBON, _CARBON_DARK)
-} | {
-    'auto': AutoTheme(light=_LIGHT, dark=_DARK),
-    'auto-paper': AutoTheme(light=_PAPER, dark=_INK),
-    'auto-carbon': AutoTheme(light=_CARBON, dark=_CARBON_DARK),
+@dataclass(frozen=True, kw_only=True)
+class Style:
+    """Writer presentation: a structural theme, a color palette, and a display mode."""
+
+    theme: str | Theme = 'default'
+    palette: str | Palette = 'slate'
+    mode: Literal['light', 'dark', 'auto'] = 'light'
+
+    def __post_init__(self) -> None:
+        if isinstance(self.theme, str):
+            get_theme(self.theme)
+        elif not isinstance(self.theme, Theme):
+            raise TypeError('style theme must be a name or Theme')
+        if isinstance(self.palette, str):
+            get_palette(self.palette)
+        elif not isinstance(self.palette, Palette):
+            raise TypeError('style palette must be a name or Palette')
+        if not isinstance(self.mode, str):
+            raise TypeError('style mode must be a string')
+        if self.mode not in ('light', 'dark', 'auto'):
+            raise ValueError("style mode must be 'light', 'dark', or 'auto'")
+
+
+_THEMES = {'default': Theme(name='default')}
+_PALETTES = {
+    'slate': Palette(name='slate'),
+    'azure': Palette(
+        name='azure',
+        light={
+            'accent': '#0067f6',
+            'accent_hover': '#0958d9',
+            'border': '#d9d9d9',
+            'description': '#595959',
+            'heading': '#262626',
+            'muted': '#595959',
+            'surface': '#f5f5f5',
+        },
+        dark={
+            'accent': '#60a5fa',
+            'background': '#1f1f1f',
+            'border': '#424242',
+            'description': '#a3a3a3',
+            'heading': '#e5e5e5',
+            'muted': '#a3a3a3',
+            'page_background': '#141414',
+            'surface': '#262626',
+            'table_header': '#262626',
+            'text': '#e5e5e5',
+        },
+    ),
+    'parchment': Palette(
+        name='parchment',
+        light={
+            'accent': '#316ac6',
+            'accent_hover': '#3565a6',
+            'background': '#fcfcf9',
+            'border': '#d7d7d6',
+            'description': '#666666',
+            'heading': '#181818',
+            'muted': '#666666',
+            'page_background': '#efefe4',
+            'surface': '#f3f3f4',
+            'table_header': '#f3f3f4',
+            'text': '#181818',
+        },
+        dark={
+            'accent': '#5893f6',
+            'background': '#252320',
+            'border': '#51493e',
+            'description': '#d0c5b4',
+            'heading': '#e8e1d5',
+            'muted': '#d0c5b4',
+            'page_background': '#191817',
+            'surface': '#302d28',
+            'table_header': '#302d28',
+            'text': '#e8e1d5',
+        },
+    ),
+    'ember': Palette(
+        name='ember',
+        light={
+            'accent': '#be4e29',
+            'accent_hover': '#a74729',
+            'border': '#dedbd3',
+            'description': '#6b6963',
+            'heading': '#252525',
+            'muted': '#6b6963',
+            'page_background': '#f7f6f2',
+            'surface': '#f7f6f2',
+            'table_header': '#f7f6f2',
+            'text': '#252525',
+        },
+        dark={
+            'accent': '#da7756',
+            'accent_hover': '#f0a080',
+            'background': '#24221f',
+            'border': '#413d37',
+            'description': '#aaa49a',
+            'heading': '#eeeae3',
+            'muted': '#aaa49a',
+            'page_background': '#1a1917',
+            'surface': '#2d2a26',
+            'table_header': '#2d2a26',
+            'text': '#eeeae3',
+        },
+    ),
 }
 
 
-def get_theme(name: str) -> Theme | AutoTheme:
-    """Return a fixed theme or an automatic light/dark pair by preset name."""
-    if not isinstance(name, str):
-        raise TypeError('theme name must be a string')
+def get_theme(name: str) -> Theme:
+    """Return a structural theme by name (currently only ``default``)."""
+    _name(name, 'theme')
     try:
-        return _PRESETS[name]
+        return _THEMES[name]
     except KeyError:
         raise ValueError(
-            f'Unknown theme {name!r}; choose from {", ".join(_PRESETS)}'
+            f'Unknown theme {name!r}; choose from {", ".join(_THEMES)}'
         ) from None
 
 
-def _resolve_theme(theme: str | Theme | AutoTheme) -> Theme | AutoTheme:
-    if isinstance(theme, str):
-        return get_theme(theme)
-    if not isinstance(theme, (Theme, AutoTheme)):
-        raise TypeError('theme must be a preset name, Theme, or AutoTheme')
-    return theme
+def get_palette(name: str) -> Palette:
+    """Return one of the slate, azure, parchment, or ember color palettes."""
+    _name(name, 'palette')
+    try:
+        return _PALETTES[name]
+    except KeyError:
+        raise ValueError(
+            f'Unknown palette {name!r}; choose from {", ".join(_PALETTES)}'
+        ) from None
 
 
-def _theme_id(theme: Theme | AutoTheme) -> str:
-    # Content-derived scopes distinguish custom themes even if names are reused.
-    themes = (theme.light, theme.dark) if isinstance(theme, AutoTheme) else (theme,)
-    payload = [(t.name, t.mode, dict(t.tokens), t.css) for t in themes]
+def _resolve_style(style: Style | Mapping[str, object] | None) -> Style:
+    if style is None:
+        style = Style()
+    elif isinstance(style, Mapping):
+        unknown = style.keys() - {'theme', 'palette', 'mode'}
+        if unknown:
+            raise ValueError(
+                f'Unknown style fields: {", ".join(sorted(map(repr, unknown)))}'
+            )
+        style = Style(**style)
+    elif not isinstance(style, Style):
+        raise TypeError('style must be a Style, mapping, or None')
+    return Style(
+        theme=get_theme(style.theme) if isinstance(style.theme, str) else style.theme,
+        palette=get_palette(style.palette)
+        if isinstance(style.palette, str)
+        else style.palette,
+        mode=style.mode,
+    )
+
+
+def _style_id(style: Style) -> str:
+    # Resolved content distinguishes custom objects even when names are reused.
+    payload = (
+        style.theme.name,
+        dict(style.theme.tokens),
+        style.theme.css,
+        style.palette.name,
+        dict(style.palette.light),
+        dict(style.palette.dark),
+        style.mode,
+    )
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
 
 
-def _stylesheet(theme: Theme | AutoTheme, *, fragment: bool) -> str:
+def _stylesheet(style: Style, *, fragment: bool) -> str:
     # :where keeps specificity low enough for Pandas Styler's explicit rules.
-    selector = f'.reportkit:where([data-reportkit-theme="{_theme_id(theme)}"])'
+    selector = f'.reportkit:where([data-reportkit-theme="{_style_id(style)}"])'
     base = re.sub(r'\.reportkit(?![\w-])', lambda match: selector, _CSS)
 
-    def variables(selected: Theme) -> str:
+    def variables(tokens: Mapping[str, str], mode: str) -> str:
         declarations = '\n'.join(
             f'  --reportkit-{key.replace("_", "-")}: {value};'
-            for key, value in selected.tokens.items()
+            for key, value in sorted(tokens.items())
         )
-        rules = f'{selector} {{\n{declarations}\n  color-scheme: {selected.mode};\n}}'
+        rules = f'{selector} {{\n{declarations}\n  color-scheme: {mode};\n}}'
         if not fragment:
             rules += (
                 '\nbody { margin: 0; background: '
-                + selected.tokens['page_background']
-                + f'; color-scheme: {selected.mode}; }}'
+                + tokens['page_background']
+                + f'; color-scheme: {mode}; }}'
             )
         return rules
 
-    def extra(selected: Theme) -> str:
-        return selected.css.replace('&', selector)
-
-    if isinstance(theme, AutoTheme):
-        css = variables(theme.light) + '\n' + base
-        # Keep light-only overrides out of dark mode, even when the dark theme
-        # does not override the same properties.
-        if theme.light.css:
-            css += (
-                '\n@media not all and (prefers-color-scheme: dark) {\n'
-                + extra(theme.light)
-                + '\n}'
-            )
+    mode = 'light' if style.mode == 'auto' else style.mode
+    tokens = dict(style.theme.tokens) | dict(getattr(style.palette, mode))
+    css = variables(tokens, mode) + '\n' + base
+    if style.mode == 'auto':
         css += (
             '\n@media (prefers-color-scheme: dark) {\n'
-            + variables(theme.dark)
-            + '\n'
-            + extra(theme.dark)
+            + variables(style.palette.dark, 'dark')
             + '\n}'
         )
-    else:
-        css = variables(theme) + '\n' + base + '\n' + extra(theme)
+    css += '\n' + style.theme.css.replace('&', selector)
     # Prevent a CSS string from terminating the surrounding HTML style element.
     return css.replace('<', r'\3c ')
 

@@ -1,256 +1,252 @@
-"""Public theme behavior and rendering integration."""
+"""Public style configuration and HTML rendering integration."""
 
-import importlib.util
 import re
-import tempfile
-import unittest
-from pathlib import Path
+from dataclasses import FrozenInstanceError
+from itertools import product
+from types import MappingProxyType
 
-from reportkit import AutoTheme, HTMLWriter, Report, Theme, get_theme
+import pytest
+
+from reportkit import HTMLWriter, Palette, Report, Style, Theme, get_palette, get_theme
+
+PALETTES = ('slate', 'azure', 'parchment', 'ember')
+MODES = ('light', 'dark', 'auto')
 
 
-class ThemeTests(unittest.TestCase):
-    def setUp(self):
-        self.report = Report('Theme preview', author='Analyst')
-        self.report.heading(1, 'Summary')
-        self.report.markdown('A [link](https://example.org) and `code`.\n\n> Note')
-        with self.report.columns(2), self.report.panel('Details'):
-            self.report.paragraph('Content')
+@pytest.fixture
+def report():
+    report = Report('Style preview', author='Analyst')
+    report.heading(1, 'Summary')
+    report.markdown('A [link](https://example.org) and `code`.\n\n> Note')
+    with report.columns(2), report.panel('Details'):
+        report.paragraph('Content')
+    return report
 
-    def test_presets_and_output_shortcuts_preserve_document(self):
-        before = self.report.to_tree()
-        original = self.report.to_html()
-        self.assertEqual(original, self.report.to_html(theme='light'))
-        with tempfile.TemporaryDirectory() as directory:
-            for name in (
-                'light',
-                'dark',
-                'paper',
-                'ink',
-                'auto',
-                'auto-paper',
-                'carbon',
-                'carbon-dark',
-                'auto-carbon',
-            ):
-                for fragment in (False, True):
-                    with self.subTest(name=name, fragment=fragment):
-                        html = self.report.to_html(theme=name, fragment=fragment)
-                        self.assertIn(
-                            '--reportkit-font-family: Roboto, "Noto Sans", sans-serif;',
-                            html,
-                        )
-                        writer = HTMLWriter(theme=get_theme(name))
-                        self.assertEqual(
-                            html, writer.render(self.report.document, fragment=fragment)
-                        )
-                        path = self.report.write(
-                            Path(directory) / 'report.html',
-                            theme=name,
-                            fragment=fragment,
-                        )
-                        self.assertEqual(path.read_text(), html)
-                        self.assertEqual(
-                            writer.write(self.report.document, path, fragment=fragment),
-                            path,
-                        )
-                        self.assertEqual(path.read_text(), html)
-                        self.assertEqual('body {' in html, not fragment)
-                        self.assertEqual('<!doctype html>' in html, not fragment)
-                        self.assertIn('grid-template-columns: 1fr', html)
-                        self.assertIn(' .reportkit-figure-image {', html)
-        self.assertEqual(before, self.report.to_tree())
-        self.assertEqual(original, self.report.to_html())
 
-    def test_default_navigation_inherits_theme(self):
-        for name in ('light', 'dark'):
-            with self.subTest(theme=name):
-                html = self.report.to_html(theme=name, toc=True)
-                for declaration in (
-                    '--reportkit-content-width: 1040px;',
-                    '--reportkit-page-margin: 32px auto;',
-                    '--reportkit-content-padding: 48px clamp(20px, 5vw, 72px);',
-                    '--reportkit-radius: 5px;',
-                    '--reportkit-title-size: 2.5rem;',
-                    '--reportkit-table-border-width: 1px;',
-                    '--reportkit-toc-font-family: var(--reportkit-font-family);',
-                    '--reportkit-toc-line-height: var(--reportkit-line-height);',
-                    '--reportkit-toc-text: var(--reportkit-text);',
-                    '--reportkit-toc-background: var(--reportkit-surface);',
-                    '--reportkit-toc-accent: var(--reportkit-accent);',
-                ):
-                    self.assertIn(declaration, html)
-                self.assertIn('font-family: var(--reportkit-toc-font-family)', html)
-                self.assertIn('background: var(--reportkit-toc-background)', html)
-                self.assertIn('color: var(--reportkit-toc-accent)', html)
-        self.assertEqual(Theme(name='custom').tokens, get_theme('light').tokens)
-        for name in ('paper', 'ink'):
-            with self.subTest(theme=name):
-                theme = get_theme(name)
-                self.assertEqual(theme.tokens['radius'], '12px')
-                self.assertEqual(
-                    theme.tokens['toc_font_family'], 'var(--reportkit-font-family)'
-                )
-                self.assertEqual(theme.tokens['line_height'], '1.65')
-                self.assertEqual(theme.tokens['cell_padding'], '.55rem .75rem')
-                self.assertEqual(theme.tokens['table_border_width'], '0')
-                self.assertEqual(
-                    theme.tokens['pre_background'], 'var(--reportkit-surface)'
-                )
+def scope(html):
+    return re.search(r'data-reportkit-theme="([^"]+)"', html)[1]
 
-    def test_carbon_typography_inherits_fonts_layout_and_toc(self):
-        for name, base in (('carbon', 'light'), ('carbon-dark', 'dark')):
-            theme = get_theme(name)
-            original = get_theme(base)
-            for key in original.tokens:
-                if key.startswith('toc_') or key in (
-                    'font_family',
-                    'code_font',
-                    'content_width',
-                    'content_padding',
-                    'page_margin',
-                    'radius',
-                ):
-                    self.assertEqual(theme.tokens[key], original.tokens[key])
-            custom = theme.with_overrides(
-                name='custom', tokens={'h2_weight': '600', 'h2_line_height': '2.5rem'}
-            )
-            html = self.report.to_html(theme=custom)
-            self.assertIn('--reportkit-h2-weight: 600;', html)
-            self.assertIn('--reportkit-h2-line-height: 2.5rem;', html)
-            self.assertIn('font-weight: var(--reportkit-h2-weight)', html)
-            self.assertIn('line-height: var(--reportkit-h2-line-height)', html)
-            self.assertNotIn('@font-face', html)
-            self.assertNotIn('@import', html)
-        pair = get_theme('auto-carbon')
-        self.assertEqual(pair.light, get_theme('carbon'))
-        self.assertEqual(pair.dark, get_theme('carbon-dark'))
-        html = self.report.to_html(theme=pair)
-        light, dark = html.split('@media (prefers-color-scheme: dark)', 1)
-        self.assertIn('--reportkit-background: #ffffff;', light)
-        self.assertIn('--reportkit-background: #161616;', dark)
-        self.assertIn('--reportkit-title-size: 2.625rem;', html)
-        self.assertIn('--reportkit-title-weight: 300;', html)
 
-    def test_custom_tokens_are_copied_and_overrides_inherit(self):
-        tokens = {'accent': '#2457a7'}
-        custom = Theme(name='custom', tokens=tokens, css='& h2 { font-style: italic; }')
-        tokens['accent'] = 'red'
-        derived = custom.with_overrides(
-            name='derived', tokens={'content_width': '1120px'}
+def test_default_inputs_preserve_appearance(report):
+    original = report.to_html()
+    for style in (None, {}, Style(), {'mode': 'light'}, MappingProxyType({})):
+        assert report.to_html(style=style) == original
+    for key, value in {
+        'font_family': 'Roboto, "Noto Sans", sans-serif',
+        'font_size': '16px',
+        'line_height': '1.5',
+        'content_width': '1040px',
+        'page_margin': '32px auto',
+        'content_padding': '48px clamp(20px, 5vw, 72px)',
+        'radius': '5px',
+        'shadow_geometry': '0 18px 42px',
+        'title_size': '2.5rem',
+        'table_border_width': '1px',
+        'cell_padding': '.25rem .75rem',
+        'background': '#ffffff',
+        'page_background': '#f5f5f5',
+        'text': '#262626',
+        'accent': '#2563eb',
+    }.items():
+        assert f'--reportkit-{key.replace("_", "-")}: {value};' in original
+    assert 'grid-template-columns: 1fr' in original
+    assert '@font-face' not in original
+    assert '@import' not in original
+
+
+@pytest.mark.parametrize(
+    'palette,mode,fragment', list(product(PALETTES, MODES, (False, True)))
+)
+def test_style_inputs_and_exports_agree(report, tmp_path, palette, mode, fragment):
+    before = report.to_tree()
+    mapping = {'theme': 'default', 'palette': palette, 'mode': mode}
+    html = report.to_html(style=mapping, fragment=fragment)
+    objects = Style(theme=get_theme('default'), palette=get_palette(palette), mode=mode)
+    assert report.to_html(style=Style(**mapping), fragment=fragment) == html
+    writer = HTMLWriter(style=objects)
+    assert writer.render(report.document, fragment=fragment) == html
+    path = report.write(tmp_path / 'report.html', style=mapping, fragment=fragment)
+    assert path.read_text() == html
+    assert writer.write(report.document, path, fragment=fragment) == path
+    assert path.read_text() == html
+    assert ('body {' in html) is not fragment
+    assert ('<!doctype html>' in html) is not fragment
+    assert ('@media (prefers-color-scheme: dark)' in html) is (mode == 'auto')
+    selected = 'light' if mode == 'auto' else mode
+    assert (
+        f'--reportkit-background: {getattr(get_palette(palette), selected)["background"]};'
+        in html
+    )
+    assert f'color-scheme: {selected};' in html
+    assert report.to_tree() == before
+
+
+def test_custom_objects_copy_freeze_and_derive(report):
+    tokens = {'content_width': '1120px'}
+    colors = {'accent': '#2457a7'}
+    theme = Theme(name='custom', tokens=tokens, css='& h2 { font-style: italic; }')
+    palette = Palette(name='custom', light=colors)
+    tokens['content_width'] = '0'
+    colors['accent'] = 'red'
+    derived = theme.with_overrides(name='derived', tokens={'font_size': '18px'})
+    derived_palette = palette.with_overrides(name='derived', dark={'accent': '#91baff'})
+    assert derived.tokens['content_width'] == '1120px'
+    assert derived.css == theme.css
+    assert derived_palette.light['accent'] == '#2457a7'
+    assert derived_palette.dark['accent'] == '#91baff'
+    assert theme.tokens['font_size'] == '16px'
+    assert palette.dark == get_palette('slate').dark
+    assert theme.with_overrides(name='clean', css='').css == ''
+    assert palette.with_overrides(name='same', light={}).light == palette.light
+    assert Theme(name='empty').tokens == get_theme('default').tokens
+    for mapping in (theme.tokens, palette.light, palette.dark):
+        with pytest.raises(TypeError):
+            mapping['anything'] = 'red'
+    style = Style(theme=derived, palette=derived_palette, mode='auto')
+    with pytest.raises(FrozenInstanceError):
+        style.mode = 'dark'
+    html = report.to_html(style=style)
+    light, dark = html.split('@media (prefers-color-scheme: dark)', 1)
+    assert '--reportkit-accent: #2457a7;' in light
+    assert '--reportkit-accent: #91baff;' in dark
+    assert 'color-scheme: light;' in light
+    assert 'color-scheme: dark;' in dark
+    assert '--reportkit-content-width: 1120px;' in light
+    assert '--reportkit-content-width:' not in dark
+    assert html.count('font-style: italic') == 1
+    assert html.index('font-style: italic') > html.index(
+        '@media (prefers-color-scheme: dark)'
+    )
+    assert '& h2' not in html
+    assert '<script' not in html
+
+
+@pytest.mark.parametrize('position', ('top', 'sidebar'))
+def test_fragment_scopes_and_navigation(report, position):
+    fragments = [
+        report.to_html(
+            style={'palette': name}, fragment=True, toc=True, toc_position=position
         )
-        self.assertEqual(derived.tokens['accent'], '#2457a7')
-        self.assertEqual(derived.css, custom.css)
-        with self.assertRaises(TypeError):
-            custom.tokens['accent'] = 'red'
-        html = self.report.to_html(theme=derived)
-        self.assertIn('--reportkit-content-width: 1120px;', html)
-        self.assertIn('--reportkit-accent: #2457a7;', html)
-        self.assertIn(' h2 { font-style: italic; }', html)
-        self.assertNotIn('& h2', html)
-        self.assertEqual(custom.with_overrides(name='clean', css='').css, '')
+        for name in PALETTES
+    ]
+    assert len({scope(html) for html in fragments}) == len(PALETTES)
+    for html in fragments:
+        assert f'.reportkit:where([data-reportkit-theme="{scope(html)}"])' in html
+        assert 'body {' not in html
+        assert not re.search(r'\.reportkit(?=[\s,{])', html)
+        assert set(re.findall(r'data-reportkit-theme="([^"]+)"', html)) == {scope(html)}
+        assert '--reportkit-toc-text: var(--reportkit-text);' in html
+        assert '--reportkit-toc-background: var(--reportkit-surface);' in html
+        assert '--reportkit-toc-accent: var(--reportkit-accent);' in html
+        assert '.report-toc a:focus-visible' in html
 
-    def test_custom_fragment_scopes_depend_on_content_not_only_name(self):
-        themes = [
-            get_theme(name).with_overrides(name='custom')
-            for name in ('carbon', 'carbon-dark')
-        ]
-        fragments = [self.report.to_html(theme=t, fragment=True) for t in themes]
-        scopes = [
-            re.search(
-                r'<article class="reportkit" data-reportkit-theme="([^"]+)"', html
-            )[1]
-            for html in fragments
-        ]
-        self.assertNotEqual(*scopes)
-        for html, scope, other in zip(fragments, scopes, reversed(scopes)):
-            self.assertIn(f'.reportkit:where([data-reportkit-theme="{scope}"])', html)
-            self.assertNotIn(other, html)
-            self.assertNotIn('body {', html)
-            self.assertNotRegex(html, r'\.reportkit(?=[\s,{])')
 
-    def test_automatic_pair_conditions_include_custom_css(self):
-        light = get_theme('paper').with_overrides(
-            name='custom-light', css='& p { letter-spacing: 1px; }'
-        )
-        dark = get_theme('ink').with_overrides(
-            name='custom-dark', css='& p { font-style: italic; }'
-        )
-        html = self.report.to_html(theme=AutoTheme(light=light, dark=dark))
-        light_rules, dark_rules = html.split('@media (prefers-color-scheme: dark)', 1)
-        self.assertIn('color-scheme: light;', light_rules)
-        self.assertIn('@media not all and (prefers-color-scheme: dark)', light_rules)
-        self.assertIn('letter-spacing: 1px', light_rules)
-        self.assertIn('color-scheme: dark;', dark_rules)
-        self.assertIn('font-style: italic', dark_rules)
-        self.assertNotIn('letter-spacing', dark_rules)
-        self.assertNotIn('<script', html)
-
-    def test_invalid_theme_inputs(self):
-        cases = [
-            (ValueError, lambda: HTMLWriter(theme='missing')),
-            (TypeError, lambda: self.report.to_html(theme=42)),
-            (ValueError, lambda: Theme(name='')),
-            (ValueError, lambda: Theme(name='custom', mode='auto')),
-            (TypeError, lambda: Theme(name='custom', tokens=[])),
-            (ValueError, lambda: Theme(name='custom', tokens={'typo': 'red'})),
-            (TypeError, lambda: Theme(name='custom', tokens={'accent': 42})),
-            (ValueError, lambda: Theme(name='custom', tokens={'accent': ' '})),
-            (TypeError, lambda: Theme(name='custom', css=None)),
-            (TypeError, lambda: AutoTheme(light='light', dark=get_theme('dark'))),
-            (
-                ValueError,
-                lambda: AutoTheme(light=get_theme('dark'), dark=get_theme('light')),
+def test_scopes_and_output_depend_on_content_not_mapping_order(report):
+    tokens = {'font_size': '18px', 'content_width': '1120px'}
+    colors = {'accent': '#123456', 'text': '#333333'}
+    theme = Theme(name='custom', tokens=tokens)
+    palette = Palette(name='custom', light=colors)
+    baseline = report.to_html(style=Style(theme=theme, palette=palette))
+    reordered = Style(
+        theme=Theme(name='custom', tokens=dict(reversed(list(tokens.items())))),
+        palette=Palette(name='custom', light=dict(reversed(list(colors.items())))),
+    )
+    assert report.to_html(style=reordered) == baseline
+    variants = [
+        Style(
+            theme=theme.with_overrides(name='custom', tokens={'font_size': '20px'}),
+            palette=palette,
+        ),
+        Style(
+            theme=theme.with_overrides(
+                name='custom', css='& p { font-style: italic; }'
             ),
+            palette=palette,
+        ),
+        Style(
+            theme=theme,
+            palette=palette.with_overrides(name='custom', light={'accent': 'red'}),
+        ),
+        Style(
+            theme=theme,
+            palette=palette.with_overrides(name='custom', dark={'accent': 'red'}),
+        ),
+        Style(theme=theme, palette=palette, mode='dark'),
+        Style(theme=theme, palette=palette, mode='auto'),
+    ]
+    scopes = [scope(baseline), *(scope(report.to_html(style=s)) for s in variants)]
+    assert len(set(scopes)) == len(scopes)
+
+
+@pytest.mark.parametrize(
+    'error,operation',
+    [
+        (TypeError, lambda: HTMLWriter(style='dark')),
+        (TypeError, lambda: Style(theme=42)),
+        (TypeError, lambda: Style(palette={})),
+        (TypeError, lambda: Style(mode=None)),
+        (ValueError, lambda: Style(theme='missing')),
+        (ValueError, lambda: Style(palette='missing')),
+        (ValueError, lambda: Style(mode='system')),
+        (ValueError, lambda: HTMLWriter(style={'typo': 'slate'})),
+        (ValueError, lambda: HTMLWriter(style={1: 'slate'})),
+        (TypeError, lambda: Theme(name=42)),
+        (ValueError, lambda: Theme(name=' ')),
+        (TypeError, lambda: Palette(name=None)),
+        (ValueError, lambda: Palette(name='')),
+        (TypeError, lambda: Theme(name='custom', tokens=[])),
+        (TypeError, lambda: Palette(name='custom', dark=None)),
+        (ValueError, lambda: Theme(name='custom', tokens={'accent': 'red'})),
+        (ValueError, lambda: Palette(name='custom', light={'font_size': '18px'})),
+        (ValueError, lambda: Palette(name='custom', dark={'typo': 'red'})),
+        (TypeError, lambda: Theme(name='custom', tokens={'font_size': 42})),
+        (ValueError, lambda: Theme(name='custom', tokens={'font_size': ' '})),
+        (TypeError, lambda: Palette(name='custom', light={'accent': 42})),
+        (ValueError, lambda: Palette(name='custom', dark={'accent': ''})),
+        (TypeError, lambda: Theme(name='custom', css=None)),
+        (TypeError, lambda: get_theme([])),
+        (TypeError, lambda: get_palette(None)),
+    ],
+)
+def test_invalid_configuration(error, operation):
+    with pytest.raises(error):
+        operation()
+
+
+def test_css_cannot_close_style_element(report):
+    theme = Theme(name='custom', css='&::after { content: "</style>"; }')
+    palette = Palette(name='custom', light={'accent': '</style>'})
+    html = report.to_html(style=Style(theme=theme, palette=palette))
+    assert html.count('</style>') == 1
+    assert r'\3c /style>' in html
+
+
+@pytest.mark.parametrize('name,mode', list(product(PALETTES, ('light', 'dark'))))
+def test_palette_text_contrast(name, mode):
+    def luminance(color):
+        rgb = [int(color[i : i + 2], 16) / 255 for i in (1, 3, 5)]
+        linear = [
+            c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in rgb
         ]
-        for error, operation in cases:
-            with self.subTest(operation=operation), self.assertRaises(error):
-                operation()
+        return sum(c * weight for c, weight in zip(linear, (0.2126, 0.7152, 0.0722)))
 
-    def test_css_cannot_close_style_element(self):
-        custom = Theme(name='custom', css='&::after { content: "</style>"; }')
-        html = self.report.to_html(theme=custom)
-        self.assertEqual(html.count('</style>'), 1)
-        self.assertIn(r'\3c /style>', html)
+    tokens = getattr(get_palette(name), mode)
+    for fg, bg in product(
+        ('text', 'heading', 'accent', 'accent_hover', 'description', 'muted'),
+        ('page_background', 'background', 'surface', 'table_header'),
+    ):
+        hi, lo = sorted((luminance(tokens[fg]), luminance(tokens[bg])), reverse=True)
+        assert (hi + 0.05) / (lo + 0.05) >= 4.5, (name, mode, fg, bg)
 
-    def test_preset_text_contrast(self):
-        def luminance(color):
-            channels = [int(color[i : i + 2], 16) / 255 for i in (1, 3, 5)]
-            linear = [
-                c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
-                for c in channels
-            ]
-            return sum(
-                c * weight for c, weight in zip(linear, (0.2126, 0.7152, 0.0722))
-            )
 
-        for name in ('light', 'dark', 'paper', 'ink', 'carbon', 'carbon-dark'):
-            tokens = get_theme(name).tokens
-            for foreground in ('text', 'heading', 'accent', 'description', 'muted'):
-                for background in ('background', 'surface', 'table_header'):
-                    with self.subTest(
-                        name=name, foreground=foreground, background=background
-                    ):
-                        values = sorted(
-                            (
-                                luminance(tokens[foreground]),
-                                luminance(tokens[background]),
-                            )
-                        )
-                        self.assertGreaterEqual(
-                            (values[1] + 0.05) / (values[0] + 0.05), 4.5
-                        )
-
-    @unittest.skipUnless(importlib.util.find_spec('pandas'), 'requires pandas')
-    def test_explicit_styler_styles_survive_dark_theme(self):
-        import pandas as pd
-
-        styler = pd.DataFrame({'Value': [1]}).style.set_properties(
-            **{'color': '#123456', 'background-color': '#abcdef'}
-        )
-        self.report.add(styler, caption='Styled data')
-        html = self.report.to_html(theme='dark')
-        self.assertIn('color: #123456;', html)
-        self.assertIn('background-color: #abcdef;', html)
-        self.assertIn('<figcaption>Styled data</figcaption>', html)
-        self.assertNotIn('!important', html)
+def test_explicit_styler_styles_survive_dark_mode(report):
+    pd = pytest.importorskip('pandas')
+    styler = pd.DataFrame({'Value': [1]}).style.set_properties(
+        **{'color': '#123456', 'background-color': '#abcdef'}
+    )
+    report.add(styler, caption='Styled data')
+    html = report.to_html(style={'mode': 'dark'})
+    assert 'color: #123456;' in html
+    assert 'background-color: #abcdef;' in html
+    assert '<figcaption>Styled data</figcaption>' in html
+    assert '!important' not in html

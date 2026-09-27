@@ -15,14 +15,13 @@ from .model import (
     RawHTML,
     Section,
 )
-from .themes import AutoTheme, Theme, get_theme
+from .themes import Palette, Style, Theme, get_palette, get_theme
 from .writer import HTMLWriter
 
 __all__ = [
     'Adapter',
     'AdapterRegistry',
     'Artifact',
-    'AutoTheme',
     'Columns',
     'Container',
     'Document',
@@ -30,13 +29,16 @@ __all__ = [
     'List',
     'Markdown',
     'Node',
+    'Palette',
     'Panel',
     'RawHTML',
     'RenderedArtifact',
     'Report',
     'Section',
+    'Style',
     'TemplateError',
     'Theme',
     'default_registry',
+    'get_palette',
     'get_theme',
 ]

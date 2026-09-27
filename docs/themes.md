@@ -1,186 +1,190 @@
 # Themes
 
-Choose a theme when exporting; the same report can be rendered repeatedly with
-different appearances. This works for both Python composition and Markdown templates.
+Choose presentation when exporting. The same report can use different styles,
+whether authored in Python or loaded from a Markdown template.
 
 ```python
-report.write('dark.html', theme='dark')
-report.write('adaptive.html', theme='auto')
-fragment = report.to_html(fragment=True, theme='paper')
+from reportkit import Style
+
+report.write('dark.html', style=Style(mode='dark'))
+report.write('adaptive.html', style={'palette': 'ember', 'mode': 'auto'})
+fragment = report.to_html(fragment=True, style={'palette': 'parchment'})
 ```
 
-| Preset | Appearance |
-| --- | --- |
-| `light` | White and neutral gray with sans-serif typography; the default |
-| `dark` | Near-black surfaces with sans-serif typography and blue links |
-| `paper` | Warm cream with sans-serif typography |
-| `ink` | Warm charcoal with sans-serif typography |
-| `auto` | `light` or `dark`, following the reader's system preference |
-| `carbon` | Carbon-inspired type hierarchy on white, using the existing report fonts |
-| `carbon-dark` | The same type hierarchy on neutral dark surfaces |
-| `auto-carbon` | System-following `carbon` / `carbon-dark` pair |
-| `auto-paper` | `paper` or `ink`, following the reader's system preference |
+`Style` has exactly three fields:
 
-Automatic themes use CSS `prefers-color-scheme` and fall back to light styling
-when the browser does not support it. They require no JavaScript, network access,
-or reader toggle. Explicit presets stay in their selected mode.
-
-The light and dark themes use compact content spacing and bordered table cells,
-with a 1040px maximum report width and 5px report corners. Page padding remains
-roomy, and the TOC retains its existing typography and colors. The `paper` and
-`ink` alternatives retain their warmer palettes and previous spacing.
-
-## Carbon-inspired presets
-
-```python
-report.write('carbon.html', theme='carbon')
-report.write('carbon-dark.html', theme='carbon-dark')
-report.write('carbon-adaptive.html', theme='auto-carbon')
-```
-
-These presets adapt [Carbon's typography guidance](https://preview.carbondesignsystem.com/building-blocks/foundations/typography/overview)
-and [type styles](https://preview.carbondesignsystem.com/building-blocks/foundations/typography/type-sets)
-using ReportKit's Roboto / Noto Sans report font stack and monospace code stack.
-They do not load IBM Plex or any external fonts. Available font weights depend
-on the locally installed fonts, so this is an adaptation rather than an exact
-Carbon reproduction. Report width, padding, corners, and TOC styles are inherited
-from the corresponding light or dark preset.
-
-| Element | Size / line height | Weight |
+| Field | Default | Choices |
 | --- | --- | --- |
-| Report title | 42px / 50px | 300 |
-| H1 | 32px / 40px | 400 |
-| H2 | 28px / 36px | 400 |
-| H3 | 20px / 28px | 400 |
-| H4 | 16px / 24px | 600 |
-| H5–H6 | 14px / 20px | 600 |
-| Body | 16px / 24px | 400 |
-| Captions | 14px / 18px | 400 |
-| Code | 14px / 20px | 400 |
+| `theme` | `'default'` | Structural theme name or custom `Theme` |
+| `palette` | `'slate'` | Palette name or custom `Palette` |
+| `mode` | `'light'` | `'light'`, `'dark'`, or `'auto'` |
 
-Sizes for headings, captions, and code use rem units, shown here with a 16px root.
+`HTMLWriter(style=...)`, `Report.to_html(style=...)`, and `Report.write(style=...)`
+accept a `Style`, a mapping with the same fields, or `None`. Missing fields use
+the defaults; `None`, `{}`, and `Style()` are equivalent. Unknown fields or names
+raise `ValueError`. Presentation is never stored in the report's document model.
 
-## Define a custom theme
+## Built-in presentation
 
-Start from a preset and override its tokens. Each token value is a CSS string.
-Theme objects and their token mappings are immutable; deriving a theme leaves
-the original unchanged.
+The only built-in structural theme is `default`. It preserves the previous light
+layout: 16px body text, 1.5 line height, 1040px maximum report width, 5px corners,
+the report frame and shadow, compact content spacing, and bordered table cells.
+Publication-style restyling and expanded shared panel controls are deferred.
+
+| Palette | Appearance |
+| --- | --- |
+| `slate` | Previous light colors; cool dashboard grays and blue accents in dark mode |
+| `azure` | Neutral gray surfaces, clear borders, and strong blue accents |
+| `parchment` | Cream light surfaces, warm charcoal dark surfaces, and blue accents |
+| `ember` | Warm neutral surfaces and orange accents |
+
+Every palette provides light and dark colors. Foreground colors are adjusted
+where needed to maintain at least 4.5:1 contrast against the built-in page,
+report, secondary, and table-header surfaces. Custom colors are not adjusted.
+
+`auto` emits light colors normally, switching colors and the browser's
+`color-scheme` under `prefers-color-scheme: dark`. It needs no JavaScript,
+network access, or reader toggle. Explicit modes stay fixed. Structure and
+typography are identical across modes and palettes.
+
+## Custom themes and palettes
+
+Theme tokens control structure; palette tokens control colors. Derive each
+independently, then combine them in a style:
 
 ```python
-from reportkit import AutoTheme, HTMLWriter, get_theme
+from reportkit import HTMLWriter, Style, get_palette, get_theme
 
-custom_light = get_theme('light').with_overrides(
-    name='custom-light',
-    tokens={'accent': '#2457a7', 'content_width': '1120px'},
+theme = get_theme('default').with_overrides(
+    name='wide',
+    tokens={'content_width': '1120px'},
     css='& .report-title { letter-spacing: -.04em; }',
 )
-custom_dark = get_theme('dark').with_overrides(
-    name='custom-dark',
-    tokens={'accent': '#91baff', 'content_width': '1120px'},
-    css='& .report-title { letter-spacing: -.04em; }',
+palette = get_palette('slate').with_overrides(
+    name='brand',
+    light={'accent': '#2457a7'},
+    dark={'accent': '#91baff'},
 )
-
-writer = HTMLWriter(theme=AutoTheme(light=custom_light, dark=custom_dark))
+writer = HTMLWriter(style=Style(theme=theme, palette=palette, mode='auto'))
 writer.write(report.document, 'custom.html')
 ```
 
-You can also construct `Theme(name='custom', tokens={...}, css='...')` directly.
-Omitted tokens inherit the default light theme. `mode='dark'` sets the browser's
-color scheme; it does not supply a dark palette. Derive from `get_theme('dark')`
-or `get_theme('ink')` for dark defaults.
+You can also construct `Theme(name='custom', tokens={...}, css='...')` and
+`Palette(name='custom', light={...}, dark={...})` directly. Omitted theme tokens
+inherit `default`; omitted palette tokens inherit the corresponding `slate` mode.
+Derive from another built-in palette to inherit that palette instead.
 
-`with_overrides(name=..., tokens=None, css=None)` retains the original mode,
-merges supplied tokens, and inherits CSS when omitted. Supplied CSS replaces the
-original CSS; use `css=''` to remove it. An `AutoTheme` requires two `Theme`
-objects with matching `light` and `dark` modes. No global registration is needed.
+Objects copy and freeze their mappings, so later changes to the original input
+cannot change a style. `with_overrides()` returns a new object, merging supplied
+tokens and inheriting omitted fields. Supplied theme CSS replaces the original;
+`css=''` clears it. Theme CSS applies in both modes; use CSS media queries when
+custom rules should apply only in one mode. No global registration is required.
 
 ## Tokens
 
-Inspect `get_theme('light').tokens` for the full default values. All supported
-keys are listed below; unknown keys raise `ValueError` to catch spelling mistakes.
+Inspect `get_theme('default').tokens` and `get_palette('slate').light` / `.dark`
+for complete defaults. Supported values are nonempty CSS strings. Unknown keys,
+color tokens in themes, and structural tokens in palettes raise `ValueError`.
+Incorrect types raise `TypeError`. CSS syntax is not validated.
+
+### Structural theme tokens
 
 | Tokens | Controls |
 | --- | --- |
-| `page_background` | Full-document background; never applied to a fragment's host page |
-| `background`, `surface` | Report background and secondary surface color |
-| `text`, `heading`, `accent` | Body text, headings, links and blockquote borders |
-| `description`, `muted` | Description, metadata and captions |
-| `border`, `table_header`, `shadow_color` | Rules, header backgrounds and page shadow color |
-| `font_family`, `code_font` | Body and code font stacks |
-| `font_size`, `line_height` | Base text size and unitless line height |
-| `content_width`, `page_margin`, `content_padding`, `radius` | Page sizing, whitespace and corner radius |
-| `h1_size`, `h2_size`, `h3_size`, `h4_size`, `h5_size`, `h6_size` | Section heading sizes |
-| `section_spacing`, `column_gap` | Section separation and column gutters |
-| `caption_size`, `figure_margin` | Caption text size and figure spacing |
-| `table_size`, `cell_padding` | Table font size and cell whitespace |
-| `panel_background`, `panel_padding` | Panel surfaces and internal spacing |
-| `shadow_geometry` | Shadow offsets and blur, combined with `shadow_color` |
+| `font_family`, `code_font`, `font_size`, `line_height` | Font stacks and base typography |
+| `content_width`, `page_margin`, `content_padding`, `radius` | Report sizing and frame geometry |
+| `shadow_geometry` | Shadow offsets and blur, combined with palette `shadow_color` |
 | `title_size`, `title_weight`, `title_line_height` | Report title typography |
-| `heading_line_height`, `heading_margin` | Shared section heading rhythm |
-| `h1_weight` through `h6_weight`, `h1_line_height` through `h6_line_height` | Individual heading weights and line heights; defaults use the shared heading line height |
-| `caption_line_height`, `code_line_height` | Caption/metadata and code leading; defaults inherit surrounding leading |
-| `h2_border_width`, `h2_padding` | Second-level heading rule width and bottom padding |
-| `paragraph_margin`, `list_margin`, `nested_list_margin`, `list_item_spacing` | Content spacing |
-| `link_decoration`, `accent_hover` | Link decoration and hover color |
-| `table_border_width`, `table_line_height` | Cell borders (bottom rules remain 1px) and table line height |
-| `pre_padding`, `pre_background`, `pre_radius`, `pre_margin`, `code_size` | Code block styling and code font size |
-| `blockquote_margin`, `blockquote_padding`, `blockquote_border_width`, `blockquote_background` | Blockquote styling |
-| `toc_font_family`, `toc_line_height`, `toc_text`, `toc_background`, `toc_accent` | TOC overrides; defaults inherit the theme’s typography, text, surface, and accent |
+| `h1_size` through `h6_size`, `h1_weight` through `h6_weight`, `h1_line_height` through `h6_line_height` | Individual heading typography |
+| `heading_line_height`, `heading_margin`, `h2_border_width`, `h2_padding` | Shared heading rhythm and second-level heading rule |
+| `section_spacing`, `column_gap`, `panel_padding` | Section, column, and existing panel spacing |
+| `caption_size`, `caption_line_height`, `figure_margin` | Captions, metadata, and figure spacing |
+| `paragraph_margin`, `list_margin`, `nested_list_margin`, `list_item_spacing` | Prose and list spacing |
+| `link_decoration` | Link decoration |
+| `table_size`, `cell_padding`, `table_border_width`, `table_line_height` | Ordinary table typography and borders; bottom rules remain 1px |
+| `pre_padding`, `pre_radius`, `pre_margin`, `code_size`, `code_line_height` | Code block geometry and typography |
+| `blockquote_margin`, `blockquote_padding`, `blockquote_border_width` | Blockquote geometry |
+| `toc_font_family`, `toc_line_height` | TOC typography, inheriting report typography by default |
 
-The responsive layout uses compact padding and one column below 700px. Custom
-CSS can override responsive rules when necessary. All presets use
-`Roboto, "Noto Sans", sans-serif` for report text and headings: Roboto is preferred,
-followed by Noto Sans and the browser's sans-serif fallback. Code retains its
-monospace stack, and the TOC inherits the report font. Font stacks use local
-fonts; the built-in themes do not download fonts. Override `font_family` to
-choose a different order or font for a custom theme.
+### Palette tokens
 
-TOC links use the theme's link color without underlines by default. On hover or
-keyboard focus, they use the theme's link hover color and an underline. Keyboard focus also has a visible outline.
-The TOC inherits the theme's font, line height, corner radius, and surface color
-in both top and sidebar layouts. The `toc_*` tokens remain available for explicit
-overrides; `toc_accent` controls the link color, and `accent_hover` controls
-the hover and focus color.
+| Tokens | Controls |
+| --- | --- |
+| `page_background` | Full-document background; never the fragment host page |
+| `background`, `surface` | Report and secondary surfaces |
+| `text`, `heading`, `description`, `muted` | Body text, headings, descriptions, metadata, and captions |
+| `accent`, `accent_hover` | Links, hover/focus colors, and blockquote borders |
+| `border`, `table_header`, `shadow_color` | Rules, table-header backgrounds, and report shadow color |
+| `panel_background`, `pre_background`, `blockquote_background` | Existing component surfaces; transparent by default |
+| `toc_text`, `toc_background`, `toc_accent` | TOC colors, referencing report text, surface, and accent by default |
+
+The responsive layout uses compact padding and one column below 700px. Report
+fonts prefer Roboto, then Noto Sans and sans-serif; code uses the existing local
+monospace stack. Built-ins do not download fonts. The TOC inherits theme
+typography, radius, and palette colors in both top and sidebar layouts. Its links
+gain underlines on hover/focus and a visible outline on keyboard focus.
 
 ## CSS customization and fragments
 
-For styling beyond tokens, use the theme's `css` string. The writer replaces every
-`&` with that theme's report-root selector, then places the CSS after the built-in
-styles. Prefix **each selector** with `&` to keep rules within the report:
+The writer replaces every `&` in theme CSS with the report-root selector, then
+places custom CSS after built-in styles and automatic-mode overrides. Prefix
+**each selector** with `&` to keep rules within the report:
 
 ```python
-custom = get_theme('paper').with_overrides(
-    name='custom',
+theme = get_theme('default').with_overrides(
+    name='italic-headings',
     css='& h2, & h3 { font-style: italic; }',
 )
 ```
 
-This is literal placeholder substitution, not Sass or CSS nesting. Within an
-automatic pair, custom CSS is applied only for its corresponding mode. Token
-values and custom CSS are trusted author-provided code, not sanitized user input.
-CSS syntax and color contrast of custom themes are the author's responsibility.
+This is literal placeholder substitution, not Sass or CSS nesting. Token values
+and custom CSS are trusted author-provided code; CSS syntax and custom color
+contrast are the author's responsibility. Unscoped custom CSS can affect the
+host page.
 
-Each theme's styles target a content-derived report attribute. Differently themed
-fragments can therefore share a page without their generated theme styles
-interfering. Unscoped custom CSS can still affect the host page. Existing section
-anchor IDs are unchanged; repeated copies of a report can share anchor IDs.
+The writer resolves defaults and object overrides into structural and color
+tokens, selects the mode, and applies custom CSS last. Content-derived style
+identifiers scope the CSS through `data-reportkit-theme`. Differently styled
+fragments can share a page without generated styles interfering. Section anchor
+IDs are unchanged, so repeated reports can still share anchor IDs.
 
 ## Tables and charts
 
-Themes style report text, layout, ordinary tables, panels, blockquotes, and figure
-captions. Explicit Pandas Styler rules retain precedence over the report defaults.
+Styles control report text, layout, ordinary tables, existing panels,
+blockquotes, and captions. Explicit Pandas Styler rules retain precedence.
 Chart colors, backgrounds, labels, and exported images retain their original
-styling; configure those through the chart library. Theme selection does not
-change adapter interfaces or rendering capabilities.
+styling; configure those through the chart library. Styling does not change
+adapter interfaces, chart layout, image dimensions, or figure composition.
 
-## Preview the themes
+## Migration
 
-Run the dependency-free [theme gallery](../examples/theme_gallery.py):
+This is a breaking change: `theme=`, `AutoTheme`, `Theme.mode`, and the old preset
+names are removed without aliases. `get_theme()` now resolves structural themes
+only; its sole built-in name is `default`.
+
+| Previous call | Replacement |
+| --- | --- |
+| `report.write(path, theme='light')` | `report.write(path)` |
+| `report.write(path, theme='dark')` | `report.write(path, style={'mode': 'dark'})` |
+| `report.write(path, theme='auto')` | `report.write(path, style={'mode': 'auto'})` |
+| `report.write(path, theme='paper')` | `report.write(path, style={'palette': 'parchment'})` |
+| `report.write(path, theme='ink')` | `report.write(path, style={'palette': 'parchment', 'mode': 'dark'})` |
+| `report.write(path, theme='auto-paper')` | `report.write(path, style={'palette': 'parchment', 'mode': 'auto'})` |
+
+These replacements preserve intent, not every old preset's exact appearance.
+Carbon presets have no built-in equivalent; use a custom structural `Theme` for
+that typography. Split old custom tokens by ownership: geometry and fonts go in
+`Theme.tokens`; colors go in `Palette.light` and `.dark`. Replace an `AutoTheme`
+pair with one structural theme, a paired palette, and `Style(mode='auto')`.
+
+## Preview styles
+
+Run the dependency-free [gallery](../examples/theme_gallery.py):
 
 ```bash
 uv run python examples/theme_gallery.py /tmp/reportkit-theme-gallery
 ```
 
-Open the generated HTML files to compare all presets, a custom automatic pair,
-and multiple differently themed fragments. Change your system appearance to
-preview automatic themes in both modes.
+It generates all 12 palette/mode combinations, a custom style, and multiple
+styled fragments sharing one page. Change your system appearance to inspect
+automatic modes.
