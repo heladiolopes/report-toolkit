@@ -11,8 +11,8 @@ fragment = report.to_html(fragment=True, theme='paper')
 
 | Preset | Appearance |
 | --- | --- |
-| `light` | Neutral blue accents on white; the default |
-| `dark` | Blue accents on dark slate |
+| `light` | White and neutral gray with Times-based typography; the default |
+| `dark` | Near-black surfaces with Times-based typography and blue links |
 | `paper` | Warm cream with serif typography |
 | `ink` | Warm charcoal with serif typography |
 | `auto` | `light` or `dark`, following the reader's system preference |
@@ -21,6 +21,11 @@ fragment = report.to_html(fragment=True, theme='paper')
 Automatic themes use CSS `prefers-color-scheme` and fall back to light styling
 when the browser does not support it. They require no JavaScript, network access,
 or reader toggle. Explicit presets stay in their selected mode.
+
+The light and dark themes use compact content spacing and bordered table cells,
+with a 1040px maximum report width and 5px report corners. Page padding remains
+roomy, and the TOC retains its existing typography and colors. The `paper` and
+`ink` alternatives retain their warmer palettes and previous spacing.
 
 ## Define a custom theme
 
@@ -64,18 +69,27 @@ keys are listed below; unknown keys raise `ValueError` to catch spelling mistake
 | Tokens | Controls |
 | --- | --- |
 | `page_background` | Full-document background; never applied to a fragment's host page |
-| `background`, `surface` | Report background and inset surfaces such as code and TOC |
+| `background`, `surface` | Report background and secondary surface color |
 | `text`, `heading`, `accent` | Body text, headings, links and blockquote borders |
 | `description`, `muted` | Description, metadata and captions |
 | `border`, `table_header`, `shadow_color` | Rules, header backgrounds and page shadow color |
 | `font_family`, `code_font` | Body and code font stacks |
 | `font_size`, `line_height` | Base text size and unitless line height |
 | `content_width`, `page_margin`, `content_padding`, `radius` | Page sizing, whitespace and corner radius |
-| `h1_size`, `h2_size`, `h3_size`, `h4_size`, `h5_size`, `h6_size` | Section heading sizes; `h1_size` also controls the title's minimum size |
+| `h1_size`, `h2_size`, `h3_size`, `h4_size`, `h5_size`, `h6_size` | Section heading sizes |
 | `section_spacing`, `column_gap` | Section separation and column gutters |
 | `caption_size`, `figure_margin` | Caption text size and figure spacing |
 | `table_size`, `cell_padding` | Table font size and cell whitespace |
 | `panel_background`, `panel_padding` | Panel surfaces and internal spacing |
+| `shadow_geometry` | Shadow offsets and blur, combined with `shadow_color` |
+| `title_size`, `heading_line_height`, `heading_margin` | Report title size and section heading rhythm |
+| `h2_border_width`, `h2_padding` | Second-level heading rule width and bottom padding |
+| `paragraph_margin`, `list_margin`, `nested_list_margin`, `list_item_spacing` | Content spacing |
+| `link_decoration`, `accent_hover` | Link decoration and hover color |
+| `table_border_width`, `table_line_height` | Cell borders (bottom rules remain 1px) and table line height |
+| `pre_padding`, `pre_background`, `pre_radius`, `pre_margin`, `code_size` | Code block styling and code font size |
+| `blockquote_margin`, `blockquote_padding`, `blockquote_border_width`, `blockquote_background` | Blockquote styling |
+| `toc_font_family`, `toc_line_height`, `toc_text`, `toc_background`, `toc_accent` | Independent TOC typography and colors |
 
 The responsive layout uses compact padding and one column below 700px. Custom
 CSS can override responsive rules when necessary. Font stacks use local fonts;

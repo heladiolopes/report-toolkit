@@ -48,6 +48,43 @@ class ThemeTests(unittest.TestCase):
         self.assertEqual(before, self.report.to_tree())
         self.assertEqual(original, self.report.to_html())
 
+    def test_default_restyle_preserves_page_and_navigation(self):
+        for name, text, surface, accent in (
+            ('light', '#1d2939', '#f4f6fa', '#1259a8'),
+            ('dark', '#e0e7ef', '#202e40', '#91baff'),
+        ):
+            with self.subTest(theme=name):
+                html = self.report.to_html(theme=name, toc=True)
+                for declaration in (
+                    '--reportkit-content-width: 1040px;',
+                    '--reportkit-page-margin: 32px auto;',
+                    '--reportkit-content-padding: 48px clamp(20px, 5vw, 72px);',
+                    '--reportkit-radius: 5px;',
+                    '--reportkit-title-size: 2.5rem;',
+                    '--reportkit-table-border-width: 1px;',
+                    '--reportkit-toc-font-family: system-ui, sans-serif;',
+                    '--reportkit-toc-line-height: 1.65;',
+                    f'--reportkit-toc-text: {text};',
+                    f'--reportkit-toc-background: {surface};',
+                    f'--reportkit-toc-accent: {accent};',
+                ):
+                    self.assertIn(declaration, html)
+                self.assertIn('font-family: var(--reportkit-toc-font-family)', html)
+                self.assertIn('background: var(--reportkit-toc-background)', html)
+                self.assertIn('color: var(--reportkit-toc-accent)', html)
+        self.assertEqual(Theme(name='custom').tokens, get_theme('light').tokens)
+        for name in ('paper', 'ink'):
+            with self.subTest(theme=name):
+                theme = get_theme(name)
+                self.assertEqual(theme.tokens['radius'], '12px')
+                self.assertEqual(theme.tokens['font_family'], 'Georgia, serif')
+                self.assertEqual(theme.tokens['line_height'], '1.65')
+                self.assertEqual(theme.tokens['cell_padding'], '.55rem .75rem')
+                self.assertEqual(theme.tokens['table_border_width'], '0')
+                self.assertEqual(
+                    theme.tokens['pre_background'], 'var(--reportkit-surface)'
+                )
+
     def test_custom_tokens_are_copied_and_overrides_inherit(self):
         tokens = {'accent': '#2457a7'}
         custom = Theme(name='custom', tokens=tokens, css='& h2 { font-style: italic; }')

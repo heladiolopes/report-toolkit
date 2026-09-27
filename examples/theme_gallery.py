@@ -9,7 +9,7 @@ from reportkit import AutoTheme, Report, get_theme
 def build_report() -> Report:
     report = Report(
         'Theme gallery',
-        description='One report, reusable visual styles.',
+        description='Neutral light and dark themes, plus warm paper and ink alternatives.',
         author='ReportKit',
     )
     report.heading(1, 'Overview')

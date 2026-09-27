@@ -47,6 +47,93 @@ _DEFAULT_TOKENS = {
 }
 
 
+# Keep the alternative presets' presentation independent of default restyling.
+_DEFAULT_TOKENS.update(
+    {
+        'shadow_geometry': '0 12px 36px',
+        'title_size': 'clamp(var(--reportkit-h1-size), 5vw, 3rem)',
+        'heading_line_height': '1.25',
+        'heading_margin': '1.7em 0 .55em',
+        'h2_border_width': '1px',
+        'h2_padding': '.25em',
+        'paragraph_margin': '.6em 0 1.1em',
+        'list_margin': 'revert',
+        'list_item_spacing': '0',
+        'nested_list_margin': 'revert',
+        'link_decoration': 'underline',
+        'accent_hover': 'var(--reportkit-accent)',
+        'table_border_width': '0',
+        'table_line_height': 'inherit',
+        'pre_padding': '1rem',
+        'pre_background': 'var(--reportkit-surface)',
+        'pre_radius': '6px',
+        'pre_margin': '1em 0',
+        'code_size': '.9em',
+        'blockquote_margin': '1rem 0',
+        'blockquote_padding': '.25rem 1rem',
+        'blockquote_border_width': '3px',
+        'blockquote_background': 'var(--reportkit-surface)',
+        'toc_font_family': 'var(--reportkit-font-family)',
+        'toc_line_height': 'var(--reportkit-line-height)',
+        'toc_text': 'var(--reportkit-text)',
+        'toc_background': 'var(--reportkit-surface)',
+        'toc_accent': 'var(--reportkit-accent)',
+    }
+)
+_ALTERNATIVE_DEFAULTS = dict(_DEFAULT_TOKENS)
+_DEFAULT_TOKENS.update(
+    {
+        'page_background': '#f5f5f5',
+        'surface': '#f3f3f3',
+        'text': '#262626',
+        'heading': '#0a0a0a',
+        'accent': '#2563eb',
+        'accent_hover': '#1d4ed8',
+        'description': '#6b6b6b',
+        'muted': '#6b6b6b',
+        'border': '#dddddd',
+        'table_header': '#f5f5f5',
+        'shadow_color': '#00000014',
+        'shadow_geometry': '0 18px 42px',
+        'font_family': 'Times, "Times New Roman", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+        'code_font': '"JetBrains Mono", "SFMono-Regular", "Consolas", "Liberation Mono", monospace',
+        'line_height': '1.5',
+        'radius': '5px',
+        'h1_size': '2em',
+        'h2_size': '1.5em',
+        'title_size': '2.5rem',
+        'heading_line_height': '1.2',
+        'heading_margin': '1.5em 0 .5em',
+        'h2_border_width': '0',
+        'h2_padding': '0',
+        'paragraph_margin': '0 0 .75rem',
+        'list_margin': '0 0 .75rem',
+        'list_item_spacing': '.25rem',
+        'nested_list_margin': '0 0 .75rem',
+        'link_decoration': 'none',
+        'table_size': '1em',
+        'cell_padding': '.25rem .75rem',
+        'table_border_width': '1px',
+        'table_line_height': '1.25',
+        'pre_padding': '0',
+        'pre_background': 'transparent',
+        'pre_radius': '0',
+        'pre_margin': '0 0 .75rem',
+        'code_size': '1em',
+        'blockquote_margin': '0 40px .75rem',
+        'blockquote_padding': '0',
+        'blockquote_border_width': '0',
+        'blockquote_background': 'transparent',
+        # Freeze the existing TOC appearance while the surrounding content changes.
+        'toc_font_family': 'system-ui, sans-serif',
+        'toc_line_height': '1.65',
+        'toc_text': '#1d2939',
+        'toc_background': '#f4f6fa',
+        'toc_accent': '#1259a8',
+    }
+)
+
+
 def _tokens(values: Mapping[str, str]) -> dict[str, str]:
     if not isinstance(values, Mapping):
         raise TypeError('theme tokens must be a mapping')
@@ -124,22 +211,28 @@ _DARK = Theme(
     name='dark',
     mode='dark',
     tokens={
-        'page_background': '#101722',
-        'background': '#182231',
-        'surface': '#202e40',
-        'text': '#e0e7ef',
-        'heading': '#f1f5fa',
-        'accent': '#91baff',
-        'description': '#bac9dc',
-        'muted': '#a8b9ce',
-        'border': '#3b4c62',
-        'table_header': '#26364b',
-        'shadow_color': '#00000033',
+        'page_background': '#0a0a0a',
+        'background': '#111111',
+        'surface': '#171717',
+        'text': '#e5e5e5',
+        'heading': '#fafafa',
+        'accent': '#60a5fa',
+        'accent_hover': '#93c5fd',
+        'description': '#a3a3a3',
+        'muted': '#a3a3a3',
+        'border': '#2a2a2a',
+        'table_header': '#1a1a1a',
+        'shadow_color': '#00000099',
+        'shadow_geometry': '0 20px 48px',
+        'toc_text': '#e0e7ef',
+        'toc_background': '#202e40',
+        'toc_accent': '#91baff',
     },
 )
 _PAPER = Theme(
     name='paper',
     tokens={
+        **_ALTERNATIVE_DEFAULTS,
         'page_background': '#eee9de',
         'background': '#fffcf5',
         'surface': '#f2ecdf',
@@ -158,6 +251,7 @@ _INK = Theme(
     name='ink',
     mode='dark',
     tokens={
+        **_ALTERNATIVE_DEFAULTS,
         'page_background': '#191817',
         'background': '#252320',
         'surface': '#302d28',
@@ -252,14 +346,18 @@ def _stylesheet(theme: Theme | AutoTheme, *, fragment: bool) -> str:
 
 _CSS = """
 .reportkit, .reportkit * { box-sizing: border-box; }
-.reportkit { max-width: var(--reportkit-content-width); margin: var(--reportkit-page-margin); padding: var(--reportkit-content-padding); background: var(--reportkit-background); border: 1px solid var(--reportkit-border); border-radius: var(--reportkit-radius); box-shadow: 0 12px 36px var(--reportkit-shadow-color); }
+.reportkit { max-width: var(--reportkit-content-width); margin: var(--reportkit-page-margin); padding: var(--reportkit-content-padding); background: var(--reportkit-background); border: 1px solid var(--reportkit-border); border-radius: var(--reportkit-radius); box-shadow: var(--reportkit-shadow-geometry) var(--reportkit-shadow-color); }
 .reportkit { color: var(--reportkit-text); font: var(--reportkit-font-size)/var(--reportkit-line-height) var(--reportkit-font-family); }
-.reportkit h1, .reportkit h2, .reportkit h3, .reportkit h4, .reportkit h5, .reportkit h6 { color: var(--reportkit-heading); line-height: 1.25; margin: 1.7em 0 .55em; }
+.reportkit h1, .reportkit h2, .reportkit h3, .reportkit h4, .reportkit h5, .reportkit h6 { color: var(--reportkit-heading); line-height: var(--reportkit-heading-line-height); margin: var(--reportkit-heading-margin); }
 .reportkit h1 { font-size: var(--reportkit-h1-size); margin-top: 0; }
-.reportkit .report-title { font-size: clamp(var(--reportkit-h1-size), 5vw, 3rem); margin: 0 0 .5em; }
-.reportkit h2 { font-size: var(--reportkit-h2-size); border-bottom: 1px solid var(--reportkit-border); padding-bottom: .25em; }
-.reportkit p { margin: .6em 0 1.1em; }
-.reportkit a { color: var(--reportkit-accent); }
+.reportkit .report-title { font-size: var(--reportkit-title-size); margin: 0 0 .5em; }
+.reportkit h2 { font-size: var(--reportkit-h2-size); border-bottom: var(--reportkit-h2-border-width) solid var(--reportkit-border); padding-bottom: var(--reportkit-h2-padding); }
+.reportkit p { margin: var(--reportkit-paragraph-margin); }
+.reportkit ul, .reportkit ol { margin: var(--reportkit-list-margin); }
+.reportkit ul ul, .reportkit ul ol, .reportkit ol ul, .reportkit ol ol { margin: var(--reportkit-nested-list-margin); }
+.reportkit li + li { margin-top: var(--reportkit-list-item-spacing); }
+.reportkit a { color: var(--reportkit-accent); text-decoration: var(--reportkit-link-decoration); }
+.reportkit a:hover { color: var(--reportkit-accent-hover); text-decoration: underline; }
 .reportkit .report-description { color: var(--reportkit-description); font-size: 1.1rem; }
 .reportkit .report-meta { color: var(--reportkit-muted); font-size: var(--reportkit-caption-size); display: flex; flex-wrap: wrap; gap: 1.2rem; }
 .reportkit .report-section { margin-top: var(--reportkit-section-spacing); }
@@ -267,22 +365,24 @@ _CSS = """
 .reportkit .report-column-item { min-width: 0; }
 .reportkit .report-panel { min-width: 0; overflow-x: auto; background: var(--reportkit-panel-background); padding: var(--reportkit-panel-padding); }
 .reportkit .report-panel-title { color: var(--reportkit-heading); font-weight: 650; margin-bottom: .75rem; }
-.reportkit .report-toc { margin: 1.5rem 0; padding: 1rem 1.5rem; background: var(--reportkit-surface); border-radius: 6px; }
+.reportkit .report-toc { margin: 1.5rem 0; padding: 1rem 1.5rem; background: var(--reportkit-toc-background); border-radius: 6px; color: var(--reportkit-toc-text); font-family: var(--reportkit-toc-font-family); line-height: var(--reportkit-toc-line-height); }
+.reportkit .report-toc a, .reportkit .report-toc a:hover { color: var(--reportkit-toc-accent); text-decoration: underline; }
+.reportkit .report-toc li + li { margin-top: 0; }
 .reportkit .report-toc-title { font-weight: 650; }
-.reportkit .report-toc ul { padding-left: 1.5rem; }
+.reportkit .report-toc ul { padding-left: 1.5rem; margin: revert; }
 .reportkit .report-artifact { margin: var(--reportkit-figure-margin); min-width: 0; overflow-x: auto; }
 .reportkit figcaption { color: var(--reportkit-muted); font-size: var(--reportkit-caption-size); margin-top: .5rem; }
 .reportkit .reportkit-figure-image { display: block; max-width: 100%; height: auto; }
-.reportkit table { border-collapse: collapse; width: 100%; font-size: var(--reportkit-table-size); }
-.reportkit th, .reportkit td { border-bottom: 1px solid var(--reportkit-border); padding: var(--reportkit-cell-padding); text-align: left; }
+.reportkit table { border-collapse: collapse; width: 100%; font-size: var(--reportkit-table-size); line-height: var(--reportkit-table-line-height); }
+.reportkit th, .reportkit td { border: var(--reportkit-table-border-width) solid var(--reportkit-border); border-bottom: 1px solid var(--reportkit-border); padding: var(--reportkit-cell-padding); text-align: left; }
 .reportkit th { background: var(--reportkit-table-header); font-weight: 650; }
-.reportkit pre { overflow-x: auto; padding: 1rem; background: var(--reportkit-surface); border-radius: 6px; }
-.reportkit code { font-size: .9em; font-family: var(--reportkit-code-font); }
+.reportkit pre { overflow-x: auto; padding: var(--reportkit-pre-padding); background: var(--reportkit-pre-background); border-radius: var(--reportkit-pre-radius); margin: var(--reportkit-pre-margin); }
+.reportkit code { font-size: var(--reportkit-code-size); font-family: var(--reportkit-code-font); }
 .reportkit h3 { font-size: var(--reportkit-h3-size); }
 .reportkit h4 { font-size: var(--reportkit-h4-size); }
 .reportkit h5 { font-size: var(--reportkit-h5-size); }
 .reportkit h6 { font-size: var(--reportkit-h6-size); }
-.reportkit blockquote { margin: 1rem 0; padding: .25rem 1rem; border-left: 3px solid var(--reportkit-accent); background: var(--reportkit-surface); }
+.reportkit blockquote { margin: var(--reportkit-blockquote-margin); padding: var(--reportkit-blockquote-padding); border-left: var(--reportkit-blockquote-border-width) solid var(--reportkit-accent); background: var(--reportkit-blockquote-background); }
 .reportkit hr { border: 0; border-top: 1px solid var(--reportkit-border); }
 @media (max-width: 700px) { .reportkit { margin: 0; border: 0; border-radius: 0; padding: 24px 18px; } .reportkit .report-columns { grid-template-columns: 1fr; } }
 """.strip()
