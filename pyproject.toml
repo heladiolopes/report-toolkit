@@ -27,6 +27,9 @@ dev = ["pytest>=8", "ruff>=0.9", "build>=1"]
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+reportkit = ["resources/*.css"]
+
 [build-system]
 requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"

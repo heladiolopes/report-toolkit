@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import re
 from collections.abc import Mapping
 from datetime import date, datetime
+from functools import cache
 from html import escape
+from importlib.resources import files
 from pathlib import Path
 from typing import Literal
 
@@ -25,11 +29,70 @@ from .model import (
     RawHTML,
     Section,
 )
-from .themes import Style, _resolve_style, _style_id, _stylesheet
+from .themes import Style
+from .themes.style import _resolve_style
 
 _logger = logging.getLogger(__name__)
 _Outline = dict[Section, tuple[int, str, str]]
 _TOCEntry = tuple[str, list['_TOCEntry']]
+
+
+@cache
+def _base_css() -> str:
+    """Read packaged CSS once, including when imported from a wheel archive."""
+    return (
+        files('reportkit')
+        .joinpath('resources/report.css')
+        .read_text(encoding='utf-8')
+        .strip()
+    )
+
+
+def _style_id(style: Style) -> str:
+    # Resolved content distinguishes custom objects even when names are reused.
+    payload = (
+        style.theme.name,
+        dict(style.theme.tokens),
+        style.theme.css,
+        style.palette.name,
+        dict(style.palette.light),
+        dict(style.palette.dark),
+        style.mode,
+    )
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def _stylesheet(style: Style, *, fragment: bool) -> str:
+    # :where keeps specificity low enough for Pandas Styler's explicit rules.
+    selector = f'.reportkit:where([data-reportkit-theme="{_style_id(style)}"])'
+    base = re.sub(r'\.reportkit(?![\w-])', lambda match: selector, _base_css())
+
+    def variables(tokens: Mapping[str, str], mode: str) -> str:
+        declarations = '\n'.join(
+            f'  --reportkit-{key.replace("_", "-")}: {value};'
+            for key, value in sorted(tokens.items())
+        )
+        rules = f'{selector} {{\n{declarations}\n  color-scheme: {mode};\n}}'
+        if not fragment:
+            rules += (
+                '\nbody { margin: 0; background: '
+                + tokens['page_background']
+                + f'; color-scheme: {mode}; }}'
+            )
+        return rules
+
+    mode = 'light' if style.mode == 'auto' else style.mode
+    tokens = dict(style.theme.tokens) | dict(getattr(style.palette, mode))
+    css = variables(tokens, mode) + '\n' + base
+    if style.mode == 'auto':
+        css += (
+            '\n@media (prefers-color-scheme: dark) {\n'
+            + variables(style.palette.dark, 'dark')
+            + '\n}'
+        )
+    css += '\n' + style.theme.css.replace('&', selector)
+    # Prevent a CSS string from terminating the surrounding HTML style element.
+    return css.replace('<', r'\3c ')
 
 
 def _format_size(size: int) -> str:

@@ -13,6 +13,13 @@ PALETTES = ('slate', 'azure', 'parchment', 'ember')
 MODES = ('light', 'dark', 'auto')
 
 
+def test_public_import_paths():
+    from reportkit import themes
+
+    for public in (Style, Theme, Palette, get_theme, get_palette):
+        assert getattr(themes, public.__name__) is public
+
+
 @pytest.fixture
 def report():
     report = Report('Style preview', author='Analyst')

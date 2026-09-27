@@ -73,3 +73,10 @@ uv run make build
 
 `make test` and pytest both run the unittest-compatible suite, including the
 example integration test. Optional integration tests skip when dependencies are absent.
+
+Theming code lives in `src/reportkit/themes/`: structural defaults belong in
+`theme.py`, color values in `palette.py`, and configuration normalization in
+`style.py`. Edit `src/reportkit/resources/report.css` for static report CSS;
+HTML-specific scoping and dynamic style generation live in the writer. CSS is
+packaged with the library and embedded in exported HTML. After changing resources
+or package-data settings, run `make build` and verify the built distributions.
