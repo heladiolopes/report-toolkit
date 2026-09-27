@@ -29,7 +29,8 @@ raise `ValueError`. Presentation is never stored in the report's document model.
 The only built-in structural theme is `default`. It preserves the previous light
 layout: 16px body text, 1.5 line height, 1040px maximum report width, 5px corners,
 the report frame and shadow, compact content spacing, and bordered table cells.
-Publication-style restyling and expanded shared panel controls are deferred.
+Publication-style restyling is deferred. Artifact expansion controls
+use the selected theme and palette.
 
 | Palette | Appearance |
 | --- | --- |

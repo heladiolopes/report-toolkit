@@ -28,7 +28,7 @@ dev = ["pytest>=8", "ruff>=0.9", "build>=1"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-reportkit = ["resources/*.css"]
+reportkit = ["resources/*.css", "resources/*.js"]
 
 [build-system]
 requires = ["setuptools>=77"]

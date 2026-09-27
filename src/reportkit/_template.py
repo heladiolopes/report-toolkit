@@ -378,9 +378,7 @@ class _Template:
                     columns = re.fullmatch(r'columns\s+([1-9][0-9]*)', instruction)
                     panel = re.fullmatch(r'panel\s+("(?:[^"\\]|\\.)*")', instruction)
                     artifact = re.fullmatch(
-                        r'artifact\s+('
-                        + _NAME
-                        + r')(?:\s+caption=("(?:[^"\\]|\\.)*"))?',
+                        r'artifact\s+(' + _NAME + r')(.*)',
                         instruction,
                     )
                     if columns or panel:
@@ -406,12 +404,36 @@ class _Template:
                             self.error(
                                 'An artifact tag requires an analytical object', line
                             )
-                        caption = (
-                            self.text(self.quoted(artifact[2], line))
-                            if artifact[2]
-                            else None
-                        )
-                        report.add(value, caption=caption)
+                        options = {}
+                        remaining = artifact[2]
+                        while remaining.strip():
+                            attribute = re.match(
+                                r'\s+([a-z_]+)=("(?:[^"\\]|\\.)*"|true|false)(?=\s|$)',
+                                remaining,
+                            )
+                            if not attribute:
+                                self.error('Invalid artifact attribute', line)
+                            key, raw_value = attribute.groups()
+                            if key not in {
+                                'caption',
+                                'width',
+                                'center',
+                                'expand',
+                            }:
+                                self.error(f'Unknown artifact attribute: {key}', line)
+                            if key in options:
+                                self.error(f'Duplicate artifact attribute: {key}', line)
+                            options[key] = (
+                                self.text(self.quoted(raw_value, line))
+                                if raw_value.startswith('"')
+                                else raw_value == 'true'
+                            )
+                            remaining = remaining[attribute.end() :]
+                        try:
+                            report.add(value, **options)
+                        except (TypeError, ValueError) as exc:
+                            self.error(str(exc), line)
+
                     else:
                         self.error('Unknown or invalid template tag', line)
                 elif kind == 'template_artifact':

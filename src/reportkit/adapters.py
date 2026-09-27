@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 from collections.abc import Callable
 from dataclasses import dataclass
+from html import escape
 from io import BytesIO
 from typing import Any, Protocol
 from uuid import uuid4
@@ -13,6 +14,8 @@ from uuid import uuid4
 @dataclass(frozen=True)
 class RenderedArtifact:
     html: str
+    kind: str | None = None
+    native_width: float | None = None
 
 
 class Adapter(Protocol):
@@ -91,12 +94,57 @@ def _is_plotly_figure(value: Any) -> bool:
 
 class PandasStylerAdapter:
     def render(self, value: Any) -> RenderedArtifact:
-        return RenderedArtifact(value.to_html())
+        return RenderedArtifact(value.to_html(), kind='table')
 
 
 class PandasDataFrameAdapter:
     def render(self, value: Any) -> RenderedArtifact:
-        return RenderedArtifact(value.style.to_html())
+        return RenderedArtifact(value.style.to_html(), kind='table')
+
+
+class _AltairHTML:
+    """Altair's template interface lets us retain each embedded Vega view."""
+
+    def __init__(self, inline: bool) -> None:
+        self.inline = inline
+
+    def render(self, **context: Any) -> str:
+        target = context['output_div']
+        libraries = ''
+        bundle = ''
+        if self.inline:
+            try:
+                import vl_convert
+            except ImportError as exc:
+                raise ImportError(
+                    'Inline Altair HTML requires vl-convert-python; install reportkit[offline]'
+                ) from exc
+            version = 'v' + '_'.join(context['vegalite_version'].split('.')[:2])
+            bundle = vl_convert.javascript_bundle(vl_version=version)
+        else:
+            for library, key in (
+                ('vega', 'vega_version'),
+                ('vega-lite', 'vegalite_version'),
+                ('vega-embed', 'vegaembed_version'),
+            ):
+                url = f'{context["base_url"]}/{library}@{context[key]}'
+                libraries += f'<script src="{escape(url, quote=True)}"></script>'
+        # Keep bundle and spec declarations local so offline charts can coexist.
+        spec = context['spec'].replace('<', r'\u003c')
+        options = context['embed_options'].replace('<', r'\u003c')
+        return (
+            libraries
+            + f'<div id="{target}"></div><script>(() => {{\n'
+            + bundle
+            + '\n(() => {'
+            + f'const spec = {spec}; const embedOpt = {options};'
+            + f'const el = document.getElementById("{target}");'
+            + f'vegaEmbed("#{target}", spec, embedOpt).then(function(result) {{'
+            + 'el.reportkitView = result.view;'
+            + 'el.dispatchEvent(new Event("reportkit:ready", {bubbles: true}));'
+            + '}).catch(function(error) { el.textContent = "Chart could not be rendered"; console.error(error); });'
+            + '})();})();</script>'
+        )
 
 
 class AltairAdapter:
@@ -104,19 +152,14 @@ class AltairAdapter:
         self.inline = inline
 
     def render(self, value: Any) -> RenderedArtifact:
-        try:
-            html = value.to_html(
+        return RenderedArtifact(
+            value.to_html(
                 fullhtml=False,
                 output_div=f'reportkit_chart_{uuid4().hex}',
-                inline=self.inline,
-            )
-        except ImportError as exc:
-            if self.inline:
-                raise ImportError(
-                    'Inline Altair HTML requires vl-convert-python; install reportkit[offline]'
-                ) from exc
-            raise
-        return RenderedArtifact(html)
+                template=_AltairHTML(self.inline),
+            ),
+            kind='altair',
+        )
 
 
 class MatplotlibAdapter:
@@ -126,7 +169,8 @@ class MatplotlibAdapter:
         data = base64.b64encode(buffer.getvalue()).decode('ascii')
         return RenderedArtifact(
             f'<img class="reportkit-figure-image" src="data:image/png;base64,{data}" '
-            'alt="Matplotlib figure">'
+            'alt="Matplotlib figure">',
+            kind='image',
         )
 
 
@@ -134,7 +178,11 @@ class PlotlyAdapter:
     def render(self, value: Any) -> RenderedArtifact:
         from plotly.io import to_html
 
-        return RenderedArtifact(to_html(value, full_html=False, include_plotlyjs='cdn'))
+        return RenderedArtifact(
+            to_html(value, full_html=False, include_plotlyjs='cdn'),
+            kind='plotly',
+            native_width=value.layout.width or 700,
+        )
 
 
 def default_registry(*, inline_altair: bool = False) -> AdapterRegistry:

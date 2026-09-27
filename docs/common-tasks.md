@@ -210,18 +210,42 @@ The [template example](../examples/template_report.py) and
 [Python example](../examples/sales_report.py) produce equivalent sales reports.
 Their shared helper contains only data and chart generation.
 
+## Size, center, and inspect artifacts
+
+```python
+report.add(sales, center=True)  # A compact table, centered in its column.
+report.add(chart, width='full', expand='always')
+report.add(figure, expand='always', caption='Expand to inspect details')
+```
+
+Artifacts keep their native width by default, including tables. `width="full"`
+scales width and height together, preserving the artifact's proportions and
+layout. Full width and centering are opt-in. Oversized artifacts scroll and
+automatically offer an Expand icon. Use `expand="never"` to suppress it. The
+enlarged view centers the visualization and includes Close, Zoom out, Zoom in,
+and Reset icons. Zoom is available only in this preview and does not change the
+inline artifact's size.
+
+The same options work in explicit template tags:
+
+```jinja
+{% artifact chart width="full" expand="always" center=true caption="Revenue" %}
+```
+
 ## Inspect and export a report
 
 ```python
 print(report.to_tree())
 html = report.to_html(toc=True, toc_depth=2)
-path = report.write('report.html', toc=True, toc_depth=2)
+path = report.write('report.html', toc=True, toc_depth=2)  # Compact by default.
+report.write('readable.html', pretty=True)
 fragment = report.to_html(fragment=True)
 ```
 
 The tree shows structure without rendering artifacts. A fragment includes scoped
-CSS and report content without the HTML document wrapper. The destination's
-parent directory must already exist.
+CSS, report content, and artifact interaction JavaScript without the HTML document wrapper. The destination's
+parent directory must already exist. Pretty output indents Reportkit markup;
+both modes preserve embedded HTML, scripts, and significant whitespace.
 
 The TOC includes section headings up to the absolute depth selected. It excludes
 the report title, panel labels, and headings inside Markdown or artifacts.

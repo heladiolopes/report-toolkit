@@ -37,6 +37,10 @@ _Outline = dict[Section, tuple[int, str, str]]
 _TOCEntry = tuple[str, list['_TOCEntry']]
 
 
+class _Payload(str):
+    """Opaque content whose boundaries must not gain formatting whitespace."""
+
+
 @cache
 def _base_css() -> str:
     """Read packaged CSS once, including when imported from a wheel archive."""
@@ -112,11 +116,15 @@ class HTMLWriter:
         registry: AdapterRegistry | None = None,
         style: Style | Mapping[str, object] | None = None,
         inline_altair: bool = False,
+        pretty: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
         numbered_headings: bool = False,
         toc_position: Literal['top', 'sidebar'] = 'top',
     ) -> None:
+        if not isinstance(pretty, bool):
+            raise TypeError('pretty must be a boolean')
+        self.pretty = pretty
         if not isinstance(toc, bool):
             raise TypeError('toc must be a boolean')
         if (
@@ -143,20 +151,70 @@ class HTMLWriter:
         )
         self._markdown = mistune.create_markdown(escape=True)
 
+    def _block(
+        self, opening: str, children: list[str], closing: str, depth: int
+    ) -> str:
+        if not self.pretty:
+            return opening + ''.join(children) + closing
+        # Indent only owned boundaries: embedded payloads remain byte-for-byte intact.
+        padding = '  ' * depth
+        parts = [opening]
+        previous_payload = False
+        for child in filter(None, children):
+            payload = isinstance(child, _Payload)
+            if not payload and not previous_payload:
+                parts.append('\n' + padding + '  ')
+            parts.append(child)
+            previous_payload = payload
+        if not previous_payload:
+            parts.append('\n' + padding)
+        parts.append(closing)
+        return ''.join(parts)
+
     def render(self, document: Document, *, fragment: bool = False) -> str:
         if not isinstance(document, Document):
             raise TypeError('HTMLWriter.render expects a Document')
-        content = self._render_document(document)
+        depth = 0 if fragment else 2
+        content = self._render_document(document, depth)
         css = _stylesheet(self.style, fragment=fragment)
+        stylesheet = f'<style>{css}</style>'
+        runtime = ''
+        if self._has_artifacts(document):
+            script = (
+                files('reportkit')
+                .joinpath('resources/artifacts.js')
+                .read_text(encoding='utf-8')
+            )
+            runtime = f'<script>{script}</script>'
         if fragment:
-            return f'<style>\n{css}\n</style>\n{content}'
+            return ('\n' if self.pretty else '').join(
+                part for part in (stylesheet, content, runtime) if part
+            )
         title = document.title if document.title is not None else 'Report'
+        head = self._block(
+            '<head>',
+            [
+                '<meta charset="utf-8">',
+                '<meta name="viewport" content="width=device-width, initial-scale=1">',
+                f'<title>{escape(title)}</title>',
+                stylesheet,
+            ],
+            '</head>',
+            1,
+        )
+        body = self._block('<body>', [content, runtime], '</body>', 1)
         return (
-            '<!doctype html>\n<html lang="en">\n<head>\n'
-            '<meta charset="utf-8">\n'
-            '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-            f'<title>{escape(title)}</title>\n<style>\n{css}\n</style>\n'
-            f'</head>\n<body>\n{content}\n</body>\n</html>\n'
+            '<!doctype html>'
+            + ('\n' if self.pretty else '')
+            + self._block('<html lang="en">', [head, body], '</html>', 0)
+            + ('\n' if self.pretty else '')
+        )
+
+    @staticmethod
+    def _has_artifacts(node: Node) -> bool:
+        return isinstance(node, Artifact) or (
+            isinstance(node, Container)
+            and any(HTMLWriter._has_artifacts(child) for child in node.children)
         )
 
     def write(
@@ -173,7 +231,7 @@ class HTMLWriter:
         )
         return destination
 
-    def _render_document(self, document: Document) -> str:
+    def _render_document(self, document: Document, depth: int = 0) -> str:
         outline = self._outline(document)
         navigation = self._render_toc(outline) if self.toc else ''
         # Section slugs never contain underscores, so this TOC ID cannot collide.
@@ -183,12 +241,13 @@ class HTMLWriter:
             if navigation and self.toc_position == 'top'
             else ''
         )
-        body = '\n'.join(
-            self._render_node(node, outline, backlink) for node in document.children
-        )
-        parts = [
-            f'<article class="reportkit" data-reportkit-theme="{_style_id(self.style)}">'
+        sidebar = bool(navigation and self.toc_position == 'sidebar')
+        article_depth = depth + int(sidebar)
+        body = [
+            self._render_node(node, outline, backlink, article_depth + 1)
+            for node in document.children
         ]
+        parts = []
         if document.title is not None:
             parts.append(
                 f'<header class="report-header"><h1 class="report-title">{escape(document.title)}</h1></header>'
@@ -200,17 +259,27 @@ class HTMLWriter:
         parts.extend(self._metadata(document))
         if navigation and self.toc_position == 'top':
             parts.append(navigation)
-        parts.append(body)
-        parts.append('</article>')
-        content = '\n'.join(parts)
-        if navigation and self.toc_position == 'sidebar':
-            return (
-                f'<div class="reportkit report-layout" data-reportkit-theme="{_style_id(self.style)}">'
-                '<div class="report-sidebar">'
-                + navigation
-                + '</div>'
-                + content
-                + '</div>'
+        parts.extend(body)
+        content = self._block(
+            f'<article class="reportkit" data-reportkit-theme="{_style_id(self.style)}">',
+            parts,
+            '</article>',
+            article_depth,
+        )
+        if sidebar:
+            return self._block(
+                f'<div class="reportkit report-layout" data-reportkit-theme="{_style_id(self.style)}">',
+                [
+                    self._block(
+                        '<div class="report-sidebar">',
+                        [navigation],
+                        '</div>',
+                        depth + 1,
+                    ),
+                    content,
+                ],
+                '</div>',
+                depth,
             )
         return content
 
@@ -306,11 +375,13 @@ class HTMLWriter:
         parts.append('</div>')
         return parts
 
-    def _render_node(self, node: Node, outline: _Outline, backlink: str = '') -> str:
+    def _render_node(
+        self, node: Node, outline: _Outline, backlink: str = '', depth: int = 0
+    ) -> str:
         if isinstance(node, Markdown):
-            return self._markdown(node.content).strip()
+            return _Payload(self._markdown(node.content).strip())
         if isinstance(node, RawHTML):
-            return node.content
+            return _Payload(node.content)
         if isinstance(node, List):
             return self._render_list(node.items, ordered=node.ordered)
         if isinstance(node, Artifact):
@@ -320,32 +391,75 @@ class HTMLWriter:
                 if node.caption
                 else ''
             )
-            return f'<figure class="report-artifact">{rendered.html}{caption}</figure>'
+            attributes = (
+                f'data-width="{node.width}" data-center="{str(node.center).lower()}" '
+                f'data-expand="{node.expand}" '
+                f'data-kind="{escape(rendered.kind or "custom", quote=True)}"'
+            )
+            sizing = ''
+            if rendered.native_width is not None:
+                width = float(rendered.native_width)
+                if not 0 < width < float('inf'):
+                    raise ValueError('native_width must be finite and positive')
+                sizing = f' style="--reportkit-native-width: {width:g}px"'
+            viewport = (
+                '<div class="report-artifact-viewport" tabindex="0" aria-label="Artifact content">'
+                '<div class="report-artifact-space"><div class="report-artifact-content"'
+                + sizing
+                + '>'
+                + rendered.html
+                + '</div></div></div>'
+            )
+            return self._block(
+                f'<figure class="report-artifact" {attributes}>',
+                [viewport, caption],
+                '</figure>',
+                depth,
+            )
         if isinstance(node, Section):
             heading, anchor, label = outline[node]
-            children = '\n'.join(
-                self._render_node(child, outline, backlink) for child in node.children
-            )
-            return (
-                f'<section class="report-section"><h{heading} id="{anchor}">{escape(label)}{backlink}</h{heading}>\n'
-                f'{children}\n</section>'
+            children = [
+                self._render_node(child, outline, backlink, depth + 1)
+                for child in node.children
+            ]
+            return self._block(
+                '<section class="report-section">',
+                [
+                    f'<h{heading} id="{anchor}">{escape(label)}{backlink}</h{heading}>',
+                    *children,
+                ],
+                '</section>',
+                depth,
             )
         if isinstance(node, Panel):
-            children = '\n'.join(
-                self._render_node(child, outline, backlink) for child in node.children
-            )
-            return (
-                f'<div class="report-panel"><div class="report-panel-title">{escape(node.title)}</div>\n'
-                f'{children}\n</div>'
+            children = [
+                self._render_node(child, outline, backlink, depth + 1)
+                for child in node.children
+            ]
+            return self._block(
+                '<div class="report-panel">',
+                [
+                    f'<div class="report-panel-title">{escape(node.title)}</div>',
+                    *children,
+                ],
+                '</div>',
+                depth,
             )
         if isinstance(node, Columns):
-            children = '\n'.join(
-                f'<div class="report-column-item">{self._render_node(child, outline, backlink)}</div>'
+            children = [
+                self._block(
+                    '<div class="report-column-item">',
+                    [self._render_node(child, outline, backlink, depth + 2)],
+                    '</div>',
+                    depth + 1,
+                )
                 for child in node.children
-            )
-            return (
-                f'<div class="report-columns" style="--reportkit-columns: {node.count}">\n'
-                f'{children}\n</div>'
+            ]
+            return self._block(
+                f'<div class="report-columns" style="--reportkit-columns: {node.count}">',
+                children,
+                '</div>',
+                depth,
             )
         raise TypeError(f'Cannot render node type {type(node).__name__}')
 

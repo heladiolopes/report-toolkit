@@ -58,3 +58,48 @@
 }
 
 @media (max-width: 700px) { .reportkit { margin: 0; border: 0; border-radius: 0; padding: 24px 18px; } .reportkit .report-columns { grid-template-columns: 1fr; } }
+
+/* Artifact sizing does not affect ordinary Markdown/raw HTML tables. */
+.reportkit .report-artifact { overflow: visible; }
+.reportkit .report-artifact-frame { position: relative; }
+.reportkit .report-artifact-expand { position: absolute; z-index: 1; left: calc(var(--reportkit-expand-left, 0px) + .5rem); bottom: calc(var(--reportkit-expand-bottom, 0px) + .5rem); display: grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: .45rem; color: var(--reportkit-muted); background: var(--reportkit-surface); border: 1px solid var(--reportkit-border); border-radius: var(--reportkit-radius); opacity: .85; cursor: pointer; transition: color .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
+.reportkit .report-artifact-expand[hidden] { display: none; }
+.reportkit .report-artifact-icon svg { display: block; width: 100%; height: 100%; }
+.reportkit .report-artifact-expand:hover,
+.reportkit .report-artifact-expand:focus-visible { color: var(--reportkit-accent); background: var(--reportkit-background); border-color: var(--reportkit-accent); opacity: 1; }
+.reportkit .report-artifact-expand:focus-visible { outline: 2px solid var(--reportkit-accent); outline-offset: 2px; }
+.reportkit .report-artifact-viewport { width: 100%; height: var(--reportkit-viewport-height, auto); max-height: 70vh; overflow: auto; }
+.reportkit .report-artifact-space { position: relative; width: var(--reportkit-space-width, max-content); height: var(--reportkit-space-height, auto); }
+.reportkit .report-artifact-ready > .report-artifact-content { position: absolute; }
+.reportkit .report-artifact-ready { overflow: clip; }
+.reportkit .report-artifact-content { width: var(--reportkit-native-width, max-content); transform: scale(var(--reportkit-artifact-scale, 1)); display: flow-root; transform-origin: top left; }
+.reportkit .report-artifact-content > .reportkit-figure-image { max-width: none; }
+.reportkit .report-artifact[data-width="native"] table { width: auto; }
+.reportkit .report-artifact[data-width="full"] .report-artifact-space { width: var(--reportkit-space-width, 100%); }
+.reportkit .report-artifact[data-width="full"] .report-artifact-content { width: 100%; }
+.reportkit .report-artifact[data-width="full"] table,
+.reportkit .report-artifact[data-width="full"] .reportkit-figure-image { width: 100%; }
+.reportkit .report-artifact[data-scaling="proportional"] .report-artifact-content { width: var(--reportkit-native-width, max-content); }
+.reportkit .report-artifact[data-scaling="proportional"] table,
+.reportkit .report-artifact[data-scaling="proportional"] .reportkit-figure-image { width: auto; }
+.reportkit .report-artifact[data-center="true"] .report-artifact-space { margin-inline: auto; }
+.reportkit .report-artifact-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .5rem; }
+.reportkit .report-artifact-toolbar[hidden], .reportkit .report-artifact-toolbar [hidden] { display: none; }
+.reportkit .report-artifact-toolbar button { font: inherit; color: var(--reportkit-text); background: var(--reportkit-surface); border: 1px solid var(--reportkit-border); border-radius: var(--reportkit-radius); padding: .25rem .65rem; cursor: pointer; }
+.reportkit .report-artifact-toolbar .report-artifact-icon { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: .45rem; color: var(--reportkit-muted); opacity: .85; transition: color .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
+.reportkit .report-artifact-toolbar .report-artifact-icon:not(:disabled):hover,
+.reportkit .report-artifact-toolbar .report-artifact-icon:focus-visible { color: var(--reportkit-accent); background: var(--reportkit-background); border-color: var(--reportkit-accent); opacity: 1; }
+.reportkit .report-artifact-toolbar button:disabled { opacity: .5; cursor: default; }
+.reportkit .report-artifact-toolbar button:focus-visible,
+.reportkit .report-artifact-viewport:focus-visible { outline: 2px solid var(--reportkit-accent); outline-offset: 2px; }
+.reportkit .report-artifact-dialog { width: 94vw; max-width: 94vw; height: 90vh; max-height: 90vh; padding: 1rem; color: var(--reportkit-text); background: var(--reportkit-background); border: 1px solid var(--reportkit-border); border-radius: var(--reportkit-radius); }
+.reportkit .report-artifact-dialog[open] { display: flex; flex-direction: column; }
+.reportkit .report-artifact-dialog::backdrop { background: rgb(0 0 0 / .5); }
+.reportkit .report-artifact-dialog > .report-artifact { flex: 1; min-height: 0; margin: 0; }
+.reportkit .report-artifact-dialog .report-artifact-viewport { height: 100%; max-height: none; }
+@media print {
+    .reportkit .report-artifact-toolbar, .reportkit .report-artifact-dialog, .reportkit .report-artifact-expand { display: none; }
+    .reportkit .report-artifact-viewport { height: auto; max-height: none; overflow: visible; }
+    .reportkit .report-artifact .report-artifact-space { width: auto; height: auto; overflow: visible; }
+    .reportkit .report-artifact .report-artifact-content { position: static; transform: none; max-width: 100%; }
+}

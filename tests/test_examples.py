@@ -96,7 +96,7 @@ class ExampleTests(unittest.TestCase):
                     '--reportkit-columns: 2',
                 ):
                     self.assertIn(marker, html)
-                self.assertEqual(html.count('<figure class="report-artifact">'), 6)
+                self.assertEqual(html.count('<figure class="report-artifact"'), 6)
                 self.assertEqual(html.count('<table '), 3)
                 self.assertEqual(html.count('class="report-panel"'), 4)
                 anchors = set(re.findall(r'id="(reportkit-[^"]+)"', html))

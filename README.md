@@ -80,3 +80,16 @@ Theming code lives in `src/reportkit/themes/`: structural defaults belong in
 HTML-specific scoping and dynamic style generation live in the writer. CSS is
 packaged with the library and embedded in exported HTML. After changing resources
 or package-data settings, run `make build` and verify the built distributions.
+
+Artifact layout is configurable per item:
+
+```python
+report.add(table, center=True)
+report.add(chart, width='full', expand='always')
+report.write('report.html', pretty=True)  # Compact markup is the default.
+```
+
+Tables and charts use native width by default. Oversized artifacts offer an
+centered expanded view with zoom controls and a Close icon. Zoom is available
+only in the expanded preview.
+See [artifact options](docs/api-reference.md#analytical-artifacts) for details.

@@ -146,12 +146,29 @@ class Report:
     def raw_html(self, content: str) -> RawHTML:
         return self._append(RawHTML(content=content))
 
-    def add(self, value: Any, *, caption: str | None = None) -> Artifact | RawHTML:
+    def add(
+        self,
+        value: Any,
+        *,
+        caption: str | None = None,
+        width: Literal['native', 'full'] = 'native',
+        center: bool = True,
+        expand: Literal['auto', 'always', 'never'] = 'auto',
+    ) -> Artifact | RawHTML:
+        node = Artifact(
+            value=value,
+            caption=caption,
+            width=width,
+            center=center,
+            expand=expand,
+        )
         if isinstance(value, str):
             if caption is not None:
                 raise ValueError('raw HTML strings do not accept a caption')
+            if width != 'native' or not center or expand != 'auto':
+                raise ValueError('raw HTML strings do not accept artifact options')
             return self.raw_html(value)
-        return self._append(Artifact(value=value, caption=caption))
+        return self._append(node)
 
     def concat(self, other: Report) -> Report:
         if not isinstance(other, Report):
@@ -223,6 +240,7 @@ class Report:
         self,
         *,
         fragment: bool = False,
+        pretty: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
         numbered_headings: bool = False,
@@ -232,6 +250,7 @@ class Report:
         from .writer import HTMLWriter
 
         return HTMLWriter(
+            pretty=pretty,
             toc=toc,
             toc_depth=toc_depth,
             style=style,
@@ -244,6 +263,7 @@ class Report:
         path: str | Path,
         *,
         fragment: bool = False,
+        pretty: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
         numbered_headings: bool = False,
@@ -253,6 +273,7 @@ class Report:
         from .writer import HTMLWriter
 
         return HTMLWriter(
+            pretty=pretty,
             toc=toc,
             toc_depth=toc_depth,
             style=style,

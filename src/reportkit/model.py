@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
 
 @dataclass(eq=False)
@@ -98,10 +98,19 @@ class List(Node):
 class Artifact(Node):
     value: Any
     caption: str | None = None
+    width: Literal['native', 'full'] = field(default='native', kw_only=True)
+    center: bool = field(default=True, kw_only=True)
+    expand: Literal['auto', 'always', 'never'] = field(default='auto', kw_only=True)
 
     def __post_init__(self) -> None:
         if self.caption is not None and not isinstance(self.caption, str):
             raise TypeError('caption must be a string or None')
+        if self.width not in ('native', 'full'):
+            raise ValueError("width must be 'native' or 'full'")
+        if self.expand not in ('auto', 'always', 'never'):
+            raise ValueError("expand must be 'auto', 'always', or 'never'")
+        if not isinstance(self.center, bool):
+            raise TypeError('center must be a boolean')
 
 
 @dataclass(eq=False)

@@ -63,7 +63,7 @@ report.unordered(['Revenue', ['January', 'February'], 'Costs'])
 ### Analytical artifacts
 
 ```python
-report.add(value, *, caption=None)
+report.add(value, *, caption=None, width="native", center=True, expand="auto")
 ```
 
 For non-strings, stores the object and returns an artifact node. Supported
@@ -73,7 +73,37 @@ rendered at output time; unsupported types raise `TypeError` during rendering.
 
 `caption` is a string or `None`, rendered as escaped text below the artifact.
 Invalid caption types raise `TypeError`. A string `value` inserts trusted HTML
-and returns an HTML node; any non-`None` caption then raises `ValueError`.
+and returns an HTML node; any non-`None` caption or non-default artifact option
+then raises `ValueError`. Explicit default options, including `center=True`,
+are accepted for raw HTML without applying artifact layout.
+
+| Option | Behavior |
+| --- | --- |
+| `width="native"` | Keep intrinsic image/table sizing and chart dimensions. This is the default; tables no longer stretch automatically. |
+| `width="full"` | Scale the complete artifact proportionally to the available column width, preserving its aspect ratio, labels, and layout. Works for charts, images, tables, and custom adapters. |
+| `center=True` | Center artifacts that fit within their viewport by default. Set `False` to align them to the left. Oversized content remains reachable from the left edge. |
+| `expand="auto"` | Offer an Expand icon when content overflows. `"always"` always offers it; `"never"` disables it. |
+
+Invalid width/expansion choices raise `ValueError`; non-boolean centering
+values raise `TypeError`. Artifact viewports scroll and are capped at 70% of the
+browser height. Expansion opens a themed dialog without shifting the report;
+Close or Escape restores the existing chart and keyboard focus. The enlarged
+view has Close, Zoom out, Zoom in, and Reset icons with tooltips. Zoom is
+available only in this preview, from 25% to 400% in 25% steps; Reset restores
+100%. For full-width artifacts, 100% is the size fitted to the preview's width.
+Zoom keeps the viewport fixed and the visualization centered horizontally and
+vertically, including after resizing. Closing the preview restores the inline
+size, and reopening it retains the preview zoom level. Oversized
+content starts scrolled to its center and remains available for manual panning.
+
+Full-width sizing fits the artifact to each viewport, including the enlarged
+panel, without stretching it horizontally. Its height changes by the same
+factor as its width. The artifact fills the available width.
+Without JavaScript, full-width images retain their aspect ratio and tables
+fall back to reflowing across the available width.
+
+Without JavaScript, artifacts remain scrollable and controls are absent.
+Printing hides controls and displays content at its native scale.
 
 ### Layout contexts
 
@@ -105,15 +135,22 @@ artifact objects remain shared. Heading groups retain their existing boundaries.
 
 ```python
 report.to_tree() -> str
-report.to_html(*, fragment=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None) -> str
-report.write(path, *, fragment=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None) -> pathlib.Path
+report.to_html(*, fragment=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None) -> str
+report.write(path, *, fragment=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None) -> pathlib.Path
 ```
 
 `to_tree()` formats the hierarchy, abbreviated text, lists, and artifact types
 and captions without rendering analytical objects.
 
 `to_html()` renders a complete HTML document by default. `fragment=True` returns
-scoped CSS and the report body without the HTML document wrapper.
+scoped CSS, the report body, and artifact interaction JavaScript when needed,
+without the HTML document wrapper.
+
+`pretty=False` (the default) produces compact Reportkit markup. `pretty=True`
+adds two-space indentation to Reportkit's structural markup. Adapter HTML, raw
+HTML, rendered Markdown, scripts, styles, and significant whitespace are kept
+unchanged in both modes. Compact output therefore need not be a single line and
+does not minify embedded library payloads. Non-boolean values raise `TypeError`.
 
 `write()` renders UTF-8 HTML to a string or `Path` destination and returns that
 path. Existing files are overwritten; parent directories are not created.
@@ -165,7 +202,7 @@ Additional Python composition after loading starts at the document root.
 | --- | --- |
 | `{{ name }}` in narrative | Inserts a scalar as literal text. |
 | `{{ chart }}` on its own line | Inserts an analytical object without a caption. |
-| `{% artifact chart caption="Revenue for {{ period }}" %}` | Inserts an analytical object with an optional caption. |
+| `{% artifact chart caption="Revenue for {{ period }}" %}` | Inserts an analytical object with an optional caption and layout options. |
 | `{% columns 2 %}` … `{% endcolumns %}` | Creates a column layout. |
 | `{% panel "Revenue for {{ period }}" %}` … `{% endpanel %}` | Groups content under a panel label. |
 
@@ -226,10 +263,16 @@ variables, inline analytical objects, unsupported expressions, mismatched tags,
 and invalid front matter raise it. Messages include the source filename (or
 `<template>`) and line number. Missing YAML support raises `ImportError`.
 
+Artifact tags accept `width="native"|"full"`, `center=true|false`,
+and `expand="auto"|"always"|"never"` in any order alongside
+`caption="..."`. Use lowercase, unquoted booleans and quoted strings. Unknown,
+duplicate, and invalid attributes raise a line-aware `TemplateError`.
+Shorthand `{{ chart }}` uses default options.
+
 ## HTMLWriter
 
 ```python
-HTMLWriter(*, registry=None, inline_altair=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None)
+HTMLWriter(*, registry=None, inline_altair=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None)
 writer.render(document, *, fragment=False) -> str
 writer.write(document, path, *, fragment=False) -> pathlib.Path
 ```
