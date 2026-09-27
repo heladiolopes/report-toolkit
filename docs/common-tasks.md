@@ -236,3 +236,16 @@ report.write('report.html')
 ```
 
 The library logs through `reportkit.writer` and does not configure logging itself.
+
+
+## Choose a report theme
+
+```python
+report.write('dark.html', theme='dark')
+report.write('adaptive.html', theme='auto')
+report.write('paper.html', theme='auto-paper')
+```
+
+Fixed presets are `light`, `dark`, `paper`, and `ink`. Automatic pairs follow the
+reader's system preference. See [Themes](themes.md) to define a custom theme,
+customize fonts and spacing, or pair your own light and dark styles.

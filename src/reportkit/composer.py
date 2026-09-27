@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from copy import copy
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .model import (
     Artifact,
@@ -22,6 +22,9 @@ from .model import (
 )
 
 _UNSET = object()
+
+if TYPE_CHECKING:
+    from .themes import AutoTheme, Theme
 
 
 class Report:
@@ -217,11 +220,16 @@ class Report:
         return format_tree(self.document)
 
     def to_html(
-        self, *, fragment: bool = False, toc: bool = False, toc_depth: int = 6
+        self,
+        *,
+        fragment: bool = False,
+        toc: bool = False,
+        toc_depth: int = 6,
+        theme: str | Theme | AutoTheme = 'light',
     ) -> str:
         from .writer import HTMLWriter
 
-        return HTMLWriter(toc=toc, toc_depth=toc_depth).render(
+        return HTMLWriter(toc=toc, toc_depth=toc_depth, theme=theme).render(
             self.document, fragment=fragment
         )
 
@@ -232,9 +240,10 @@ class Report:
         fragment: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
+        theme: str | Theme | AutoTheme = 'light',
     ) -> Path:
         from .writer import HTMLWriter
 
-        return HTMLWriter(toc=toc, toc_depth=toc_depth).write(
+        return HTMLWriter(toc=toc, toc_depth=toc_depth, theme=theme).write(
             self.document, path, fragment=fragment
         )

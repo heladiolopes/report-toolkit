@@ -52,6 +52,13 @@ and `examples/template_report.html` in a browser. Altair and Plotly charts
 require network access for their JavaScript. Raw HTML is covered in the
 [recipes](docs/common-tasks.md#insert-trusted-html), since templates escape it.
 
+## Themes
+
+Export with `theme='dark'`, `'paper'`, or `'ink'`, or use `theme='auto'` to follow
+the reader's system appearance. The default remains `'light'`. Define reusable
+custom themes with token and CSS overrides; see [Themes](docs/themes.md) and the
+[theme gallery](examples/theme_gallery.py).
+
 ## Development
 
 ```bash

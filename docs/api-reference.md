@@ -105,8 +105,8 @@ artifact objects remain shared. Heading groups retain their existing boundaries.
 
 ```python
 report.to_tree() -> str
-report.to_html(*, fragment=False, toc=False, toc_depth=6) -> str
-report.write(path, *, fragment=False, toc=False, toc_depth=6) -> pathlib.Path
+report.to_html(*, fragment=False, toc=False, toc_depth=6, theme='light') -> str
+report.write(path, *, fragment=False, toc=False, toc_depth=6, theme='light') -> pathlib.Path
 ```
 
 `to_tree()` formats the hierarchy, abbreviated text, lists, and artifact types
@@ -212,7 +212,7 @@ and invalid front matter raise it. Messages include the source filename (or
 ## HTMLWriter
 
 ```python
-HTMLWriter(*, registry=None, inline_altair=False, toc=False, toc_depth=6)
+HTMLWriter(*, registry=None, inline_altair=False, toc=False, toc_depth=6, theme='light')
 writer.render(document, *, fragment=False) -> str
 writer.write(document, path, *, fragment=False) -> pathlib.Path
 ```
@@ -229,3 +229,32 @@ load JavaScript from CDNs; tables and Matplotlib images are embedded.
 `registry=None` uses built-in artifact support. The custom registry extension
 API is outside this reference. Combining a custom registry with
 `inline_altair=True` raises `ValueError`.
+
+
+## Themes
+
+```python
+Theme(*, name, mode='light', tokens={}, css='')
+theme.with_overrides(*, name, tokens=None, css=None) -> Theme
+AutoTheme(*, light, dark)
+get_theme(name) -> Theme | AutoTheme
+```
+
+`HTMLWriter`, `Report.to_html()`, and `Report.write()` accept `theme` as a preset
+name, `Theme`, or `AutoTheme`. The default is `'light'`. `get_theme()` accepts
+`light`, `dark`, `paper`, `ink`, `auto`, and `auto-paper`; unknown names raise
+`ValueError`. Unsupported theme argument types raise `TypeError`.
+
+`Theme` copies and freezes its token mapping, filling omitted tokens with the
+light defaults. Names must be nonempty strings; modes are `light` or `dark`.
+Tokens must be a mapping of supported keys to nonempty CSS strings, and `css`
+must be a string. Incorrect types raise `TypeError`; unknown keys, empty names
+or values, and unsupported modes raise `ValueError`.
+
+`with_overrides()` merges tokens, preserves the mode, and inherits CSS unless
+replacement CSS is supplied. `AutoTheme` requires light and dark `Theme` objects
+(`TypeError` for other types, `ValueError` for mismatched modes). It follows the
+reader's system preference through CSS, with a light fallback.
+
+See [Themes](themes.md) for every token, custom CSS scoping, examples, and chart
+styling boundaries.
