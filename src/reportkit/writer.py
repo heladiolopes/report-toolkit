@@ -110,6 +110,40 @@ def _format_size(size: int) -> str:
 
 
 class HTMLWriter:
+    """Render output-independent report documents as HTML.
+
+    Parameters
+    ----------
+    registry : AdapterRegistry or None, optional
+        Registry used to render analytical objects. If omitted, the default
+        adapters are registered.
+    style : Style, mapping, or None, optional
+        Structural theme, color palette, and display mode. Mappings accept the
+        fields ``theme``, ``palette``, and ``mode``.
+    inline_altair : bool, optional
+        Embed Altair's JavaScript bundle instead of loading it from a CDN.
+        Requires ``vl-convert-python``. Cannot be combined with ``registry``.
+    pretty : bool, optional
+        Indent Reportkit's structural markup with two spaces.
+    toc : bool, optional
+        Include a table of contents for structural sections.
+    toc_depth : int, optional
+        Maximum absolute section level included in the TOC, from 1 to 6.
+    numbered_headings : bool, optional
+        Prefix structural headings and matching TOC entries with hierarchical
+        numbers.
+    toc_position : {'top', 'sidebar'}, optional
+        Place the TOC above the report or in a sidebar.
+
+    Raises
+    ------
+    TypeError
+        If boolean options or ``style`` have unsupported types.
+    ValueError
+        If ``toc_depth`` or ``toc_position`` is invalid, or both a custom
+        registry and ``inline_altair`` are supplied.
+    """
+
     def __init__(
         self,
         *,
@@ -172,6 +206,28 @@ class HTMLWriter:
         return ''.join(parts)
 
     def render(self, document: Document, *, fragment: bool = False) -> str:
+        """Render a document as a complete HTML page or embeddable fragment.
+
+        Parameters
+        ----------
+        document : Document
+            Report document to render.
+        fragment : bool, optional
+            Return scoped CSS, body content, and required artifact scripts
+            without an HTML document wrapper.
+
+        Returns
+        -------
+        str
+            Rendered HTML.
+
+        Raises
+        ------
+        TypeError
+            If ``document`` is not a :class:`~reportkit.model.Document`.
+        TypeError, ValueError
+            If an artifact has no registered adapter or cannot be rendered.
+        """
         if not isinstance(document, Document):
             raise TypeError('HTMLWriter.render expects a Document')
         depth = 0 if fragment else 2
@@ -220,6 +276,30 @@ class HTMLWriter:
     def write(
         self, document: Document, path: str | Path, *, fragment: bool = False
     ) -> Path:
+        """Render a document and write UTF-8 HTML to a file.
+
+        Parameters
+        ----------
+        document : Document
+            Report document to render.
+        path : str or pathlib.Path
+            Destination file. Existing files are overwritten; parent directories
+            are not created.
+        fragment : bool, optional
+            Write an embeddable fragment instead of a complete HTML page.
+
+        Returns
+        -------
+        pathlib.Path
+            The destination path.
+
+        Raises
+        ------
+        OSError
+            If the destination cannot be written.
+        TypeError, ValueError
+            If the document or one of its artifacts cannot be rendered.
+        """
         destination = Path(path)
         destination.write_text(
             self.render(document, fragment=fragment), encoding='utf-8'

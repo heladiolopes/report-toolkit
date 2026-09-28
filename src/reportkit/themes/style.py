@@ -12,7 +12,24 @@ from .theme import Theme, get_theme
 
 @dataclass(frozen=True, kw_only=True)
 class Style:
-    """Writer presentation: a structural theme, a color palette, and a display mode."""
+    """Configure a writer's structural theme, palette, and display mode.
+
+    Parameters
+    ----------
+    theme : str or Theme, optional
+        Built-in theme name or custom structural theme. Defaults to ``'default'``.
+    palette : str or Palette, optional
+        Built-in palette name or custom color palette. Defaults to ``'slate'``.
+    mode : {'light', 'dark', 'auto'}, optional
+        Color mode. ``'auto'`` follows the user's system preference.
+
+    Raises
+    ------
+    TypeError
+        If a theme, palette, or mode value has an unsupported type.
+    ValueError
+        If a name or mode is not recognized.
+    """
 
     theme: str | Theme = 'default'
     palette: str | Palette = 'slate'

@@ -54,7 +54,24 @@ _SLATE_DARK = {
 
 @dataclass(frozen=True, kw_only=True)
 class Palette:
-    """Immutable light/dark colors; omitted tokens inherit the matching slate mode."""
+    """Immutable light and dark colors for a report.
+
+    Omitted color tokens inherit their values from the corresponding slate mode.
+
+    Parameters
+    ----------
+    name : str
+        Palette name.
+    light, dark : mapping of str to str, optional
+        Color tokens for light and dark display modes.
+
+    Raises
+    ------
+    TypeError
+        If a mapping key or value has an unsupported type.
+    ValueError
+        If the name or token keys/values are invalid.
+    """
 
     name: str
     light: Mapping[str, str] = field(default_factory=dict)
@@ -78,7 +95,28 @@ class Palette:
         light: Mapping[str, str] | None = None,
         dark: Mapping[str, str] | None = None,
     ) -> Palette:
-        """Merge each supplied color mapping and inherit the other mode."""
+        """Return a palette with selected light or dark color overrides.
+
+        Parameters
+        ----------
+        name : str
+            Name for the returned palette.
+        light, dark : mapping of str to str, optional
+            Color tokens merged over the corresponding mapping in this palette.
+            An omitted mapping is inherited unchanged.
+
+        Returns
+        -------
+        Palette
+            A new palette; this instance is unchanged.
+
+        Raises
+        ------
+        TypeError
+            If a mapping key or value has an unsupported type.
+        ValueError
+            If the name or tokens are invalid.
+        """
         return Palette(
             name=name,
             light=dict(self.light)
@@ -174,7 +212,25 @@ _PALETTES = {
 
 
 def get_palette(name: str) -> Palette:
-    """Return one of the slate, azure, parchment, or ember color palettes."""
+    """Return a built-in color palette by name.
+
+    Parameters
+    ----------
+    name : str
+        Palette name: ``'slate'``, ``'azure'``, ``'parchment'``, or ``'ember'``.
+
+    Returns
+    -------
+    Palette
+        The requested palette.
+
+    Raises
+    ------
+    TypeError
+        If ``name`` is not a string.
+    ValueError
+        If the name is not recognized.
+    """
     _name(name, 'palette')
     try:
         return _PALETTES[name]

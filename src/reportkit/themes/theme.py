@@ -78,6 +78,23 @@ class Theme:
 
     ``css`` is trusted CSS; ``&`` is replaced by the report root selector.
     Colors belong in a Palette rather than the theme token mapping.
+
+    Parameters
+    ----------
+    name : str
+        Theme name.
+    tokens : mapping of str to str, optional
+        Structural CSS tokens. Omitted tokens inherit the default theme values.
+    css : str, optional
+        Additional trusted CSS. The ampersand (``&``) is replaced by the
+        report root selector.
+
+    Raises
+    ------
+    TypeError
+        If ``css`` is not a string or tokens are not string mappings.
+    ValueError
+        If the name or token keys/values are invalid.
     """
 
     name: str
@@ -103,7 +120,29 @@ class Theme:
         tokens: Mapping[str, str] | None = None,
         css: str | None = None,
     ) -> Theme:
-        """Merge structural tokens, inheriting CSS unless a replacement is supplied."""
+        """Return a theme with selected structural token or CSS overrides.
+
+        Parameters
+        ----------
+        name : str
+            Name for the returned theme.
+        tokens : mapping of str to str, optional
+            Token values merged over this theme's tokens.
+        css : str or None, optional
+            Replacement CSS. If omitted or ``None``, this theme's CSS is kept.
+
+        Returns
+        -------
+        Theme
+            A new theme; this instance is unchanged.
+
+        Raises
+        ------
+        TypeError
+            If ``css`` or token values have unsupported types.
+        ValueError
+            If the name or tokens are invalid.
+        """
         return Theme(
             name=name,
             tokens=dict(self.tokens)
@@ -116,7 +155,25 @@ _THEMES = {'default': Theme(name='default')}
 
 
 def get_theme(name: str) -> Theme:
-    """Return a structural theme by name (currently only ``default``)."""
+    """Return a built-in structural theme by name.
+
+    Parameters
+    ----------
+    name : str
+        Built-in theme name. Currently only ``'default'`` is available.
+
+    Returns
+    -------
+    Theme
+        The requested theme.
+
+    Raises
+    ------
+    TypeError
+        If ``name`` is not a string.
+    ValueError
+        If the name is not recognized.
+    """
     _name(name, 'theme')
     try:
         return _THEMES[name]
