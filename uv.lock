@@ -1634,7 +1634,7 @@ wheels = [
 ]
 
 [[package]]
-name = "reportkit"
+name = "report-toolkit"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [

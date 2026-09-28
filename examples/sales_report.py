@@ -5,7 +5,7 @@ from pathlib import Path
 
 from _sales_data import profit_figure, revenue_chart, revenue_plot, sales_data
 
-from reportkit import Report
+from report_toolkit import Report
 
 
 def build_report() -> Report:
@@ -20,7 +20,7 @@ def build_report() -> Report:
     report = Report(
         'Sales review',
         description='January–April 2026 · Illustrative data',
-        author='Analytics team',
+        author='Report author',
         date=date(2026, 5, 1),
     )
     report.paragraph('A review of sales performance, supporting data, and next steps.')
@@ -28,7 +28,7 @@ def build_report() -> Report:
         report.markdown(
             f'Revenue totaled **{total}**, with *{growth} growth* from January to April. '
             'The `revenue` measure is shown before costs. '
-            'See the [source data](#reportkit-source-data).'
+            'See the [source data](#reporttkt-source-data).'
         )
         report.unordered(
             [

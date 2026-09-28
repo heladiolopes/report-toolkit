@@ -98,8 +98,8 @@ class _Template:
             import yaml
         except ImportError as exc:
             raise ImportError(
-                'YAML front matter requires reportkit[templates]; '
-                'install with: pip install "reportkit[templates]"'
+                'YAML front matter requires report-toolkit[templates]; '
+                'install with: pip install "report-toolkit[templates]"'
             ) from exc
 
         class UniqueLoader(yaml.SafeLoader):

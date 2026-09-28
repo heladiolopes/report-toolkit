@@ -4,7 +4,7 @@ from pathlib import Path
 
 from _extensive_data import showcase_context
 
-from reportkit import Report
+from report_toolkit import Report
 
 
 def build_report() -> Report:

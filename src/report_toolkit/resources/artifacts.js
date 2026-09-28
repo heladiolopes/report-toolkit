@@ -1,7 +1,7 @@
 /* Proportional artifact sizing and expanded views. */
 (() => {
-  if (window.reportkitArtifacts) {
-    window.reportkitArtifacts();
+  if (window.reporttktArtifacts) {
+    window.reporttktArtifacts();
     return;
   }
   const initialized = new WeakSet();
@@ -55,8 +55,8 @@
       if (dialog) return;
       const visible = inlineViewport.getBoundingClientRect();
       const bounds = space.getBoundingClientRect();
-      frame.style.setProperty('--reportkit-expand-left', `${Math.max(0, bounds.left - visible.left)}px`);
-      frame.style.setProperty('--reportkit-expand-bottom', `${Math.max(0, visible.bottom - Math.min(bounds.bottom, visible.bottom))}px`);
+      frame.style.setProperty('--reporttkt-expand-left', `${Math.max(0, bounds.left - visible.left)}px`);
+      frame.style.setProperty('--reporttkt-expand-bottom', `${Math.max(0, visible.bottom - Math.min(bounds.bottom, visible.bottom))}px`);
     }
     function measure() {
       if (!figure.isConnected || printing) return;
@@ -65,11 +65,11 @@
       const width = Math.max(content.offsetWidth, content.scrollWidth);
       const height = Math.max(content.offsetHeight, content.scrollHeight);
       const fit = full && width > 0 ? available / width : 1;
-      if (!dialog) inlineViewport.style.setProperty('--reportkit-viewport-height', `${Math.min(height * fit, window.innerHeight * .7)}px`);
+      if (!dialog) inlineViewport.style.setProperty('--reporttkt-viewport-height', `${Math.min(height * fit, window.innerHeight * .7)}px`);
       const scale = fit * (dialog ? previewZoom : 1);
-      content.style.setProperty('--reportkit-artifact-scale', scale);
-      space.style.setProperty('--reportkit-space-width', `${width * scale}px`);
-      space.style.setProperty('--reportkit-space-height', `${height * scale}px`);
+      content.style.setProperty('--reporttkt-artifact-scale', scale);
+      space.style.setProperty('--reporttkt-space-width', `${width * scale}px`);
+      space.style.setProperty('--reporttkt-space-height', `${height * scale}px`);
       space.style.marginInline = (dialog || figure.dataset.center === 'true') && width * scale < available ? 'auto' : '0';
       space.style.marginTop = dialog ? `${Math.max(0, (viewport.clientHeight - height * scale) / 2)}px` : '0';
       space.classList.add('report-artifact-ready');
@@ -128,7 +128,7 @@
       viewport.setAttribute('aria-label', 'Enlarged artifact content');
       host.append(viewport);
       dialog.append(controls, host);
-      figure.closest('article.reportkit').append(dialog);
+      figure.closest('article.reporttkt').append(dialog);
       viewport.append(space);
       dialog.addEventListener('keydown', event => {
         if (event.key !== 'Tab') return;
@@ -171,7 +171,7 @@
     // Asynchronous charts can change their descendants without resizing the host.
     new MutationObserver(schedule).observe(content, {childList: true, subtree: true});
     content.addEventListener('load', schedule, true);
-    content.addEventListener('reportkit:ready', schedule);
+    content.addEventListener('reporttkt:ready', schedule);
     window.addEventListener('resize', schedule);
     window.addEventListener('beforeprint', () => {
       if (dialog) { dialog.close(); restoreDialog(); }
@@ -183,6 +183,6 @@
     });
     measure();
   }
-  window.reportkitArtifacts = () => document.querySelectorAll('figure.report-artifact').forEach(initialize);
-  window.reportkitArtifacts();
+  window.reporttktArtifacts = () => document.querySelectorAll('figure.report-artifact').forEach(initialize);
+  window.reporttktArtifacts();
 })();

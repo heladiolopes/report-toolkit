@@ -3,7 +3,7 @@ import unittest
 from datetime import date
 from pathlib import Path
 
-from reportkit import AdapterRegistry, HTMLWriter, RenderedArtifact, Report
+from report_toolkit import AdapterRegistry, HTMLWriter, RenderedArtifact, Report
 
 
 class TextAdapter:
@@ -44,11 +44,11 @@ class WriterTests(unittest.TestCase):
         self.assertIn('<h1 class="report-title">Sales &amp; Growth</h1>', html)
         self.assertIn('Quarter &lt;one&gt;', html)
         self.assertIn('datetime="2026-09-25"', html)
-        self.assertIn('<h2 id="reportkit-summary-here">Summary &lt;here&gt;</h2>', html)
+        self.assertIn('<h2 id="reporttkt-summary-here">Summary &lt;here&gt;</h2>', html)
         self.assertIn('<strong>Revenue</strong>', html)
         self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt;', html)
         self.assertIn('<ol><li>North</li><li>South &amp; West</li></ol>', html)
-        self.assertIn('--reportkit-columns: 2', html)
+        self.assertIn('--reporttkt-columns: 2', html)
         self.assertIn('<figcaption>First &amp; best</figcaption>', html)
         self.assertIn('<strong>A</strong>', html)
         self.assertNotIn('<!doctype html>', fragment)
@@ -60,8 +60,8 @@ class WriterTests(unittest.TestCase):
             with report.section('Inner'):
                 report.markdown('Text')
         html = self.writer.render(report.document)
-        self.assertIn('<h1 id="reportkit-outer">Outer</h1>', html)
-        self.assertIn('<h2 id="reportkit-inner">Inner</h2>', html)
+        self.assertIn('<h1 id="reporttkt-outer">Outer</h1>', html)
+        self.assertIn('<h2 id="reporttkt-inner">Inner</h2>', html)
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'report.html'
             self.assertEqual(self.writer.write(report.document, path), path)

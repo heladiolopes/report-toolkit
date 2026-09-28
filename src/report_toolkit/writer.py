@@ -45,7 +45,7 @@ class _Payload(str):
 def _base_css() -> str:
     """Read packaged CSS once, including when imported from a wheel archive."""
     return (
-        files('reportkit')
+        files('report_toolkit')
         .joinpath('resources/report.css')
         .read_text(encoding='utf-8')
         .strip()
@@ -68,12 +68,12 @@ def _style_id(style: Style) -> str:
 
 def _stylesheet(style: Style, *, fragment: bool) -> str:
     # :where keeps specificity low enough for Pandas Styler's explicit rules.
-    selector = f'.reportkit:where([data-reportkit-theme="{_style_id(style)}"])'
-    base = re.sub(r'\.reportkit(?![\w-])', lambda match: selector, _base_css())
+    selector = f'.reporttkt:where([data-reporttkt-theme="{_style_id(style)}"])'
+    base = re.sub(r'\.reporttkt(?![\w-])', lambda match: selector, _base_css())
 
     def variables(tokens: Mapping[str, str], mode: str) -> str:
         declarations = '\n'.join(
-            f'  --reportkit-{key.replace("_", "-")}: {value};'
+            f'  --reporttkt-{key.replace("_", "-")}: {value};'
             for key, value in sorted(tokens.items())
         )
         rules = f'{selector} {{\n{declarations}\n  color-scheme: {mode};\n}}'
@@ -224,7 +224,7 @@ class HTMLWriter:
         Raises
         ------
         TypeError
-            If ``document`` is not a :class:`~reportkit.model.Document`.
+            If ``document`` is not a :class:`~report_toolkit.model.Document`.
         TypeError, ValueError
             If an artifact has no registered adapter or cannot be rendered.
         """
@@ -237,7 +237,7 @@ class HTMLWriter:
         runtime = ''
         if self._has_artifacts(document):
             script = (
-                files('reportkit')
+                files('report_toolkit')
                 .joinpath('resources/artifacts.js')
                 .read_text(encoding='utf-8')
             )
@@ -316,7 +316,7 @@ class HTMLWriter:
         navigation = self._render_toc(outline) if self.toc else ''
         # Section slugs never contain underscores, so this TOC ID cannot collide.
         backlink = (
-            ' <a class="report-toc-backlink" href="#reportkit_toc" '
+            ' <a class="report-toc-backlink" href="#reporttkt_toc" '
             'aria-label="Back to table of contents">↑</a>'
             if navigation and self.toc_position == 'top'
             else ''
@@ -341,14 +341,14 @@ class HTMLWriter:
             parts.append(navigation)
         parts.extend(body)
         content = self._block(
-            f'<article class="reportkit" data-reportkit-theme="{_style_id(self.style)}">',
+            f'<article class="reporttkt" data-reporttkt-theme="{_style_id(self.style)}">',
             parts,
             '</article>',
             article_depth,
         )
         if sidebar:
             return self._block(
-                f'<div class="reportkit report-layout" data-reportkit-theme="{_style_id(self.style)}">',
+                f'<div class="reporttkt report-layout" data-reporttkt-theme="{_style_id(self.style)}">',
                 [
                     self._block(
                         '<div class="report-sidebar">',
@@ -376,7 +376,7 @@ class HTMLWriter:
                 slug = (
                     re.sub(r'[\W_]+', '-', node.title.lower()).strip('-') or 'heading'
                 )
-                base = f'reportkit-{slug}'
+                base = f'reporttkt-{slug}'
                 anchor = base
                 suffix = 2
                 while anchor in used:
@@ -431,7 +431,7 @@ class HTMLWriter:
             )
 
         return (
-            '<nav class="report-toc" id="reportkit_toc" tabindex="-1" aria-label="Table of contents">'
+            '<nav class="report-toc" id="reporttkt_toc" tabindex="-1" aria-label="Table of contents">'
             '<div class="report-toc-title">Table of contents</div>'
             + render_entries(entries)
             + '</nav>'
@@ -481,7 +481,7 @@ class HTMLWriter:
                 width = float(rendered.native_width)
                 if not 0 < width < float('inf'):
                     raise ValueError('native_width must be finite and positive')
-                sizing = f' style="--reportkit-native-width: {width:g}px"'
+                sizing = f' style="--reporttkt-native-width: {width:g}px"'
             viewport = (
                 '<div class="report-artifact-viewport" tabindex="0" aria-label="Artifact content">'
                 '<div class="report-artifact-space"><div class="report-artifact-content"'
@@ -536,7 +536,7 @@ class HTMLWriter:
                 for child in node.children
             ]
             return self._block(
-                f'<div class="report-columns" style="--reportkit-columns: {node.count}">',
+                f'<div class="report-columns" style="--reporttkt-columns: {node.count}">',
                 children,
                 '</div>',
                 depth,

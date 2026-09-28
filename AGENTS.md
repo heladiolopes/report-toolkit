@@ -2,7 +2,7 @@
 
 ## Project structure
 
-- Source code lives in `src/reportkit/`.
+- Source code lives in `src/report_toolkit/`.
 - Tests live in `tests/`.
 - Keep the top-level package structure shallow and easy to navigate.
 - The main architectural areas are:
@@ -14,7 +14,7 @@
 - As functionality grows, `adapters` and `writers` may become first-level subpackages, for example:
 
 ```text
-src/reportkit/
+src/report_toolkit/
 ├── composer.py
 ├── model.py
 ├── adapters/

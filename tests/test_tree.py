@@ -1,6 +1,6 @@
 import unittest
 
-from reportkit import Report
+from report_toolkit import Report
 
 
 class TreeTests(unittest.TestCase):

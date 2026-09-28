@@ -1,7 +1,7 @@
 ---
 title: Sales review
 description: January–April 2026 · Illustrative data
-author: Analytics team
+author: Report author
 date: 2026-05-01
 ---
 
@@ -9,7 +9,7 @@ A review of sales performance, supporting data, and next steps.
 
 # Summary
 
-Revenue totaled **{{ total }}**, with *{{ growth }} growth* from January to April. The `revenue` measure is shown before costs. See the [source data](#reportkit-source-data).
+Revenue totaled **{{ total }}**, with *{{ growth }} growth* from January to April. The `revenue` measure is shown before costs. See the [source data](#reporttkt-source-data).
 
 - April delivered the highest revenue.
     - Revenue: $17,200

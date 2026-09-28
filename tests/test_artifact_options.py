@@ -4,7 +4,7 @@ from html.parser import HTMLParser
 
 import pytest
 
-from reportkit import (
+from report_toolkit import (
     AdapterRegistry,
     Artifact,
     HTMLWriter,
@@ -436,7 +436,7 @@ def test_altair_full_width_and_multiple_offline_charts(page):
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.set_content(HTMLWriter(inline_altair=True).render(report.document))
     page.wait_for_function(
-        "Array.from(document.querySelectorAll('[id^=reportkit_chart_]')).filter(el => el.reportkitView).length === 2"
+        "Array.from(document.querySelectorAll('[id^=reporttkt_chart_]')).filter(el => el.reporttktView).length === 2"
     )
     native = (
         page.locator('figure').nth(1).locator('.report-artifact-content').bounding_box()
@@ -444,8 +444,8 @@ def test_altair_full_width_and_multiple_offline_charts(page):
     ratio = native['width'] / native['height']
     assert_proportional_fit(page, 'figure .report-artifact-content', ratio)
     first = page.locator('figure').first
-    assert first.locator('[id^=reportkit_chart_]').evaluate(
-        '(el) => [el.reportkitView.width(), el.reportkitView.height()]'
+    assert first.locator('[id^=reporttkt_chart_]').evaluate(
+        '(el) => [el.reporttktView.width(), el.reporttktView.height()]'
     ) == [200, 150]
     first.get_by_role('button', name='Expand', exact=True).click()
     assert_proportional_fit(page, 'dialog .report-artifact-content', ratio)
@@ -478,7 +478,7 @@ def test_matplotlib_full_width_preserves_aspect_ratio(page):
     page.wait_for_function(
         "document.querySelectorAll('.report-artifact-ready').length === 2"
     )
-    images = page.locator('.reportkit-figure-image')
+    images = page.locator('.reporttkt-figure-image')
     native, full = [images.nth(i).bounding_box() for i in range(2)]
     assert full['width'] > native['width']
     assert full['width'] / full['height'] == pytest.approx(

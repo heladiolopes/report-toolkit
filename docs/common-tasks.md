@@ -1,10 +1,10 @@
 # Common Tasks
 
-Examples assume `from reportkit import Report` and `report = Report('Analysis')`,
+Examples assume `from report_toolkit import Report` and `report = Report('Analysis')`,
 unless a complete setup is shown. Install the relevant extra from a checkout
 with `uv sync --extra pandas`, for example, or use `--extra all` for every
 integration below. For an existing environment, install the corresponding
-`reportkit[pandas]` extra. See [Getting Started](getting-started.md) for a complete
+`report-toolkit[pandas]` extra. See [Getting Started](getting-started.md) for a complete
 runnable introduction and [API Reference](api-reference.md) for constraints.
 
 ## Add a Pandas table
@@ -39,7 +39,7 @@ Requires `altair` and, for this data setup, `pandas`. JavaScript loads from a CD
 by default. For embedded Altair JavaScript, install the `offline` extra and use:
 
 ```python
-from reportkit import HTMLWriter
+from report_toolkit import HTMLWriter
 
 HTMLWriter(inline_altair=True).write(report.document, 'offline.html')
 ```
@@ -135,7 +135,7 @@ The paired examples therefore demonstrate shared display features only.
 ## Combine reports
 
 ```python
-intro = Report('Combined report', author='Analytics')
+intro = Report('Combined report', author='Report author')
 intro.heading(1, 'Summary')
 intro.paragraph('An overview.')
 appendix = Report('Appendix')
@@ -155,7 +155,7 @@ Save this as `monthly.md`:
 ```markdown
 ---
 title: Monthly sales
-author: Analytics
+author: Report author
 ---
 
 # Summary
@@ -176,7 +176,7 @@ Load it from Python:
 
 ```python
 import pandas as pd
-from reportkit import Report
+from report_toolkit import Report
 
 sales = pd.DataFrame({'month': ['Jan', 'Feb'], 'revenue': [12000, 14500]})
 report = Report.from_template(
@@ -259,7 +259,7 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 report.write('report.html')
 ```
 
-The library logs through `reportkit.writer` and does not configure logging itself.
+The library logs through `report_toolkit.writer` and does not configure logging itself.
 
 
 ## Choose a report theme

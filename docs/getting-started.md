@@ -1,7 +1,7 @@
 # Getting Started
 
 Create a sales report with a table, a summary, and a two-column layout.
-Run these commands from a reportkit checkout:
+Run these commands from a report-toolkit checkout:
 
 ```bash
 uv sync --extra pandas
@@ -14,13 +14,13 @@ from datetime import date
 
 import pandas as pd
 
-from reportkit import Report
+from report_toolkit import Report
 
 sales = pd.DataFrame({'month': ['January', 'February'], 'revenue': [12000, 14500]})
 report = Report(
     'Sales review',
     description='Monthly revenue',
-    author='Analytics team',
+    author='Report author',
     date=date(2026, 3, 1),
 )
 

@@ -30,7 +30,7 @@ class _ReportContent(HTMLParser):
             (key, value)
             for key, value in attrs
             if key in {'class', 'href'}
-            or (key == 'style' and '--reportkit-columns' in value)
+            or (key == 'style' and '--reporttkt-columns' in value)
         )
         self.events.append(('start', tag, selected))
 
@@ -58,7 +58,7 @@ class _ReportContent(HTMLParser):
             'yaml',
         )
     ),
-    'Sales examples require reportkit[all]',
+    'Sales examples require report-toolkit[all]',
 )
 class ExampleTests(unittest.TestCase):
     def test_sales_examples_render_equivalent_complete_reports(self):
@@ -81,7 +81,7 @@ class ExampleTests(unittest.TestCase):
                 rendered.append(_ReportContent(html).events)
                 for marker in (
                     'Sales review',
-                    'Analytics team',
+                    'Report author',
                     '2026-05-01',
                     '$57,500',
                     '43.3% growth',
@@ -93,14 +93,14 @@ class ExampleTests(unittest.TestCase):
                     '<hr',
                     '<ol>',
                     '<ul>',
-                    '--reportkit-columns: 2',
+                    '--reporttkt-columns: 2',
                 ):
                     self.assertIn(marker, html)
                 self.assertEqual(html.count('<figure class="report-artifact"'), 6)
                 self.assertEqual(html.count('<table '), 3)
                 self.assertEqual(html.count('class="report-panel"'), 4)
-                anchors = set(re.findall(r'id="(reportkit-[^"]+)"', html))
-                links = re.findall(r'href="#(reportkit-[^"]+)"', html)
+                anchors = set(re.findall(r'id="(reporttkt-[^"]+)"', html))
+                links = re.findall(r'href="#(reporttkt-[^"]+)"', html)
                 self.assertTrue(links)
                 self.assertTrue(set(links) <= anchors)
         self.assertEqual(rendered[0], rendered[1])

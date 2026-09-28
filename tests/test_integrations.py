@@ -1,7 +1,7 @@
 import importlib.util
 import unittest
 
-from reportkit import HTMLWriter, Report
+from report_toolkit import HTMLWriter, Report
 
 
 class IntegrationTests(unittest.TestCase):
@@ -32,7 +32,7 @@ class IntegrationTests(unittest.TestCase):
         html = HTMLWriter().render(report.document)
         self.assertEqual(html.count('class="report-artifact"'), 2)
         self.assertEqual(html.count('vegaEmbed('), 2)
-        self.assertIn('reportkit_chart_', html)
+        self.assertIn('reporttkt_chart_', html)
 
     @unittest.skipUnless(
         importlib.util.find_spec('altair') and importlib.util.find_spec('vl_convert'),

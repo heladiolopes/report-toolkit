@@ -3,18 +3,18 @@
 import argparse
 from pathlib import Path
 
-from reportkit import Report, Style, get_palette, get_theme
+from report_toolkit import Report, Style, get_palette, get_theme
 
 
 def build_report() -> Report:
     report = Report(
         'Theme gallery',
         description='Four color palettes in light, dark, and automatic modes.',
-        author='ReportKit',
+        author='Report Toolkit',
     )
     report.heading(1, 'Overview')
     report.markdown(
-        'Readable **reports** with [links](#reportkit-details), `inline code`, and captions.\n\n> A note highlighted using the report’s theme.'
+        'Readable **reports** with [links](#reporttkt-details), `inline code`, and captions.\n\n> A note highlighted using the report’s theme.'
     )
     with report.columns(2):
         with report.panel('Highlights'):

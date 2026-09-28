@@ -24,9 +24,9 @@ _SLATE_LIGHT = {
     'accent_hover': '#1d4ed8',
     'pre_background': 'transparent',
     'blockquote_background': 'transparent',
-    'toc_text': 'var(--reportkit-text)',
-    'toc_background': 'var(--reportkit-surface)',
-    'toc_accent': 'var(--reportkit-accent)',
+    'toc_text': 'var(--reporttkt-text)',
+    'toc_background': 'var(--reporttkt-surface)',
+    'toc_accent': 'var(--reporttkt-accent)',
 }
 
 
@@ -46,9 +46,9 @@ _SLATE_DARK = {
     'accent_hover': '#93c5fd',
     'pre_background': 'transparent',
     'blockquote_background': 'transparent',
-    'toc_text': 'var(--reportkit-text)',
-    'toc_background': 'var(--reportkit-surface)',
-    'toc_accent': 'var(--reportkit-accent)',
+    'toc_text': 'var(--reporttkt-text)',
+    'toc_background': 'var(--reporttkt-surface)',
+    'toc_accent': 'var(--reporttkt-accent)',
 }
 
 

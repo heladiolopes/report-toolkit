@@ -1,6 +1,6 @@
 # API Reference
 
-Import `Report`, `HTMLWriter`, and `TemplateError` from `reportkit`. This reference
+Import `Report`, `HTMLWriter`, and `TemplateError` from `report_toolkit`. This reference
 covers composition and HTML output. Internal document types and adapter extension
 machinery are outside its scope. See [Common Tasks](common-tasks.md) for recipes.
 
@@ -155,7 +155,7 @@ does not minify embedded library payloads. Non-boolean values raise `TypeError`.
 `write()` renders UTF-8 HTML to a string or `Path` destination and returns that
 path. Existing files are overwritten; parent directories are not created.
 Filesystem and rendering errors propagate. Successful writes emit an INFO
-message through `reportkit.writer` with the destination and actual file size.
+message through `report_toolkit.writer` with the destination and actual file size.
 
 `toc` must be a boolean (`TypeError` otherwise). `toc_depth` must be an integer
 1–6, excluding booleans (`ValueError` otherwise), even if the TOC is disabled.
@@ -248,7 +248,7 @@ without front matter need no additional dependency.
 ---
 title: Monthly sales
 description: Revenue and costs
-author: Analytics
+author: Report author
 date: 2026-05-01
 ---
 ```

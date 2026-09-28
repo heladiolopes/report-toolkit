@@ -117,7 +117,7 @@ class _AltairHTML:
                 import vl_convert
             except ImportError as exc:
                 raise ImportError(
-                    'Inline Altair HTML requires vl-convert-python; install reportkit[offline]'
+                    'Inline Altair HTML requires vl-convert-python; install report-toolkit[offline]'
                 ) from exc
             version = 'v' + '_'.join(context['vegalite_version'].split('.')[:2])
             bundle = vl_convert.javascript_bundle(vl_version=version)
@@ -140,8 +140,8 @@ class _AltairHTML:
             + f'const spec = {spec}; const embedOpt = {options};'
             + f'const el = document.getElementById("{target}");'
             + f'vegaEmbed("#{target}", spec, embedOpt).then(function(result) {{'
-            + 'el.reportkitView = result.view;'
-            + 'el.dispatchEvent(new Event("reportkit:ready", {bubbles: true}));'
+            + 'el.reporttktView = result.view;'
+            + 'el.dispatchEvent(new Event("reporttkt:ready", {bubbles: true}));'
             + '}).catch(function(error) { el.textContent = "Chart could not be rendered"; console.error(error); });'
             + '})();})();</script>'
         )
@@ -155,7 +155,7 @@ class AltairAdapter:
         return RenderedArtifact(
             value.to_html(
                 fullhtml=False,
-                output_div=f'reportkit_chart_{uuid4().hex}',
+                output_div=f'reporttkt_chart_{uuid4().hex}',
                 template=_AltairHTML(self.inline),
             ),
             kind='altair',
@@ -168,7 +168,7 @@ class MatplotlibAdapter:
         value.savefig(buffer, format='png', bbox_inches='tight')
         data = base64.b64encode(buffer.getvalue()).decode('ascii')
         return RenderedArtifact(
-            f'<img class="reportkit-figure-image" src="data:image/png;base64,{data}" '
+            f'<img class="reporttkt-figure-image" src="data:image/png;base64,{data}" '
             'alt="Matplotlib figure">',
             kind='image',
         )

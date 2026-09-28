@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from xml.etree import ElementTree
 
-from reportkit import HTMLWriter, Report
+from report_toolkit import HTMLWriter, Report
 
 
 def navigation(html):
@@ -170,7 +170,7 @@ class NavigationBrowserTests(unittest.TestCase):
                     if position == 'top':
                         page.locator(target + ' .report-toc-backlink').click()
                         self.assertEqual(
-                            page.evaluate('location.hash'), '#reportkit_toc'
+                            page.evaluate('location.hash'), '#reporttkt_toc'
                         )
                         self.assertAlmostEqual(nav.bounding_box()['y'], 0, delta=2)
                     self.assertTrue(

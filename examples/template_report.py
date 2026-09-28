@@ -4,7 +4,7 @@ from pathlib import Path
 
 from _sales_data import profit_figure, revenue_chart, revenue_plot, sales_data
 
-from reportkit import Report
+from report_toolkit import Report
 
 
 def build_report() -> Report:

@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 from xml.etree import ElementTree
 
-from reportkit import (
+from report_toolkit import (
     AdapterRegistry,
     HTMLWriter,
     Panel,
@@ -58,7 +58,7 @@ class StructureTests(unittest.TestCase):
         # The writer respects the model, including explicitly constructed sections.
         direct = Section('Direct', level=1)
         child.append(direct)
-        self.assertIn('<h1 id="reportkit-direct">Direct</h1>', report.to_html())
+        self.assertIn('<h1 id="reporttkt-direct">Direct</h1>', report.to_html())
 
     def test_heading_transitions_and_intro(self):
         report = Report()
@@ -168,9 +168,9 @@ class NavigationTests(unittest.TestCase):
                         [a.text for a in nav.findall('./ul/li/a')],
                         ['Sales & growth', 'Conclusion', 'Sales & growth'],
                     )
-                    self.assertEqual(html.count('href="#reportkit-sales-growth"'), 1)
+                    self.assertEqual(html.count('href="#reporttkt-sales-growth"'), 1)
                     self.assertIn(
-                        '<h1 id="reportkit-sales-growth">Sales &amp; growth '
+                        '<h1 id="reporttkt-sales-growth">Sales &amp; growth '
                         '<a class="report-toc-backlink"',
                         html,
                     )
@@ -274,12 +274,12 @@ class NavigationTests(unittest.TestCase):
         self.assertEqual(
             ids,
             [
-                'reportkit-a',
-                'reportkit-a-2',
-                'reportkit-a-2-2',
-                'reportkit-heading',
-                'reportkit-heading-2',
-                'reportkit-são-paulo-east',
+                'reporttkt-a',
+                'reporttkt-a-2',
+                'reporttkt-a-2-2',
+                'reporttkt-heading',
+                'reporttkt-heading-2',
+                'reporttkt-são-paulo-east',
             ],
         )
         self.assertEqual(
@@ -290,7 +290,7 @@ class NavigationTests(unittest.TestCase):
         self.assertEqual(report.to_tree(), before)
         other = Report()
         other.heading(1, 'A')
-        self.assertIn('id="reportkit-a"', writer.render(other.document))
+        self.assertIn('id="reporttkt-a"', writer.render(other.document))
 
     def test_sections_inherit_levels_and_cap_at_six(self):
         report = Report('Report title')
@@ -384,14 +384,14 @@ class LoggingTests(unittest.TestCase):
         report.paragraph('São Paulo — 東京')
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'report.html'
-            with self.assertLogs('reportkit.writer', level=logging.INFO) as logs:
+            with self.assertLogs('report_toolkit.writer', level=logging.INFO) as logs:
                 self.assertEqual(report.write(path), path)
             self.assertEqual(len(logs.records), 1)
             self.assertIn(str(path), logs.output[0])
             self.assertIn(f'{len(path.read_bytes()) / 1024:.1f} KiB', logs.output[0])
 
     def test_human_readable_size_units(self):
-        from reportkit.writer import _format_size
+        from report_toolkit.writer import _format_size
 
         for size, expected in [
             (0, '0 B'),
@@ -407,7 +407,7 @@ class LoggingTests(unittest.TestCase):
 
     def test_no_success_log_on_render_or_write_failure(self):
         report = Report()
-        with self.assertNoLogs('reportkit.writer', level=logging.INFO):
+        with self.assertNoLogs('report_toolkit.writer', level=logging.INFO):
             report.to_html()
             with patch.object(Path, 'write_text', side_effect=OSError('write failed')):
                 with self.assertRaises(OSError):

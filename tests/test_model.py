@@ -1,6 +1,6 @@
 import unittest
 
-from reportkit import Columns, Document, List, Markdown, RawHTML, Report, Section
+from report_toolkit import Columns, Document, List, Markdown, RawHTML, Report, Section
 
 
 class ModelTests(unittest.TestCase):

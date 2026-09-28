@@ -7,14 +7,22 @@ from types import MappingProxyType
 
 import pytest
 
-from reportkit import HTMLWriter, Palette, Report, Style, Theme, get_palette, get_theme
+from report_toolkit import (
+    HTMLWriter,
+    Palette,
+    Report,
+    Style,
+    Theme,
+    get_palette,
+    get_theme,
+)
 
 PALETTES = ('slate', 'azure', 'parchment', 'ember')
 MODES = ('light', 'dark', 'auto')
 
 
 def test_public_import_paths():
-    from reportkit import themes
+    from report_toolkit import themes
 
     for public in (Style, Theme, Palette, get_theme, get_palette):
         assert getattr(themes, public.__name__) is public
@@ -31,7 +39,7 @@ def report():
 
 
 def scope(html):
-    return re.search(r'data-reportkit-theme="([^"]+)"', html)[1]
+    return re.search(r'data-reporttkt-theme="([^"]+)"', html)[1]
 
 
 def test_default_inputs_preserve_appearance(report):
@@ -55,7 +63,7 @@ def test_default_inputs_preserve_appearance(report):
         'text': '#262626',
         'accent': '#2563eb',
     }.items():
-        assert f'--reportkit-{key.replace("_", "-")}: {value};' in original
+        assert f'--reporttkt-{key.replace("_", "-")}: {value};' in original
     assert 'grid-template-columns: 1fr' in original
     assert '@font-face' not in original
     assert '@import' not in original
@@ -81,7 +89,7 @@ def test_style_inputs_and_exports_agree(report, tmp_path, palette, mode, fragmen
     assert ('@media (prefers-color-scheme: dark)' in html) is (mode == 'auto')
     selected = 'light' if mode == 'auto' else mode
     assert (
-        f'--reportkit-background: {getattr(get_palette(palette), selected)["background"]};'
+        f'--reporttkt-background: {getattr(get_palette(palette), selected)["background"]};'
         in html
     )
     assert f'color-scheme: {selected};' in html
@@ -114,12 +122,12 @@ def test_custom_objects_copy_freeze_and_derive(report):
         style.mode = 'dark'
     html = report.to_html(style=style)
     light, dark = html.split('@media (prefers-color-scheme: dark)', 1)
-    assert '--reportkit-accent: #2457a7;' in light
-    assert '--reportkit-accent: #91baff;' in dark
+    assert '--reporttkt-accent: #2457a7;' in light
+    assert '--reporttkt-accent: #91baff;' in dark
     assert 'color-scheme: light;' in light
     assert 'color-scheme: dark;' in dark
-    assert '--reportkit-content-width: 1120px;' in light
-    assert '--reportkit-content-width:' not in dark
+    assert '--reporttkt-content-width: 1120px;' in light
+    assert '--reporttkt-content-width:' not in dark
     assert html.count('font-style: italic') == 1
     assert html.index('font-style: italic') > html.index(
         '@media (prefers-color-scheme: dark)'
@@ -138,13 +146,13 @@ def test_fragment_scopes_and_navigation(report, position):
     ]
     assert len({scope(html) for html in fragments}) == len(PALETTES)
     for html in fragments:
-        assert f'.reportkit:where([data-reportkit-theme="{scope(html)}"])' in html
+        assert f'.reporttkt:where([data-reporttkt-theme="{scope(html)}"])' in html
         assert 'body {' not in html
-        assert not re.search(r'\.reportkit(?=[\s,{])', html)
-        assert set(re.findall(r'data-reportkit-theme="([^"]+)"', html)) == {scope(html)}
-        assert '--reportkit-toc-text: var(--reportkit-text);' in html
-        assert '--reportkit-toc-background: var(--reportkit-surface);' in html
-        assert '--reportkit-toc-accent: var(--reportkit-accent);' in html
+        assert not re.search(r'\.reporttkt(?=[\s,{])', html)
+        assert set(re.findall(r'data-reporttkt-theme="([^"]+)"', html)) == {scope(html)}
+        assert '--reporttkt-toc-text: var(--reporttkt-text);' in html
+        assert '--reporttkt-toc-background: var(--reporttkt-surface);' in html
+        assert '--reporttkt-toc-accent: var(--reporttkt-accent);' in html
         assert '.report-toc a:focus-visible' in html
 
 

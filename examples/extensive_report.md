@@ -1,7 +1,7 @@
 ---
 title: The two-year trading review
-description: January 2024–December 2025 · An extensive synthetic sales analytics showcase
-author: Commercial analytics team
+description: January 2024–December 2025 · An extensive synthetic sales report
+author: Report author
 date: 2026-01-15
 ---
 
@@ -42,7 +42,7 @@ The synthetic generation process combines gradual growth, recurring seasonality,
 
 ## Reading route
 
-Start with [Revenue](#reportkit-revenue) for the aggregate trend, then compare products and regions. The [Detailed analysis](#reportkit-detailed-analysis) section contains the complete monthly table and the methodology hierarchy. The sidebar includes all six heading levels.
+Start with [Revenue](#reporttkt-revenue) for the aggregate trend, then compare products and regions. The [Detailed analysis](#reporttkt-detailed-analysis) section contains the complete monthly table and the methodology hierarchy. The sidebar includes all six heading levels.
 
 # Business context
 
@@ -349,4 +349,3 @@ Replace the synthetic generator with a validated dataset at a clearly documented
 ## Closing perspective
 
 This example brings compact comparison panels, medium analytical charts, and deliberately oversized visuals into one long-form review. The persistent sidebar provides access to the broad business story and the deepest calculation notes, while the Markdown template keeps the narrative separate from Python chart construction.
-

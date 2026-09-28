@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
-from reportkit import (
+from report_toolkit import (
     AdapterRegistry,
     Artifact,
     Columns,
@@ -236,7 +236,7 @@ class TemplateTests(unittest.TestCase):
             self.assertIsInstance(
                 Report.from_template_string('Hello').document.children[0], Markdown
             )
-            with self.assertRaisesRegex(ImportError, r'reportkit\[templates\]'):
+            with self.assertRaisesRegex(ImportError, r'report-toolkit\[templates\]'):
                 Report.from_template_string('---\ntitle: Hi\n---\nHello')
         with self.assertRaisesRegex(TemplateError, 'Unclosed YAML'):
             Report.from_template_string('---\ntitle: Hi')

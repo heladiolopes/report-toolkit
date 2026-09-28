@@ -4,7 +4,7 @@ Choose presentation when exporting. The same report can use different styles,
 whether authored in Python or loaded from a Markdown template.
 
 ```python
-from reportkit import Style
+from report_toolkit import Style
 
 report.write('dark.html', style=Style(mode='dark'))
 report.write('adaptive.html', style={'palette': 'ember', 'mode': 'auto'})
@@ -54,7 +54,7 @@ Theme tokens control structure; palette tokens control colors. Derive each
 independently, then combine them in a style:
 
 ```python
-from reportkit import HTMLWriter, Style, get_palette, get_theme
+from report_toolkit import HTMLWriter, Style, get_palette, get_theme
 
 theme = get_theme('default').with_overrides(
     name='wide',
@@ -145,9 +145,9 @@ host page.
 
 The writer resolves defaults and object overrides into structural and color
 tokens, selects the mode, and applies custom CSS last. Content-derived style
-identifiers scope the CSS through `data-reportkit-theme`. Differently styled
+identifiers scope the CSS through `data-reporttkt-theme`. Differently styled
 fragments can share a page without generated styles interfering. Section anchor
-IDs are unchanged, so repeated reports can still share anchor IDs.
+IDs use the `reporttkt-` prefix; repeated reports can still share anchor IDs.
 
 ## Tables and charts
 
@@ -183,7 +183,7 @@ pair with one structural theme, a paired palette, and `Style(mode='auto')`.
 Run the dependency-free [gallery](../examples/theme_gallery.py):
 
 ```bash
-uv run python examples/theme_gallery.py /tmp/reportkit-theme-gallery
+uv run python examples/theme_gallery.py /tmp/report-toolkit-theme-gallery
 ```
 
 It generates all 12 palette/mode combinations, a custom style, and multiple

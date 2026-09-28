@@ -1,9 +1,15 @@
-# reportkit
+# report-toolkit
 
 Build analytical reports in Python or Markdown templates and export styled HTML
 with tables, charts, sections, and column layouts.
 
 ## Install
+
+Install the package:
+
+```bash
+pip install report-toolkit
+```
 
 From a checkout:
 
@@ -18,9 +24,9 @@ Individual extras are `pandas`, `altair`, `matplotlib`, `plotly`, and `templates
 ## Quick start
 
 ```python
-from reportkit import Report
+from report_toolkit import Report
 
-report = Report('Sales review', author='Analytics team')
+report = Report('Sales review', author='Report author')
 report.heading(1, 'Summary')
 report.markdown('Revenue **increased** this month.')
 report.unordered(['Review the results', 'Plan the next month'])
@@ -74,9 +80,9 @@ uv run make build
 `make test` and pytest both run the unittest-compatible suite, including the
 example integration test. Optional integration tests skip when dependencies are absent.
 
-Theming code lives in `src/reportkit/themes/`: structural defaults belong in
+Theming code lives in `src/report_toolkit/themes/`: structural defaults belong in
 `theme.py`, color values in `palette.py`, and configuration normalization in
-`style.py`. Edit `src/reportkit/resources/report.css` for static report CSS;
+`style.py`. Edit `src/report_toolkit/resources/report.css` for static report CSS;
 HTML-specific scoping and dynamic style generation live in the writer. CSS is
 packaged with the library and embedded in exported HTML. After changing resources
 or package-data settings, run `make build` and verify the built distributions.
