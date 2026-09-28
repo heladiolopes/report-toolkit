@@ -1,11 +1,11 @@
 [project]
 name = "report-toolkit"
-version = "1.0.0"
+version = "0.1.0"
 description = "Compose analytical reports in Python and render them as HTML"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-authors = [{name = "report-toolkit contributors"}]
+authors = [{name = "Heladio Lopes"}]
 dependencies = ["mistune>=3,<4"]
 classifiers = [
     "Programming Language :: Python :: 3",
