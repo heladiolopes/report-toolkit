@@ -79,6 +79,8 @@ uv run make build
 
 `make test` and pytest both run the unittest-compatible suite, including the
 example integration test. Optional integration tests skip when dependencies are absent.
+Version tags run tests, Ruff lint, and a format check before the release workflow
+builds and publishes to PyPI.
 
 Theming code lives in `src/report_toolkit/themes/`: structural defaults belong in
 `theme.py`, color values in `palette.py`, and configuration normalization in

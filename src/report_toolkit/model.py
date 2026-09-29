@@ -25,7 +25,8 @@ class Container(Node):
         if not isinstance(node, Node):
             raise TypeError('A container accepts report nodes only')
         if isinstance(node, Document):
-            raise ValueError('A document cannot be nested inside another container')
+            # Preserve the public validation error for invalid document nesting.
+            raise ValueError('A document cannot be nested inside another container')  # noqa: TRY004
         if node is self or node._parent is not None:
             raise ValueError('A node can belong to only one container')
         node._parent = self

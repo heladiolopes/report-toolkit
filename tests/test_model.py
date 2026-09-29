@@ -24,9 +24,8 @@ class ModelTests(unittest.TestCase):
 
     def test_context_restores_parent_after_exception(self):
         report = Report()
-        with self.assertRaisesRegex(RuntimeError, 'stop'):
-            with report.section('Before'):
-                raise RuntimeError('stop')
+        with self.assertRaisesRegex(RuntimeError, 'stop'), report.section('Before'):
+            raise RuntimeError('stop')
         report.markdown('After')
         self.assertEqual(len(report.document.children), 2)
 
@@ -84,10 +83,9 @@ class ModelTests(unittest.TestCase):
     def test_concat_copies_structure_and_keeps_artifact_references(self):
         value = object()
         left = Report('Left title', description='Left', author='Ada', date='2026-09-25')
-        with left.section('First'):
-            with left.columns(2):
-                left.add(value)
-                left.list(['parent', ['child']])
+        with left.section('First'), left.columns(2):
+            left.add(value)
+            left.list(['parent', ['child']])
         right = Report('Right title', description='Right', author='Bob')
         right.heading(2, 'Second')
 

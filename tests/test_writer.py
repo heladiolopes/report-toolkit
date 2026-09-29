@@ -32,10 +32,9 @@ class WriterTests(unittest.TestCase):
         report.heading(2, 'Summary <here>')
         report.markdown('**Revenue** rose. <script>alert(1)</script>')
         report.list(['North', 'South & West'], ordered=True)
-        with report.section('Charts'):
-            with report.columns(2):
-                report.add(TextArtifact('A'), caption='First & best')
-                report.add(TextArtifact('B'))
+        with report.section('Charts'), report.columns(2):
+            report.add(TextArtifact('A'), caption='First & best')
+            report.add(TextArtifact('B'))
 
         html = self.writer.render(report.document)
         fragment = self.writer.render(report.document, fragment=True)
@@ -56,9 +55,8 @@ class WriterTests(unittest.TestCase):
 
     def test_nested_sections_and_file_output(self):
         report = Report()
-        with report.section('Outer'):
-            with report.section('Inner'):
-                report.markdown('Text')
+        with report.section('Outer'), report.section('Inner'):
+            report.markdown('Text')
         html = self.writer.render(report.document)
         self.assertIn('<h1 id="reporttkt-outer">Outer</h1>', html)
         self.assertIn('<h2 id="reporttkt-inner">Inner</h2>', html)

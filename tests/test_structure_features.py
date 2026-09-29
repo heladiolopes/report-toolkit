@@ -39,21 +39,25 @@ class StructureTests(unittest.TestCase):
     def test_section_validation_and_stored_levels(self):
         self.assertEqual(Section('Default').level, 2)
         for level in (True, 0, 7, '2', 2.5, None):
-            with self.subTest(level=level):
-                with self.assertRaisesRegex(ValueError, 'section level'):
-                    Section('Invalid', level=level)
+            with (
+                self.subTest(level=level),
+                self.assertRaisesRegex(ValueError, 'section level'),
+            ):
+                Section('Invalid', level=level)
         with self.assertRaisesRegex(TypeError, 'section title'):
             Section(None)
         with self.assertRaises(TypeError):
             Section('Positional level', 3)
         report = Report()
         root = report.heading(4, 'Root')
-        with report.columns(2):
-            with report.panel('Panel'):
-                with report.section('Child') as child:
-                    with report.section('Deep') as deep:
-                        with report.section('Capped') as capped:
-                            pass
+        with (
+            report.columns(2),
+            report.panel('Panel'),
+            report.section('Child') as child,
+            report.section('Deep') as deep,
+            report.section('Capped') as capped,
+        ):
+            pass
         self.assertEqual([n.level for n in (root, child, deep, capped)], [4, 5, 6, 6])
         # The writer respects the model, including explicitly constructed sections.
         direct = Section('Direct', level=1)
@@ -87,10 +91,12 @@ class StructureTests(unittest.TestCase):
                 with report.panel('Right') as right:
                     report.paragraph('Right body')
             after_columns = report.paragraph('After columns')
-        with self.assertRaisesRegex(RuntimeError, 'stop'):
-            with report.panel('Interrupted') as interrupted:
-                report.heading(1, 'Interrupted heading')
-                raise RuntimeError('stop')
+        with (
+            self.assertRaisesRegex(RuntimeError, 'stop'),
+            report.panel('Interrupted') as interrupted,
+        ):
+            report.heading(1, 'Interrupted heading')
+            raise RuntimeError('stop')
         after = report.paragraph('After')
         self.assertEqual(outer.children, (section, interrupted, after))
         self.assertEqual(local.children, (columns, after_columns))
@@ -140,7 +146,9 @@ class StructureTests(unittest.TestCase):
 
 class NavigationTests(unittest.TestCase):
     def navigation(self, html):
-        return ElementTree.fromstring(re.search(r'<nav\b.*?</nav>', html, re.S).group())
+        return ElementTree.fromstring(
+            re.search(r'<nav\b.*?</nav>', html, re.DOTALL).group()
+        )
 
     def test_report_title_is_separate_from_matching_content_sections(self):
         for title in ('Sales & growth', None):
@@ -194,7 +202,7 @@ class NavigationTests(unittest.TestCase):
             with self.subTest(fragment=fragment):
                 html = report.to_html(toc=True, fragment=fragment)
                 article = ElementTree.fromstring(
-                    re.search(r'<article\b.*?</article>', html, re.S).group()
+                    re.search(r'<article\b.*?</article>', html, re.DOTALL).group()
                 )
                 self.assertEqual(
                     [node.tag for node in article],
@@ -295,12 +303,14 @@ class NavigationTests(unittest.TestCase):
     def test_sections_inherit_levels_and_cap_at_six(self):
         report = Report('Report title')
         report.heading(4, 'Four')
-        with report.columns(2):
-            with report.panel('Panel'):
-                with report.section('Five'):
-                    with report.section('Six'):
-                        with report.section('Still six'):
-                            pass
+        with (
+            report.columns(2),
+            report.panel('Panel'),
+            report.section('Five'),
+            report.section('Six'),
+            report.section('Still six'),
+        ):
+            pass
         html = report.to_html(toc=True)
         self.assertEqual(re.findall(r'<h([1-6]) id=', html), ['4', '5', '6', '6'])
         self.assertEqual(
@@ -365,7 +375,7 @@ class NavigationTests(unittest.TestCase):
                 report.add(object(), caption='Below')
         html = HTMLWriter(registry=registry, toc=True).render(report.document)
         article = ElementTree.fromstring(
-            re.search(r'<article\b.*?</article>', html, re.S).group()
+            re.search(r'<article\b.*?</article>', html, re.DOTALL).group()
         )
         columns = article.find('.//div[@class="report-columns"]')
         self.assertEqual(len(columns), 2)
@@ -409,9 +419,11 @@ class LoggingTests(unittest.TestCase):
         report = Report()
         with self.assertNoLogs('report_toolkit.writer', level=logging.INFO):
             report.to_html()
-            with patch.object(Path, 'write_text', side_effect=OSError('write failed')):
-                with self.assertRaises(OSError):
-                    report.write('unused.html')
+            with (
+                patch.object(Path, 'write_text', side_effect=OSError('write failed')),
+                self.assertRaises(OSError),
+            ):
+                report.write('unused.html')
             report.add(object())
             with self.assertRaises(TypeError):
                 report.write('unused.html')
