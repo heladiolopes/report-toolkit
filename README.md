@@ -97,7 +97,8 @@ report.add(chart, width='full', expand='always')
 report.write('report.html', pretty=True)  # Compact markup is the default.
 ```
 
-Tables and charts use native width by default. Oversized artifacts offer an
-centered expanded view with zoom controls and a Close icon. Zoom is available
+Tables and charts use native width by default and display their full height.
+Artifacts that overflow horizontally offer a bottom-right Expand button opening
+a centered expanded view with zoom controls and a Close icon. Zoom is available
 only in the expanded preview.
 See [artifact options](docs/api-reference.md#analytical-artifacts) for details.

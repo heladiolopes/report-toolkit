@@ -85,8 +85,10 @@ are accepted for raw HTML without applying artifact layout.
 | `expand="auto"` | Offer an Expand icon when content overflows. `"always"` always offers it; `"never"` disables it. |
 
 Invalid width/expansion choices raise `ValueError`; non-boolean centering
-values raise `TypeError`. Artifact viewports scroll and are capped at 70% of the
-browser height. Expansion opens a themed dialog without shifting the report;
+values raise `TypeError`. Inline artifacts display their full height and scroll
+horizontally when needed. The Expand icon sits at the bottom-right of the visible
+artifact area. Expansion opens a themed dialog fitted to the browser window
+without shifting the report;
 Close or Escape restores the existing chart and keyboard focus. The enlarged
 view has Close, Zoom out, Zoom in, and Reset icons with tooltips. Zoom is
 available only in this preview, from 25% to 400% in 25% steps; Reset restores

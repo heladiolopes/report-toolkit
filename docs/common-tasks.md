@@ -220,8 +220,9 @@ report.add(figure, expand='always', caption='Expand to inspect details')
 
 Artifacts keep their native width by default, including tables. `width="full"`
 scales width and height together, preserving the artifact's proportions and
-layout. Full width and centering are opt-in. Oversized artifacts scroll and
-automatically offer an Expand icon. Use `expand="never"` to suppress it. The
+layout. Inline artifacts display their full height. Artifacts wider than their
+viewport scroll horizontally and automatically offer an Expand icon at the
+bottom-right of the visible artifact area. Use `expand="never"` to suppress it. The
 enlarged view centers the visualization and includes Close, Zoom out, Zoom in,
 and Reset icons. Zoom is available only in this preview and does not change the
 inline artifact's size.

@@ -62,13 +62,13 @@
 /* Artifact sizing does not affect ordinary Markdown/raw HTML tables. */
 .reporttkt .report-artifact { overflow: visible; }
 .reporttkt .report-artifact-frame { position: relative; }
-.reporttkt .report-artifact-expand { position: absolute; z-index: 1; left: calc(var(--reporttkt-expand-left, 0px) + .5rem); bottom: calc(var(--reporttkt-expand-bottom, 0px) + .5rem); display: grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: .45rem; color: var(--reporttkt-muted); background: var(--reporttkt-surface); border: 1px solid var(--reporttkt-border); border-radius: var(--reporttkt-radius); opacity: .85; cursor: pointer; transition: color .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
+.reporttkt .report-artifact-expand { position: absolute; z-index: 1; right: calc(var(--reporttkt-expand-right, 0px) + .5rem); bottom: calc(var(--reporttkt-expand-bottom, 0px) + .5rem); display: grid; place-items: center; width: 2.25rem; height: 2.25rem; padding: .45rem; color: var(--reporttkt-muted); background: var(--reporttkt-surface); border: 1px solid var(--reporttkt-border); border-radius: var(--reporttkt-radius); opacity: .85; cursor: pointer; transition: color .15s ease, background-color .15s ease, border-color .15s ease, opacity .15s ease; }
 .reporttkt .report-artifact-expand[hidden] { display: none; }
 .reporttkt .report-artifact-icon svg { display: block; width: 100%; height: 100%; }
 .reporttkt .report-artifact-expand:hover,
 .reporttkt .report-artifact-expand:focus-visible { color: var(--reporttkt-accent); background: var(--reporttkt-background); border-color: var(--reporttkt-accent); opacity: 1; }
 .reporttkt .report-artifact-expand:focus-visible { outline: 2px solid var(--reporttkt-accent); outline-offset: 2px; }
-.reporttkt .report-artifact-viewport { width: 100%; height: var(--reporttkt-viewport-height, auto); max-height: 70vh; overflow: auto; }
+.reporttkt .report-artifact-viewport { width: 100%; height: var(--reporttkt-viewport-height, auto); overflow: auto; }
 .reporttkt .report-artifact-space { position: relative; width: var(--reporttkt-space-width, max-content); height: var(--reporttkt-space-height, auto); }
 .reporttkt .report-artifact-ready > .report-artifact-content { position: absolute; }
 .reporttkt .report-artifact-ready { overflow: clip; }

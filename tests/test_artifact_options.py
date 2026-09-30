@@ -286,8 +286,71 @@ def test_center_expansion_and_restore(page):
     large = page.locator('figure.report-artifact').nth(1)
     assert large.get_by_role('button', name='Expand', exact=True).is_visible()
     assert large.locator('.report-artifact-viewport').evaluate(
-        '(el) => el.scrollWidth > el.clientWidth && el.scrollHeight > el.clientHeight'
+        '(el) => el.scrollWidth > el.clientWidth && el.scrollHeight <= el.clientHeight + 1'
     )
+
+
+@pytest.mark.parametrize(('width', 'center'), [(160, True), (160, False), (1800, True)])
+def test_expand_button_bottom_right_after_scroll_and_resize(page, width, center):
+    report = Report()
+    report.add(box(width, 200), center=center, expand='always')
+    load(page, report)
+
+    def assert_position():
+        page.wait_for_function(
+            """() => {
+                const viewport = document.querySelector('figure .report-artifact-viewport').getBoundingClientRect();
+                const space = document.querySelector('figure .report-artifact-space').getBoundingClientRect();
+                const button = document.querySelector('figure .report-artifact-expand').getBoundingClientRect();
+                return Math.abs(button.right - (Math.min(space.right, viewport.right) - 8)) < 1
+                    && Math.abs(button.bottom - (Math.min(space.bottom, viewport.bottom) - 8)) < 1;
+            }"""
+        )
+
+    assert_position()
+    if width == 1800:
+        page.locator('figure .report-artifact-viewport').evaluate(
+            '(el) => el.scrollLeft = el.scrollWidth'
+        )
+        assert_position()
+    page.set_viewport_size({'width': 390, 'height': 700})
+    assert_position()
+
+
+@pytest.mark.parametrize('javascript', [True, False])
+@pytest.mark.parametrize('width', ['native', 'full'])
+def test_tall_inline_artifact_has_no_height_limit(browser, width, javascript):
+    page = browser.new_page(
+        java_script_enabled=javascript, viewport={'width': 1200, 'height': 900}
+    )
+    try:
+        report = Report()
+        report.add(box(1600 if width == 'full' else 160, 2400), width=width)
+        page.set_content(writer().render(report.document))
+        if javascript:
+            page.wait_for_function(
+                "document.querySelector('.report-artifact-ready') !== null"
+            )
+        viewport = page.locator('figure .report-artifact-viewport')
+        content = page.locator('figure .report-artifact-content')
+        assert viewport.bounding_box()['height'] > 900
+        assert viewport.bounding_box()['height'] == pytest.approx(
+            content.bounding_box()['height'], abs=1
+        )
+        assert viewport.evaluate('(el) => el.scrollHeight <= el.clientHeight + 1')
+        assert page.get_by_role('button', name='Expand', exact=True).count() == 0
+        if javascript:
+            page.set_viewport_size({'width': 390, 'height': 700})
+            page.wait_for_function(
+                """() => {
+                    const viewport = document.querySelector('figure .report-artifact-viewport');
+                    const content = document.querySelector('figure .report-artifact-content');
+                    return Math.abs(viewport.getBoundingClientRect().height - content.getBoundingClientRect().height) < 1
+                        && viewport.scrollHeight <= viewport.clientHeight + 1;
+                }"""
+            )
+    finally:
+        page.close()
 
 
 def test_async_overflow_fragments_and_mobile(page):
@@ -344,9 +407,7 @@ def test_table_native_full_and_no_javascript(browser, page):
                 assert full['width'] / full['height'] == pytest.approx(
                     native['width'] / native['height'], abs=0.01
                 )
-            assert target.get_by_role(
-                'button', name='Expand', exact=True
-            ).count() == int(enabled)
+            assert target.get_by_role('button', name='Expand', exact=True).count() == 0
         finally:
             if not enabled:
                 target.close()

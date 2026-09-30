@@ -349,3 +349,4 @@ Replace the synthetic generator with a validated dataset at a clearly documented
 ## Closing perspective
 
 This example brings compact comparison panels, medium analytical charts, and deliberately oversized visuals into one long-form review. The persistent sidebar provides access to the broad business story and the deepest calculation notes, while the Markdown template keeps the narrative separate from Python chart construction.
+
