@@ -40,6 +40,7 @@ Open `sales.html` in a browser.
 Start with [Getting Started](docs/getting-started.md), use
 [Common Tasks](docs/common-tasks.md) for recipes, and consult the
 [API Reference](docs/api-reference.md) for signatures and constraints.
+See the [Changelog](CHANGELOG.md) for release history and upcoming changes.
 
 ## Two equivalent examples
 
