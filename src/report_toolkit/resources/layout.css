@@ -1,0 +1,15 @@
+/* Layout only: the host supplies typography, colors, and table styling. */
+.reporttkt .report-columns { display: grid; grid-template-columns: repeat(var(--reporttkt-columns), minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.reporttkt .report-column-item, .reporttkt .report-panel { min-width: 0; }
+.reporttkt .report-panel-title { margin-bottom: .75rem; text-align: center; }
+.reporttkt .report-panel, .reporttkt .report-artifact-viewport { overflow-x: auto; }
+.reporttkt .report-artifact { margin: 1rem 0; min-width: 0; }
+.reporttkt .report-artifact-space { width: max-content; }
+.reporttkt .report-artifact-content { width: var(--reporttkt-native-width, max-content); }
+.reporttkt .report-artifact[data-center="true"] .report-artifact-space { margin-inline: auto; }
+.reporttkt .report-artifact[data-width="full"] .report-artifact-space,
+.reporttkt .report-artifact[data-width="full"] .report-artifact-content,
+.reporttkt .report-artifact[data-width="full"] table,
+.reporttkt .report-artifact[data-width="full"] .reporttkt-figure-image { width: 100%; }
+.reporttkt.report-layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: 1rem; }
+@media (max-width: 700px) { .reporttkt .report-columns, .reporttkt.report-layout { grid-template-columns: 1fr; } }

@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from functools import cache
 from html import escape
+from html.parser import HTMLParser
 from importlib.resources import files
 from pathlib import Path
 from typing import Literal
@@ -29,6 +30,7 @@ from .model import (
     RawHTML,
     Section,
 )
+from .profiles import RenderingProfile, _resolve_profile
 from .themes import Style
 from .themes.style import _resolve_style
 
@@ -99,6 +101,72 @@ def _stylesheet(style: Style, *, fragment: bool) -> str:
     return css.replace('<', r'\3c ')
 
 
+class _ElementClasses(HTMLParser):
+    """Locate opening tags without serializing embedded scripts or styles."""
+
+    _attributes = re.compile(
+        r"""\s+([^\s=/>]+)(?:\s*=\s*("[^"]*"|'[^']*'|[^\s>]+))?""", re.DOTALL
+    )
+
+    def __init__(self, html: str, classes: Mapping[str, tuple[str, ...]]) -> None:
+        super().__init__(convert_charrefs=False)
+        self.classes = classes
+        self.edits: list[tuple[int, int, str]] = []
+        self.offsets = [0]
+        self.offsets.extend(match.end() for match in re.finditer('\n', html))
+        self.feed(html)
+        self.close()
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        additions = self.classes.get(tag, ())
+        if not additions:
+            return
+        opening = self.get_starttag_text()
+        existing = next((value or '' for key, value in attrs if key == 'class'), '')
+        tokens = existing.split()
+        tokens.extend(token for token in additions if token not in tokens)
+        attribute = 'class="' + escape(' '.join(tokens), quote=True) + '"'
+        for match in self._attributes.finditer(opening):
+            if match[1].lower() == 'class':
+                opening = opening[: match.start(1)] + attribute + opening[match.end() :]
+                break
+        else:
+            index = len(opening) - (2 if opening.endswith('/>') else 1)
+            opening = opening[:index] + ' ' + attribute + opening[index:]
+        line, column = self.getpos()
+        start = self.offsets[line - 1] + column
+        self.edits.append((start, start + len(self.get_starttag_text()), opening))
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.handle_starttag(tag, attrs)
+
+
+def _add_element_classes(html: str, classes: Mapping[str, tuple[str, ...]]) -> str:
+    if not classes:
+        return html
+    parser = _ElementClasses(html, classes)
+    parts = []
+    previous = 0
+    for start, end, replacement in parser.edits:
+        parts.extend((html[previous:start], replacement))
+        previous = end
+    parts.append(html[previous:])
+    return ''.join(parts)
+
+
+@cache
+def _layout_css() -> str:
+    css = (
+        files('report_toolkit')
+        .joinpath('resources/layout.css')
+        .read_text(encoding='utf-8')
+        .strip()
+    )
+    return re.sub(
+        r'\.reporttkt(?![\w-])', '.reporttkt:where([data-reporttkt-layout])', css
+    )
+
+
 def _format_size(size: int) -> str:
     if size < 1024:
         return f'{size} B'
@@ -117,6 +185,8 @@ class HTMLWriter:
     registry : AdapterRegistry or None, optional
         Registry used to render analytical objects. If omitted, the default
         adapters are registered.
+    profile : str or RenderingProfile, optional
+        Rendering capabilities: rich (default), portable, content, or a custom profile.
     style : Style, mapping, or None, optional
         Structural theme, color palette, and display mode. Mappings accept the
         fields ``theme``, ``palette``, and ``mode``.
@@ -149,6 +219,7 @@ class HTMLWriter:
         *,
         registry: AdapterRegistry | None = None,
         style: Style | Mapping[str, object] | None = None,
+        profile: str | RenderingProfile = 'rich',
         inline_altair: bool = False,
         pretty: bool = False,
         toc: bool = False,
@@ -171,6 +242,13 @@ class HTMLWriter:
             raise TypeError('numbered_headings must be a boolean')
         if toc_position not in ('top', 'sidebar'):
             raise ValueError("toc_position must be 'top' or 'sidebar'")
+        self.profile = _resolve_profile(profile)
+        if toc_position not in self.profile.toc_positions:
+            raise ValueError(
+                f'Profile {self.profile.name!r} does not support {toc_position!r} TOC positioning'
+            )
+        if inline_altair and self.profile.chart_mode == 'svg':
+            raise ValueError('inline_altair cannot be used with SVG profiles')
         self.numbered_headings = numbered_headings
         self.toc_position = toc_position
         self.style = _resolve_style(style)
@@ -230,12 +308,17 @@ class HTMLWriter:
         """
         if not isinstance(document, Document):
             raise TypeError('HTMLWriter.render expects a Document')
+        fragment = fragment or self.profile.content_only
         depth = 0 if fragment else 2
         content = self._render_document(document, depth)
-        css = _stylesheet(self.style, fragment=fragment)
+        css = (
+            _stylesheet(self.style, fragment=fragment)
+            if self.profile.stylesheet == 'theme'
+            else _layout_css()
+        )
         stylesheet = f'<style>{css}</style>'
         runtime = ''
-        if self._has_artifacts(document):
+        if self.profile.artifact_controls and self._has_artifacts(document):
             script = (
                 files('report_toolkit')
                 .joinpath('resources/artifacts.js')
@@ -243,10 +326,15 @@ class HTMLWriter:
             )
             runtime = f'<script>{script}</script>'
         if fragment:
-            return ('\n' if self.pretty else '').join(
+            html = ('\n' if self.pretty else '').join(
                 part for part in (stylesheet, content, runtime) if part
             )
-        title = document.title if document.title is not None else 'Report'
+            return _add_element_classes(html, self.profile.element_classes)
+        title = (
+            document.title
+            if self.profile.include_metadata and document.title is not None
+            else 'Report'
+        )
         head = self._block(
             '<head>',
             [
@@ -259,12 +347,13 @@ class HTMLWriter:
             1,
         )
         body = self._block('<body>', [content, runtime], '</body>', 1)
-        return (
+        html = (
             '<!doctype html>'
             + ('\n' if self.pretty else '')
             + self._block('<html lang="en">', [head, body], '</html>', 0)
             + ('\n' if self.pretty else '')
         )
+        return _add_element_classes(html, self.profile.element_classes)
 
     @staticmethod
     def _has_artifacts(node: Node) -> bool:
@@ -328,27 +417,33 @@ class HTMLWriter:
             for node in document.children
         ]
         parts = []
-        if document.title is not None:
-            parts.append(
-                f'<header class="report-header"><h1 class="report-title">{escape(document.title)}</h1></header>'
-            )
-        if document.description is not None:
-            parts.append(
-                f'<p class="report-description">{escape(document.description)}</p>'
-            )
-        parts.extend(self._metadata(document))
+        if self.profile.include_metadata:
+            if document.title is not None:
+                parts.append(
+                    f'<header class="report-header"><h1 class="report-title">{escape(document.title)}</h1></header>'
+                )
+            if document.description is not None:
+                parts.append(
+                    f'<p class="report-description">{escape(document.description)}</p>'
+                )
+            parts.extend(self._metadata(document))
         if navigation and self.toc_position == 'top':
             parts.append(navigation)
         parts.extend(body)
+        theme_attribute = (
+            f' data-reporttkt-theme="{_style_id(self.style)}"'
+            if self.profile.stylesheet == 'theme'
+            else ' data-reporttkt-layout="minimal"'
+        )
         content = self._block(
-            f'<article class="reporttkt" data-reporttkt-theme="{_style_id(self.style)}">',
+            f'<article class="reporttkt"{theme_attribute}>',
             parts,
             '</article>',
             article_depth,
         )
         if sidebar:
             return self._block(
-                f'<div class="reporttkt report-layout" data-reporttkt-theme="{_style_id(self.style)}">',
+                f'<div class="reporttkt report-layout"{theme_attribute}>',
                 [
                     self._block(
                         '<div class="report-sidebar">',
@@ -430,9 +525,14 @@ class HTMLWriter:
                 + '</ul>'
             )
 
+        title = (
+            '<div class="report-toc-title">Table of contents</div>'
+            if self.profile.include_toc_title
+            else ''
+        )
         return (
             '<nav class="report-toc" id="reporttkt_toc" tabindex="-1" aria-label="Table of contents">'
-            '<div class="report-toc-title">Table of contents</div>'
+            + title
             + render_entries(entries)
             + '</nav>'
         )
@@ -465,7 +565,16 @@ class HTMLWriter:
         if isinstance(node, List):
             return self._render_list(node.items, ordered=node.ordered)
         if isinstance(node, Artifact):
-            rendered = self.registry.resolve(node.value).render(node.value)
+            adapter = self.registry.resolve(node.value)
+            render_for_profile = getattr(adapter, 'render_for_profile', None)
+            if callable(render_for_profile):
+                rendered = render_for_profile(node.value, profile=self.profile)
+            elif self.profile.chart_mode == 'interactive':
+                rendered = adapter.render(node.value)
+            else:
+                raise TypeError(
+                    f'{type(adapter).__name__} must provide render_for_profile(value, *, profile) to support SVG profiles'
+                )
             caption = (
                 f'<figcaption>{escape(node.caption)}</figcaption>'
                 if node.caption

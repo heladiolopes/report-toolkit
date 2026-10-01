@@ -19,6 +19,7 @@ matplotlib = ["matplotlib>=3.7"]
 plotly = ["plotly>=5"]
 templates = ["PyYAML>=6,<7"]
 all = ["pandas>=2", "altair>=5", "matplotlib>=3.7", "plotly>=5", "PyYAML>=6,<7"]
+portable = ["altair>=5", "vl-convert-python>=1", "plotly>=6.1.1", "kaleido>=1"]
 offline = ["altair>=5", "vl-convert-python>=1"]
 
 [dependency-groups]

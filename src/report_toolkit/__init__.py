@@ -1,7 +1,13 @@
 """Compose analytical reports and render them as HTML."""
 
 from ._template import TemplateError
-from .adapters import Adapter, AdapterRegistry, RenderedArtifact, default_registry
+from .adapters import (
+    Adapter,
+    AdapterRegistry,
+    ProfileAwareAdapter,
+    RenderedArtifact,
+    default_registry,
+)
 from .composer import Report
 from .model import (
     Artifact,
@@ -15,6 +21,7 @@ from .model import (
     RawHTML,
     Section,
 )
+from .profiles import RenderingProfile, get_profile
 from .themes import Palette, Style, Theme, get_palette, get_theme
 from .writer import HTMLWriter
 
@@ -31,8 +38,10 @@ __all__ = [
     'Node',
     'Palette',
     'Panel',
+    'ProfileAwareAdapter',
     'RawHTML',
     'RenderedArtifact',
+    'RenderingProfile',
     'Report',
     'Section',
     'Style',
@@ -40,5 +49,6 @@ __all__ = [
     'Theme',
     'default_registry',
     'get_palette',
+    'get_profile',
     'get_theme',
 ]

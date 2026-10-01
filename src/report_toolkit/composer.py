@@ -24,6 +24,7 @@ from .model import (
 _UNSET = object()
 
 if TYPE_CHECKING:
+    from .profiles import RenderingProfile
     from .themes import Style
 
 
@@ -580,6 +581,7 @@ class Report:
         numbered_headings: bool = False,
         toc_position: Literal['top', 'sidebar'] = 'top',
         style: Style | Mapping[str, object] | None = None,
+        profile: str | RenderingProfile = 'rich',
     ) -> str:
         """Render the report as a complete HTML document or fragment.
 
@@ -599,6 +601,8 @@ class Report:
             numbers.
         toc_position : {'top', 'sidebar'}, optional
             Place the TOC above the report or in a sidebar.
+        profile : str or RenderingProfile, optional
+            Rendering capabilities: rich (default), portable, content, or a custom profile.
         style : Style, mapping, or None, optional
             Theme, palette, and display mode configuration.
 
@@ -621,6 +625,7 @@ class Report:
             toc=toc,
             toc_depth=toc_depth,
             style=style,
+            profile=profile,
             numbered_headings=numbered_headings,
             toc_position=toc_position,
         ).render(self.document, fragment=fragment)
@@ -636,6 +641,7 @@ class Report:
         numbered_headings: bool = False,
         toc_position: Literal['top', 'sidebar'] = 'top',
         style: Style | Mapping[str, object] | None = None,
+        profile: str | RenderingProfile = 'rich',
     ) -> Path:
         """Render the report and write UTF-8 HTML to a file.
 
@@ -644,7 +650,7 @@ class Report:
         path : str or pathlib.Path
             Destination file. Existing files are overwritten; parent directories
             are not created.
-        fragment, pretty, toc, toc_depth, numbered_headings, toc_position, style
+        fragment, pretty, toc, toc_depth, numbered_headings, toc_position, style, profile
             See :meth:`to_html` for the rendering options.
 
         Returns
@@ -666,6 +672,7 @@ class Report:
             toc=toc,
             toc_depth=toc_depth,
             style=style,
+            profile=profile,
             numbered_headings=numbered_headings,
             toc_position=toc_position,
         ).write(self.document, path, fragment=fragment)

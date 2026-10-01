@@ -14,8 +14,9 @@ Creates an empty report. `title`, `description`, and `author` accept strings or
 `None`; `date` accepts `datetime.date`, `datetime.datetime`, a string, or `None`.
 Invalid metadata types raise `TypeError`.
 
-The title is displayed above metadata and the optional TOC and supplies the
-browser tab title. It is not a section and is excluded from the TOC. An omitted
+When the profile includes metadata, the title is displayed above metadata and
+the optional TOC and supplies the browser tab title. It is not a section and is
+excluded from the TOC. An omitted
 title produces no visible report title and a browser title of `Report`; content
 headings never supply a fallback. `report.document` is the document accepted by
 `HTMLWriter`; direct model construction is not covered here.
@@ -137,8 +138,8 @@ artifact objects remain shared. Heading groups retain their existing boundaries.
 
 ```python
 report.to_tree() -> str
-report.to_html(*, fragment=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None) -> str
-report.write(path, *, fragment=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None) -> pathlib.Path
+report.to_html(*, fragment=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None, profile='rich') -> str
+report.write(path, *, fragment=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None, profile='rich') -> pathlib.Path
 ```
 
 `to_tree()` formats the hierarchy, abbreviated text, lists, and artifact types
@@ -274,7 +275,7 @@ Shorthand `{{ chart }}` uses default options.
 ## HTMLWriter
 
 ```python
-HTMLWriter(*, registry=None, inline_altair=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None)
+HTMLWriter(*, registry=None, inline_altair=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None, profile='rich')
 writer.render(document, *, fragment=False) -> str
 writer.write(document, path, *, fragment=False) -> pathlib.Path
 ```
@@ -292,6 +293,40 @@ load JavaScript from CDNs; tables and Matplotlib images are embedded.
 API is outside this reference. Combining a custom registry with
 `inline_altair=True` raises `ValueError`.
 
+
+## Rendering profiles
+
+```python
+get_profile(name) -> RenderingProfile
+RenderingProfile(*, name, chart_mode='interactive', content_only=False,
+                 include_metadata=True, include_toc_title=True,
+                 stylesheet='theme', artifact_controls=True,
+                 toc_positions=('top', 'sidebar'), element_classes={})
+profile.with_overrides(*, name, **changes) -> RenderingProfile
+```
+
+All HTML export entrypoints accept `profile` as a built-in name (`rich`,
+`portable`, `content`) or an immutable `RenderingProfile`. Rich preserves existing
+behavior. Portable exports built-in interactive charts as embedded SVG, with no
+report runtime. Content always returns a fragment with minimal layout CSS and
+supports only top TOCs. Style configuration is validated for every profile;
+only `stylesheet='theme'` emits theme styles.
+
+`include_metadata` controls the report title, description, author, and date.
+`include_toc_title` controls the visible TOC title while retaining its accessible
+label and navigation. Both are validated booleans, defaulting to `True` and set
+to `False` in the content profile. Custom profiles can override them independently.
+
+`element_classes` maps lowercase HTML tags to tuples of additional class tokens.
+Existing payload classes and attributes remain intact. Overrides merge mappings;
+a supplied tuple replaces that tag's additions, and `()` clears them.
+
+Custom adapters can implement the exported `ProfileAwareAdapter` protocol:
+`render_for_profile(value, *, profile) -> RenderedArtifact`. The writer prefers
+this method over `render(value)`. Legacy adapters are accepted for interactive
+profiles; SVG profiles require explicit support. The registry accepts either
+interface. See [Rendering profiles](rendering-profiles.md) for dependency setup,
+validation, custom profiles, and examples.
 
 ## Themes
 

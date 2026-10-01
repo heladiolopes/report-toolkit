@@ -67,6 +67,15 @@ appearance. Define reusable `Style`, `Theme`, and `Palette` objects;
 see [Themes](docs/themes.md) for customization and migration from `theme=`, and the
 [theme gallery](examples/theme_gallery.py).
 
+## Rendering profiles
+
+Use `profile='rich'` (the default) for interactive reports, `profile='portable'`
+for static SVG charts, or `profile='content'` for a content fragment with minimal
+layout CSS and interactive charts. Install `portable` for SVG exporters;
+Plotly also requires Chrome at export time. Derive immutable profiles with
+`get_profile(...).with_overrides(...)`, including HTML tag-to-class mappings for
+host applications. See [Rendering profiles](docs/rendering-profiles.md).
+
 ## Development
 
 ```bash

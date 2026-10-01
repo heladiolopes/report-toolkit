@@ -6,9 +6,11 @@ import base64
 from collections.abc import Callable
 from dataclasses import dataclass
 from html import escape
-from io import BytesIO
+from io import BytesIO, StringIO
 from typing import Any, Protocol
 from uuid import uuid4
+
+from .profiles import RenderingProfile
 
 
 @dataclass(frozen=True)
@@ -22,6 +24,19 @@ class Adapter(Protocol):
     def render(self, value: Any) -> RenderedArtifact: ...
 
 
+class ProfileAwareAdapter(Protocol):
+    def render_for_profile(
+        self, value: Any, *, profile: RenderingProfile
+    ) -> RenderedArtifact: ...
+
+
+class _StaticAdapter:
+    def render_for_profile(
+        self, value: Any, *, profile: RenderingProfile
+    ) -> RenderedArtifact:
+        return self.render(value)
+
+
 Predicate = Callable[[Any], bool]
 
 
@@ -31,20 +46,27 @@ def _has_base_from(value: Any, module_prefix: str) -> bool:
 
 class AdapterRegistry:
     def __init__(self) -> None:
-        self._entries: list[tuple[Predicate, Adapter]] = []
+        self._entries: list[tuple[Predicate, Adapter | ProfileAwareAdapter]] = []
 
-    def register(self, object_type: type | Predicate, adapter: Adapter) -> None:
+    def register(
+        self, object_type: type | Predicate, adapter: Adapter | ProfileAwareAdapter
+    ) -> None:
         if isinstance(object_type, type):
             predicate = lambda value: isinstance(value, object_type)
         elif callable(object_type):
             predicate = object_type
         else:
             raise TypeError('adapter match must be a type or predicate')
-        if not callable(getattr(adapter, 'render', None)):
-            raise TypeError('adapter must provide render(value)')
+        if not any(
+            callable(getattr(adapter, method, None))
+            for method in ('render', 'render_for_profile')
+        ):
+            raise TypeError(
+                'adapter must provide render(value) or render_for_profile(value, *, profile)'
+            )
         self._entries.append((predicate, adapter))
 
-    def resolve(self, value: Any) -> Adapter:
+    def resolve(self, value: Any) -> Adapter | ProfileAwareAdapter:
         for predicate, adapter in reversed(self._entries):
             if predicate(value):
                 return adapter
@@ -92,12 +114,12 @@ def _is_plotly_figure(value: Any) -> bool:
     return isinstance(value, BaseFigure)
 
 
-class PandasStylerAdapter:
+class PandasStylerAdapter(_StaticAdapter):
     def render(self, value: Any) -> RenderedArtifact:
         return RenderedArtifact(value.to_html(), kind='table')
 
 
-class PandasDataFrameAdapter:
+class PandasDataFrameAdapter(_StaticAdapter):
     def render(self, value: Any) -> RenderedArtifact:
         return RenderedArtifact(value.style.to_html(), kind='table')
 
@@ -161,8 +183,35 @@ class AltairAdapter:
             kind='altair',
         )
 
+    def render_for_profile(
+        self, value: Any, *, profile: RenderingProfile
+    ) -> RenderedArtifact:
+        if profile.chart_mode == 'interactive':
+            return self.render(value)
+        try:
+            import vl_convert  # noqa: F401
+        except ImportError as exc:
+            raise ImportError(
+                'SVG Altair export requires vl-convert-python; install report-toolkit[portable]'
+            ) from exc
+        buffer = StringIO()
+        value.save(buffer, format='svg')
+        return _svg_artifact(buffer.getvalue(), label='Altair chart')
 
-class MatplotlibAdapter:
+
+def _svg_artifact(
+    svg: str | bytes, *, label: str, native_width: float | None = None
+) -> RenderedArtifact:
+    data = svg.encode('utf-8') if isinstance(svg, str) else svg
+    encoded = base64.b64encode(data).decode('ascii')
+    return RenderedArtifact(
+        f'<img class="reporttkt-figure-image" src="data:image/svg+xml;base64,{encoded}" alt="{escape(label, quote=True)}">',
+        kind='image',
+        native_width=native_width,
+    )
+
+
+class MatplotlibAdapter(_StaticAdapter):
     def render(self, value: Any) -> RenderedArtifact:
         buffer = BytesIO()
         value.savefig(buffer, format='png', bbox_inches='tight')
@@ -182,6 +231,29 @@ class PlotlyAdapter:
             to_html(value, full_html=False, include_plotlyjs='cdn'),
             kind='plotly',
             native_width=value.layout.width or 700,
+        )
+
+    def render_for_profile(
+        self, value: Any, *, profile: RenderingProfile
+    ) -> RenderedArtifact:
+        if profile.chart_mode == 'interactive':
+            return self.render(value)
+        from plotly.io import to_image
+
+        try:
+            import kaleido  # noqa: F401
+        except ImportError as exc:
+            raise ImportError(
+                'SVG Plotly export requires Kaleido; install report-toolkit[portable]'
+            ) from exc
+        try:
+            svg = to_image(value, format='svg')
+        except Exception as exc:
+            raise RuntimeError(
+                'Plotly SVG export failed; verify compatible Plotly/Kaleido versions and Chrome installation'
+            ) from exc
+        return _svg_artifact(
+            svg, label='Plotly chart', native_width=value.layout.width or 700
         )
 
 
