@@ -290,7 +290,23 @@ class _Template:
         parser = _SourceParser()
 
         def directive(block, match, state):
-            end = state.find_line_end()
+            # Closing delimiters inside JSON strings are literal text.
+            position = state.src.index('{%', state.cursor) + 2
+            quoted = False
+            while position < len(state.src):
+                char = state.src[position]
+                if quoted and char == '\\':
+                    position += 2
+                    continue
+                if char == '"':
+                    quoted = not quoted
+                elif not quoted and state.src.startswith('%}', position):
+                    end = state.src.find('\n', position + 2)
+                    end = len(state.src) if end == -1 else end + 1
+                    break
+                position += 1
+            else:
+                end = len(state.src)
             state.append_token(
                 {'type': 'template', 'raw': state.src[state.cursor : end].strip()}
             )
@@ -364,7 +380,7 @@ class _Template:
                 if kind == 'template':
                     flush()
                     tag = token['raw']
-                    match = re.fullmatch(r'\{%\s*(.*?)\s*%\}', tag)
+                    match = re.fullmatch(r'\{%\s*(.*?)\s*%\}', tag, flags=re.DOTALL)
                     if not match:
                         self.error('Malformed template tag', line)
                     instruction = match[1]
@@ -380,6 +396,7 @@ class _Template:
                     artifact = re.fullmatch(
                         r'artifact\s+(' + _NAME + r')(.*)',
                         instruction,
+                        flags=re.DOTALL,
                     )
                     if columns or panel:
                         if columns:

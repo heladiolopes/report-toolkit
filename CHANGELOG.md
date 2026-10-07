@@ -5,6 +5,10 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Template tags now support line breaks between tokens, including artifact options and layout tags.
+
 ## [0.2.0] - 2026-09-30
 
 ### Added

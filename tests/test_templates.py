@@ -92,6 +92,90 @@ class TemplateTests(unittest.TestCase):
         self.assertEqual(outer.children[1].title, 'Next')
         self.assertIsNone(report.document.title)
 
+    def test_multiline_tags_match_single_line_composition(self):
+        chart = _Chart()
+        context = {'chart': chart, 'period': 'May'}
+        multiline = (
+            'Before\n{%\n columns\n 2\n%}\n{% panel\n "Revenue"\n%}\n'
+            '{% artifact\n chart\n caption="Trend {{ period }}"\n'
+            ' width="full"\n center=false\n expand="always"\n%}\n'
+            '{% columns\n 1 %}\n{% panel\n "Nested" %}\nInside\n'
+            '{%\n endpanel\n%}\n{%\n endcolumns\n%}\n'
+            '{%\n endpanel\n%}\n{%\n endcolumns\n%}\nAfter\n'
+        )
+        single_line = (
+            'Before\n{% columns 2 %}\n{% panel "Revenue" %}\n'
+            '{% artifact chart caption="Trend {{ period }}"'
+            ' width="full" center=false expand="always" %}\n'
+            '{% columns 1 %}\n{% panel "Nested" %}\nInside\n'
+            '{% endpanel %}\n{% endcolumns %}\n'
+            '{% endpanel %}\n{% endcolumns %}\nAfter\n'
+        )
+        expected = Report.from_template_string(single_line, context=context)
+        for source in (multiline, multiline.replace('\n', '\r\n')):
+            with self.subTest(source=source):
+                actual = Report.from_template_string(source, context=context)
+                artifact = actual.document.children[1].children[0].children[0]
+                self.assertIs(artifact.value, chart)
+                self.assertEqual(artifact.caption, 'Trend May')
+                self.assertEqual(artifact.width, 'full')
+                self.assertFalse(artifact.center)
+                self.assertEqual(artifact.expand, 'always')
+                self.assertEqual(chart.rendered, 0)
+                writer = HTMLWriter(registry=self.registry())
+                self.assertEqual(
+                    writer.render(actual.document), writer.render(expected.document)
+                )
+                chart.rendered = 0
+
+    def test_multiline_tags_respect_markdown_boundaries_and_quotes(self):
+        chart = _Chart()
+        for prefix in ('Before', '- Item', '> Quote'):
+            with self.subTest(prefix=prefix):
+                report = Report.from_template_string(
+                    prefix + '\n{% artifact chart\n'
+                    ' caption="Literal %} and \\"quote\\"\\nNext"\n%}\nAfter',
+                    context={'chart': chart},
+                )
+                self.assertEqual(
+                    [type(node) for node in report.document.children],
+                    [Markdown, Artifact, Markdown],
+                )
+                self.assertEqual(
+                    report.document.children[1].caption,
+                    'Literal %} and "quote"\nNext',
+                )
+        source = (
+            '```markdown\n{% artifact missing\n caption="Example"\n%}\n```\n\n'
+            '    {% panel\n    "Example"\n    %}\n\n'
+            '<div>\n{% artifact missing\n%}\n</div>\n'
+        )
+        actual = Report.from_template_string(source)
+        expected = Report()
+        expected.markdown(source)
+        self.assertEqual(actual.to_html(), expected.to_html())
+
+    def test_multiline_tag_errors_keep_source_locations(self):
+        cases = [
+            ('{% artifact chart\n caption="Trend"', 'Malformed template tag', 2),
+            ('{% artifact chart\n%} trailing', 'Malformed template tag', 2),
+            ('Text {% artifact chart\n%}', 'own line', 2),
+            ('{% artifact chart\n unknown=true\n%}', 'Unknown artifact attribute', 2),
+            ('{% artifact chart\n center=true\n center=false\n%}', 'Duplicate', 2),
+            ('{% artifact chart\n caption="Raw\nnewline"\n%}', 'quoted string', 2),
+            ('- {% artifact chart\n  %}', 'inside lists or blockquotes', 2),
+            ('> {% artifact chart\n> %}', 'inside lists or blockquotes', 2),
+            ('{% artifact chart\n%}\n{{ missing }}', 'Missing template variable', 4),
+            ('{% panel\n "Notes"\n%}', 'Unclosed panel', 2),
+        ]
+        for source, message, line in cases:
+            with self.subTest(source=source):
+                with self.assertRaisesRegex(TemplateError, message) as raised:
+                    Report.from_template_string(
+                        '\n' + source, context={'chart': _Chart()}
+                    )
+                self.assertIn(f'<template>:{line}:', str(raised.exception))
+
     def test_literal_text_code_escapes_and_html(self):
         report = Report.from_template_string(
             '# {{ title }}\n\nValue: **{{ value }}**.\n\n'
@@ -230,6 +314,11 @@ class TemplateTests(unittest.TestCase):
                 Report.from_template_string('---\n' + yaml + '\n---\nBody')
         with self.assertRaisesRegex(TemplateError, '<template>:5:'):
             Report.from_template_string('---\ntitle: T\n---\n\n{{ missing }}')
+        with self.assertRaisesRegex(TemplateError, '<template>:7:'):
+            Report.from_template_string(
+                '---\ntitle: T\n---\n{% artifact chart\n%}\n\n{{ missing }}',
+                context={'chart': _Chart()},
+            )
 
     def test_yaml_dependency_is_lazy(self):
         with patch.dict('sys.modules', {'yaml': None}):

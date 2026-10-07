@@ -222,8 +222,30 @@ Non-scalar objects require their own line outside lists and blockquotes. Each
 occurrence references the same original object. Unsupported artifacts fail at
 rendering time, as with `add()`.
 
-Tags must occupy their own lines. Captions and panel titles use JSON-style
-double-quoted strings, including `\"` to embed a quotation mark. Column counts
+Tags must occupy standalone blocks and may span multiple lines. Line breaks
+between tokens act as whitespace; the opening `{%` and closing `%}` must have
+only whitespace before and after them on their respective lines. For example:
+
+```markdown
+{% columns
+  2
+%}
+{% panel
+  "Revenue"
+%}
+{% artifact revenue_chart
+  caption="Revenue for {{ period }}"
+  width="full"
+  center=true
+  expand="always"
+%}
+{% endpanel %}
+{% endcolumns %}
+```
+
+Closing tags may also span multiple lines. Captions and panel titles use JSON-style
+double-quoted strings, including `\"` to embed a quotation mark and `\n` for a
+newline; literal line breaks inside quoted strings are invalid. Column counts
 are positive integer literals. Layouts may nest; closing tags must match the
 most recent opening tag. Adjacent prose stays together as Markdown content, so
 use panels when several prose elements should occupy a single grid cell.

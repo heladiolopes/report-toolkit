@@ -230,7 +230,12 @@ inline artifact's size.
 The same options work in explicit template tags:
 
 ```jinja
-{% artifact chart width="full" expand="always" center=true caption="Revenue" %}
+{% artifact chart
+  width="full"
+  expand="always"
+  center=true
+  caption="Revenue"
+%}
 ```
 
 ## Inspect and export a report
