@@ -225,7 +225,8 @@ viewport scroll horizontally and automatically offer an Expand icon at the
 bottom-right of the visible artifact area. Use `expand="never"` to suppress it. The
 enlarged view centers the visualization and includes Close, Zoom out, Zoom in,
 and Reset icons. Zoom is available only in this preview and does not change the
-inline artifact's size.
+inline artifact's size. Every opening starts at native size (100%), including
+full-width artifacts; Reset also restores native 100%.
 
 The same options work in explicit template tags:
 

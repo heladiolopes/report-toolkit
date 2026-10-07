@@ -8,6 +8,7 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - Template tags now support line breaks between tokens, including artifact options and layout tags.
+- Expanded artifact previews now open at native size (100%), including full-width artifacts, and reset zoom on every reopening.
 
 ## [0.2.0] - 2026-09-30
 

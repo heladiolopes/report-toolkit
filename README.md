@@ -112,3 +112,4 @@ Artifacts that overflow horizontally offer a bottom-right Expand button opening
 a centered expanded view with zoom controls and a Close icon. Zoom is available
 only in the expanded preview.
 See [artifact options](docs/api-reference.md#analytical-artifacts) for details.
+

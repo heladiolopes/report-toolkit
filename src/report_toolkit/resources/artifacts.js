@@ -64,7 +64,7 @@
       if (!available) return;
       const width = Math.max(content.offsetWidth, content.scrollWidth);
       const height = Math.max(content.offsetHeight, content.scrollHeight);
-      const fit = full && width > 0 ? available / width : 1;
+      const fit = !dialog && full && width > 0 ? available / width : 1;
       if (!dialog) inlineViewport.style.setProperty('--reporttkt-viewport-height', `${height * fit}px`);
       const scale = fit * (dialog ? previewZoom : 1);
       content.style.setProperty('--reporttkt-artifact-scale', scale);
@@ -94,6 +94,8 @@
     }
     const expandButton = button('Expand', () => {
       if (dialog) return;
+      previewZoom = 1;
+      centeredSize = null;
       dialog = document.createElement('dialog');
       dialog.className = 'report-artifact-dialog';
       dialog.setAttribute('aria-label', figure.querySelector('figcaption')?.textContent || 'Enlarged artifact');
@@ -121,6 +123,7 @@
       const host = document.createElement('div');
       host.className = 'report-artifact';
       Object.assign(host.dataset, figure.dataset);
+      host.dataset.width = 'native';
       host.dataset.center = 'true';
       viewport = document.createElement('div');
       viewport.className = 'report-artifact-viewport';

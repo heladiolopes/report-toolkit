@@ -93,14 +93,15 @@ without shifting the report;
 Close or Escape restores the existing chart and keyboard focus. The enlarged
 view has Close, Zoom out, Zoom in, and Reset icons with tooltips. Zoom is
 available only in this preview, from 25% to 400% in 25% steps; Reset restores
-100%. For full-width artifacts, 100% is the size fitted to the preview's width.
+100%. Expanded previews always open at native size (100%), including full-width
+artifacts.
 Zoom keeps the viewport fixed and the visualization centered horizontally and
 vertically, including after resizing. Closing the preview restores the inline
-size, and reopening it retains the preview zoom level. Oversized
+size, and reopening it resets the preview to native 100%. Oversized
 content starts scrolled to its center and remains available for manual panning.
 
-Full-width sizing fits the artifact to each viewport, including the enlarged
-panel, without stretching it horizontally. Its height changes by the same
+Full-width sizing fits the inline artifact to its viewport without stretching
+it horizontally. Its height changes by the same
 factor as its width. The artifact fills the available width.
 Without JavaScript, full-width images retain their aspect ratio and tables
 fall back to reflowing across the available width.

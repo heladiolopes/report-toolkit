@@ -275,7 +275,12 @@ def test_center_expansion_and_restore(page):
         '(el) => el === document.activeElement'
     )
     small.get_by_role('button', name='Expand', exact=True).click()
-    assert dialog.locator('output').text_content() == '125%'
+    assert dialog.locator('output').text_content() == '100%'
+    assert dialog.locator('.report-artifact-content').bounding_box()[
+        'width'
+    ] == pytest.approx(bounds['width'])
+    dialog.get_by_role('button', name='Zoom in', exact=True).click()
+    page.wait_for_function("document.querySelector('dialog output').value === '125%'")
     dialog.get_by_role('button', name='Reset', exact=True).click()
     page.wait_for_function("document.querySelector('dialog output').value === '100%'")
     assert dialog.locator('.report-artifact-content').bounding_box()[
@@ -446,6 +451,17 @@ def assert_proportional_fit(page, selector, ratio):
     )
 
 
+def assert_native_size(page, selector, width, height):
+    page.wait_for_function(
+        """({selector, width, height}) => {
+            const bounds = document.querySelector(selector).getBoundingClientRect();
+            return Math.abs(bounds.width - width) < 1
+                && Math.abs(bounds.height - height) < 1;
+        }""",
+        arg={'selector': selector, 'width': width, 'height': height},
+    )
+
+
 def test_plotly_full_width_resize_and_state(page):
     go = pytest.importorskip('plotly.graph_objects')
     from plotly.offline import get_plotlyjs
@@ -472,7 +488,7 @@ def test_plotly_full_width_resize_and_state(page):
         '(el) => [el._fullLayout.width, el._fullLayout.height]'
     ) == [320, 240]
     first.get_by_role('button', name='Expand', exact=True).click()
-    assert_proportional_fit(page, expanded, 320 / 240)
+    assert_native_size(page, expanded, 320, 240)
     page.get_by_role('dialog').get_by_role('button', name='Close', exact=True).click()
     page.wait_for_function("!document.querySelector('dialog')")
     assert_proportional_fit(page, inline, 320 / 240)
@@ -509,7 +525,9 @@ def test_altair_full_width_and_multiple_offline_charts(page):
         '(el) => [el.reporttktView.width(), el.reporttktView.height()]'
     ) == [200, 150]
     first.get_by_role('button', name='Expand', exact=True).click()
-    assert_proportional_fit(page, 'dialog .report-artifact-content', ratio)
+    assert_native_size(
+        page, 'dialog .report-artifact-content', native['width'], native['height']
+    )
     page.keyboard.press('Escape')
     page.wait_for_function("!document.querySelector('dialog')")
     page.set_viewport_size({'width': 390, 'height': 700})
@@ -561,17 +579,31 @@ def test_dialog_focus_containment_and_print_restores_content(page):
     page.evaluate("window.dispatchEvent(new Event('afterprint'))")
 
 
-def test_full_width_custom_artifact_preserves_proportions(page):
+@pytest.mark.parametrize(('width', 'height'), [(160, 100), (1600, 800)])
+def test_full_width_custom_artifact_preserves_proportions(page, width, height):
     report = Report()
-    report.add(box(1600, 800), width='full', expand='always')
+    report.add(box(width, height), width='full', expand='always')
     load(page, report)
-    assert_proportional_fit(page, 'figure .report-artifact-content', 2)
+    ratio = width / height
+    assert_proportional_fit(page, 'figure .report-artifact-content', ratio)
     viewport = page.locator('figure .report-artifact-viewport')
     assert viewport.evaluate('(el) => el.scrollWidth <= el.clientWidth + 1')
     page.get_by_role('button', name='Expand', exact=True).click()
-    assert_proportional_fit(page, 'dialog .report-artifact-content', 2)
+    expanded = 'dialog .report-artifact-content'
+    dialog = page.get_by_role('dialog')
+    assert_native_size(page, expanded, width, height)
+    assert dialog.locator('output').text_content() == '100%'
     page.set_viewport_size({'width': 390, 'height': 700})
-    assert_proportional_fit(page, 'dialog .report-artifact-content', 2)
+    assert_native_size(page, expanded, width, height)
+    dialog.get_by_role('button', name='Zoom in', exact=True).click()
+    assert_native_size(page, expanded, width * 1.25, height * 1.25)
+    dialog.get_by_role('button', name='Reset', exact=True).click()
+    assert_native_size(page, expanded, width, height)
+    dialog.get_by_role('button', name='Zoom out', exact=True).click()
+    assert_native_size(page, expanded, width * 0.75, height * 0.75)
     page.keyboard.press('Escape')
     page.wait_for_function("!document.querySelector('dialog')")
-    assert_proportional_fit(page, 'figure .report-artifact-content', 2)
+    assert_proportional_fit(page, 'figure .report-artifact-content', ratio)
+    page.get_by_role('button', name='Expand', exact=True).click()
+    assert_native_size(page, expanded, width, height)
+    assert dialog.locator('output').text_content() == '100%'
