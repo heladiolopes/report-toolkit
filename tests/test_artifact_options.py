@@ -535,6 +535,113 @@ def test_altair_full_width_and_multiple_offline_charts(page):
     assert not errors
 
 
+@pytest.mark.parametrize('hover_before_expansion', [False, True])
+def test_altair_tooltips_in_expanded_mode(page, hover_before_expansion):
+    alt = pytest.importorskip('altair')
+    pytest.importorskip('vl_convert')
+    report = Report()
+    for label in ('First chart', 'Second chart'):
+        chart = (
+            alt.Chart(alt.Data(values=[{'x': 1, 'y': 2, 'label': label}]))
+            .mark_circle(size=400)
+            .encode(
+                x='x:Q',
+                y='y:Q',
+                tooltip=[alt.Tooltip('label:N', title='title'), 'x:Q'],
+            )
+            .properties(
+                width=200,
+                height=150,
+                usermeta={
+                    'embedOptions': {
+                        'renderer': 'svg',
+                        'actions': False,
+                        'tooltip': {
+                            'theme': 'light' if label == 'First chart' else 'dark'
+                        },
+                    }
+                },
+            )
+        )
+        report.add(chart, expand='always')
+    errors = []
+    page.on('pageerror', lambda error: errors.append(str(error)))
+    page.set_content(HTMLWriter(inline_altair=True).render(report.document))
+    page.wait_for_function(
+        "Array.from(document.querySelectorAll('[id^=reporttkt_chart_]')).filter(el => el.reporttktView).length === 2"
+    )
+
+    def hover_and_check(host, label):
+        host.locator('.mark-symbol path').hover()
+        tooltip = page.locator('.vg-tooltip.visible')
+        tooltip.wait_for(state='visible')
+        assert label in tooltip.inner_text()
+        # Visibility alone does not detect a tooltip behind the modal's backdrop.
+        assert tooltip.evaluate(
+            """el => {
+                const original = el.style.pointerEvents;
+                el.style.pointerEvents = 'auto';
+                try {
+                    const bounds = el.getBoundingClientRect();
+                    return el.contains(document.elementFromPoint(
+                        bounds.x + bounds.width / 2, bounds.y + bounds.height / 2
+                    ));
+                } finally {
+                    el.style.pointerEvents = original;
+                }
+            }"""
+        )
+        return {
+            **tooltip.bounding_box(),
+            'styles': tooltip.evaluate(
+                """el => [el, ...el.querySelectorAll('*')].map(node => {
+                    const style = getComputedStyle(node);
+                    return Object.fromEntries([
+                        'fontFamily', 'fontSize', 'fontWeight', 'lineHeight',
+                        'color', 'backgroundColor', 'padding', 'border',
+                        'borderCollapse', 'borderSpacing', 'boxSizing'
+                    ].map(property => [property, style[property]]));
+                })"""
+            ),
+        }
+
+    for index, label in enumerate(('First chart', 'Second chart')):
+        figure = page.locator('figure').nth(index)
+        if hover_before_expansion:
+            hover_and_check(figure, label)
+        figure.get_by_role('button', name='Expand', exact=True).click()
+        dialog = page.get_by_role('dialog')
+        original = hover_and_check(dialog, label)
+        assert dialog.locator('.vg-tooltip.visible').count() == 1
+        dialog.get_by_role('button', name='Zoom in', exact=True).click()
+        page.wait_for_function(
+            "document.querySelector('dialog output').value === '125%'"
+        )
+        zoomed = hover_and_check(dialog, label)
+        assert zoomed['width'] == pytest.approx(original['width'])
+        assert zoomed['height'] == pytest.approx(original['height'])
+        if index == 0:
+            page.keyboard.press('Escape')
+        else:
+            dialog.get_by_role('button', name='Close', exact=True).click()
+        page.wait_for_function("!document.querySelector('dialog')")
+        assert page.locator('body > .vg-tooltip').count() == 1
+        assert page.locator('.vg-tooltip.visible').count() == 0
+        inline = hover_and_check(figure, label)
+        assert inline['styles'] == original['styles']
+        assert inline['width'] == pytest.approx(original['width'])
+        assert inline['height'] == pytest.approx(original['height'])
+        figure.get_by_role('button', name='Expand', exact=True).click()
+        hover_and_check(page.get_by_role('dialog'), label)
+        page.evaluate("window.dispatchEvent(new Event('beforeprint'))")
+        assert page.locator('dialog').count() == 0
+        assert page.locator('body > .vg-tooltip').count() == 1
+        assert page.locator('.vg-tooltip.visible').count() == 0
+        page.evaluate("window.dispatchEvent(new Event('afterprint'))")
+        hover_and_check(figure, label)
+    assert not errors
+
+
 def test_pretty_keeps_adjacent_inline_payloads_adjacent():
     report = Report()
     report.raw_html('<span>one</span>')

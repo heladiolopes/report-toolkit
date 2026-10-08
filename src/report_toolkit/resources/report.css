@@ -1,16 +1,17 @@
-.reporttkt, .reporttkt * { box-sizing: border-box; }
+/* Vega tooltips keep their own typography and table styles inside the dialog. */
+.reporttkt, .reporttkt *:where(:not(.vg-tooltip, .vg-tooltip *)) { box-sizing: border-box; }
 .reporttkt { max-width: var(--reporttkt-content-width); margin: var(--reporttkt-page-margin); padding: var(--reporttkt-content-padding); background: var(--reporttkt-background); border: 1px solid var(--reporttkt-border); border-radius: var(--reporttkt-radius); box-shadow: var(--reporttkt-shadow-geometry) var(--reporttkt-shadow-color); }
 .reporttkt { color: var(--reporttkt-text); font: var(--reporttkt-font-size)/var(--reporttkt-line-height) var(--reporttkt-font-family); }
-.reporttkt h1, .reporttkt h2, .reporttkt h3, .reporttkt h4, .reporttkt h5, .reporttkt h6 { color: var(--reporttkt-heading); line-height: var(--reporttkt-heading-line-height); margin: var(--reporttkt-heading-margin); }
-.reporttkt h1 { font-size: var(--reporttkt-h1-size); font-weight: var(--reporttkt-h1-weight); line-height: var(--reporttkt-h1-line-height); margin-top: 0; }
+.reporttkt h1:where(:not(.vg-tooltip *)), .reporttkt h2:where(:not(.vg-tooltip *)), .reporttkt h3:where(:not(.vg-tooltip *)), .reporttkt h4:where(:not(.vg-tooltip *)), .reporttkt h5:where(:not(.vg-tooltip *)), .reporttkt h6:where(:not(.vg-tooltip *)) { color: var(--reporttkt-heading); line-height: var(--reporttkt-heading-line-height); margin: var(--reporttkt-heading-margin); }
+.reporttkt h1:where(:not(.vg-tooltip *)) { font-size: var(--reporttkt-h1-size); font-weight: var(--reporttkt-h1-weight); line-height: var(--reporttkt-h1-line-height); margin-top: 0; }
 .reporttkt .report-title { font-size: var(--reporttkt-title-size); font-weight: var(--reporttkt-title-weight); line-height: var(--reporttkt-title-line-height); margin: 0 0 .5em; }
-.reporttkt h2 { font-size: var(--reporttkt-h2-size); font-weight: var(--reporttkt-h2-weight); line-height: var(--reporttkt-h2-line-height); border-bottom: var(--reporttkt-h2-border-width) solid var(--reporttkt-border); padding-bottom: var(--reporttkt-h2-padding); }
-.reporttkt p { margin: var(--reporttkt-paragraph-margin); }
-.reporttkt ul, .reporttkt ol { margin: var(--reporttkt-list-margin); }
-.reporttkt ul ul, .reporttkt ul ol, .reporttkt ol ul, .reporttkt ol ol { margin: var(--reporttkt-nested-list-margin); }
-.reporttkt li + li { margin-top: var(--reporttkt-list-item-spacing); }
-.reporttkt a { color: var(--reporttkt-accent); text-decoration: var(--reporttkt-link-decoration); }
-.reporttkt a:hover { color: var(--reporttkt-accent-hover); text-decoration: underline; }
+.reporttkt h2:where(:not(.vg-tooltip *)) { font-size: var(--reporttkt-h2-size); font-weight: var(--reporttkt-h2-weight); line-height: var(--reporttkt-h2-line-height); border-bottom: var(--reporttkt-h2-border-width) solid var(--reporttkt-border); padding-bottom: var(--reporttkt-h2-padding); }
+.reporttkt p:where(:not(.vg-tooltip *)) { margin: var(--reporttkt-paragraph-margin); }
+.reporttkt ul:where(:not(.vg-tooltip *)), .reporttkt ol:where(:not(.vg-tooltip *)) { margin: var(--reporttkt-list-margin); }
+.reporttkt ul:where(:not(.vg-tooltip *)) ul:where(:not(.vg-tooltip *)), .reporttkt ul:where(:not(.vg-tooltip *)) ol:where(:not(.vg-tooltip *)), .reporttkt ol:where(:not(.vg-tooltip *)) ul:where(:not(.vg-tooltip *)), .reporttkt ol:where(:not(.vg-tooltip *)) ol:where(:not(.vg-tooltip *)) { margin: var(--reporttkt-nested-list-margin); }
+.reporttkt li:where(:not(.vg-tooltip *)) + li:where(:not(.vg-tooltip *)) { margin-top: var(--reporttkt-list-item-spacing); }
+.reporttkt a:where(:not(.vg-tooltip *)) { color: var(--reporttkt-accent); text-decoration: var(--reporttkt-link-decoration); }
+.reporttkt a:where(:not(.vg-tooltip *)):hover { color: var(--reporttkt-accent-hover); text-decoration: underline; }
 .reporttkt .report-description { color: var(--reporttkt-description); font-size: 1.1rem; }
 .reporttkt .report-meta { color: var(--reporttkt-muted); font-size: var(--reporttkt-caption-size); line-height: var(--reporttkt-caption-line-height); display: flex; flex-wrap: wrap; gap: 1.2rem; }
 .reporttkt .report-section { margin-top: var(--reporttkt-section-spacing); }
@@ -28,17 +29,17 @@
 .reporttkt .report-artifact { margin: var(--reporttkt-figure-margin); min-width: 0; overflow-x: auto; }
 .reporttkt figcaption { color: var(--reporttkt-muted); font-size: var(--reporttkt-caption-size); line-height: var(--reporttkt-caption-line-height); margin-top: .5rem; }
 .reporttkt .reporttkt-figure-image { display: block; max-width: 100%; height: auto; }
-.reporttkt table { border-collapse: collapse; width: 100%; font-size: var(--reporttkt-table-size); line-height: var(--reporttkt-table-line-height); }
-.reporttkt th, .reporttkt td { border: var(--reporttkt-table-border-width) solid var(--reporttkt-border); border-bottom: 1px solid var(--reporttkt-border); padding: var(--reporttkt-cell-padding); text-align: left; }
-.reporttkt th { background: var(--reporttkt-table-header); font-weight: 650; }
-.reporttkt pre { line-height: var(--reporttkt-code-line-height); overflow-x: auto; padding: var(--reporttkt-pre-padding); background: var(--reporttkt-pre-background); border-radius: var(--reporttkt-pre-radius); margin: var(--reporttkt-pre-margin); }
-.reporttkt code { font-size: var(--reporttkt-code-size); font-family: var(--reporttkt-code-font); line-height: var(--reporttkt-code-line-height); }
-.reporttkt h3 { font-size: var(--reporttkt-h3-size); font-weight: var(--reporttkt-h3-weight); line-height: var(--reporttkt-h3-line-height); }
-.reporttkt h4 { font-size: var(--reporttkt-h4-size); font-weight: var(--reporttkt-h4-weight); line-height: var(--reporttkt-h4-line-height); }
-.reporttkt h5 { font-size: var(--reporttkt-h5-size); font-weight: var(--reporttkt-h5-weight); line-height: var(--reporttkt-h5-line-height); }
-.reporttkt h6 { font-size: var(--reporttkt-h6-size); font-weight: var(--reporttkt-h6-weight); line-height: var(--reporttkt-h6-line-height); }
-.reporttkt blockquote { margin: var(--reporttkt-blockquote-margin); padding: var(--reporttkt-blockquote-padding); border-left: var(--reporttkt-blockquote-border-width) solid var(--reporttkt-accent); background: var(--reporttkt-blockquote-background); }
-.reporttkt hr { border: 0; border-top: 1px solid var(--reporttkt-border); }
+.reporttkt table:where(:not(.vg-tooltip *)) { border-collapse: collapse; width: 100%; font-size: var(--reporttkt-table-size); line-height: var(--reporttkt-table-line-height); }
+.reporttkt th:where(:not(.vg-tooltip *)), .reporttkt td:where(:not(.vg-tooltip *)) { border: var(--reporttkt-table-border-width) solid var(--reporttkt-border); border-bottom: 1px solid var(--reporttkt-border); padding: var(--reporttkt-cell-padding); text-align: left; }
+.reporttkt th:where(:not(.vg-tooltip *)) { background: var(--reporttkt-table-header); font-weight: 650; }
+.reporttkt pre:where(:not(.vg-tooltip *)) { line-height: var(--reporttkt-code-line-height); overflow-x: auto; padding: var(--reporttkt-pre-padding); background: var(--reporttkt-pre-background); border-radius: var(--reporttkt-pre-radius); margin: var(--reporttkt-pre-margin); }
+.reporttkt code:where(:not(.vg-tooltip *)) { font-size: var(--reporttkt-code-size); font-family: var(--reporttkt-code-font); line-height: var(--reporttkt-code-line-height); }
+.reporttkt h3:where(:not(.vg-tooltip *)) { font-size: var(--reporttkt-h3-size); font-weight: var(--reporttkt-h3-weight); line-height: var(--reporttkt-h3-line-height); }
+.reporttkt h4:where(:not(.vg-tooltip *)) { font-size: var(--reporttkt-h4-size); font-weight: var(--reporttkt-h4-weight); line-height: var(--reporttkt-h4-line-height); }
+.reporttkt h5:where(:not(.vg-tooltip *)) { font-size: var(--reporttkt-h5-size); font-weight: var(--reporttkt-h5-weight); line-height: var(--reporttkt-h5-line-height); }
+.reporttkt h6:where(:not(.vg-tooltip *)) { font-size: var(--reporttkt-h6-size); font-weight: var(--reporttkt-h6-weight); line-height: var(--reporttkt-h6-line-height); }
+.reporttkt blockquote:where(:not(.vg-tooltip *)) { margin: var(--reporttkt-blockquote-margin); padding: var(--reporttkt-blockquote-padding); border-left: var(--reporttkt-blockquote-border-width) solid var(--reporttkt-accent); background: var(--reporttkt-blockquote-background); }
+.reporttkt hr:where(:not(.vg-tooltip *)) { border: 0; border-top: 1px solid var(--reporttkt-border); }
 .reporttkt .report-toc-backlink { font-size: .7em; white-space: nowrap; }
 .reporttkt .report-toc a { overflow-wrap: anywhere; }
 .reporttkt.report-layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: 1.5rem; align-items: start; max-width: calc(var(--reporttkt-content-width) + 17.5rem); padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; }

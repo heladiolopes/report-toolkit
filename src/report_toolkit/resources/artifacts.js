@@ -133,6 +133,26 @@
       dialog.append(controls, host);
       figure.closest('article.reporttkt').append(dialog);
       viewport.append(space);
+      // Vega appends tooltips to body, below a modal dialog's top layer.
+      // Keep them outside the scaled/scrolling chart so cursor coordinates work.
+      const tooltips = new Map();
+      const moveTooltips = () => {
+        for (const tooltip of document.body.querySelectorAll(':scope > .vg-tooltip')) {
+          const lineHeight = tooltip.style.getPropertyValue('line-height');
+          const priority = tooltip.style.getPropertyPriority('line-height');
+          tooltips.set(tooltip, {parent: tooltip.parentNode, next: tooltip.nextSibling, lineHeight, priority});
+          // Preserve body line spacing instead of inheriting the report's font.
+          tooltip.style.lineHeight = getComputedStyle(tooltip).lineHeight;
+          dialog.append(tooltip);
+        }
+      };
+      for (const tooltip of document.body.querySelectorAll(':scope > .vg-tooltip')) {
+        tooltip.classList.remove('visible');
+      }
+      moveTooltips();
+      const tooltipObserver = new MutationObserver(moveTooltips);
+      // The tooltip may only be created on the first hover, after expansion.
+      tooltipObserver.observe(document.body, {childList: true});
       dialog.addEventListener('keydown', event => {
         if (event.key !== 'Tab') return;
         const focusable = Array.from(dialog.querySelectorAll(
@@ -150,6 +170,14 @@
       });
       restoreDialog = () => {
         if (!dialog) return;
+        tooltipObserver.disconnect();
+        for (const [tooltip, {parent, next, lineHeight, priority}] of Array.from(tooltips).reverse()) {
+          tooltip.classList.remove('visible');
+          if (lineHeight) tooltip.style.setProperty('line-height', lineHeight, priority);
+          else tooltip.style.removeProperty('line-height');
+          parent.insertBefore(tooltip, next?.parentNode === parent ? next : null);
+        }
+        tooltips.clear();
         observer.unobserve(viewport);
         inlineViewport.append(space);
         viewport = inlineViewport;
