@@ -578,8 +578,9 @@ class Report:
         pretty: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
+        collapsible_toc: bool = False,
         numbered_headings: bool = False,
-        toc_position: Literal['top', 'sidebar'] = 'top',
+        toc_position: Literal['top', 'sidebar', 'reader'] = 'top',
         style: Style | Mapping[str, object] | None = None,
         profile: str | RenderingProfile = 'rich',
     ) -> str:
@@ -594,13 +595,17 @@ class Report:
             Indent Reportkit's structural markup with two spaces.
         toc : bool, optional
             Include a table of contents for structural sections.
+        collapsible_toc : bool, optional
+            Enable branch controls in interactive themed TOCs (default False).
         toc_depth : int, optional
             Maximum absolute section level included in the TOC, from 1 to 6.
         numbered_headings : bool, optional
             Prefix structural headings and matching TOC entries with hierarchical
             numbers.
-        toc_position : {'top', 'sidebar'}, optional
-            Place the TOC above the report or in a sidebar.
+        toc_position : {'top', 'sidebar', 'reader'}, optional
+            Place the TOC above the report, in a sidebar, or in a full-page
+            reader layout. Reader mode requires toc=True, fragment=False, and
+            a themed interactive profile.
         profile : str or RenderingProfile, optional
             Rendering capabilities: rich (default), portable, content, or a custom profile.
         style : Style, mapping, or None, optional
@@ -624,6 +629,7 @@ class Report:
             pretty=pretty,
             toc=toc,
             toc_depth=toc_depth,
+            collapsible_toc=collapsible_toc,
             style=style,
             profile=profile,
             numbered_headings=numbered_headings,
@@ -638,8 +644,9 @@ class Report:
         pretty: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
+        collapsible_toc: bool = False,
         numbered_headings: bool = False,
-        toc_position: Literal['top', 'sidebar'] = 'top',
+        toc_position: Literal['top', 'sidebar', 'reader'] = 'top',
         style: Style | Mapping[str, object] | None = None,
         profile: str | RenderingProfile = 'rich',
     ) -> Path:
@@ -650,7 +657,7 @@ class Report:
         path : str or pathlib.Path
             Destination file. Existing files are overwritten; parent directories
             are not created.
-        fragment, pretty, toc, toc_depth, numbered_headings, toc_position, style, profile
+        fragment, pretty, toc, toc_depth, collapsible_toc, numbered_headings, toc_position, style, profile
             See :meth:`to_html` for the rendering options.
 
         Returns
@@ -671,6 +678,7 @@ class Report:
             pretty=pretty,
             toc=toc,
             toc_depth=toc_depth,
+            collapsible_toc=collapsible_toc,
             style=style,
             profile=profile,
             numbered_headings=numbered_headings,

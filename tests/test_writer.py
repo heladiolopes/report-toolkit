@@ -43,7 +43,10 @@ class WriterTests(unittest.TestCase):
         self.assertIn('<h1 class="report-title">Sales &amp; Growth</h1>', html)
         self.assertIn('Quarter &lt;one&gt;', html)
         self.assertIn('datetime="2026-09-25"', html)
-        self.assertIn('<h2 id="reporttkt-summary-here">Summary &lt;here&gt;</h2>', html)
+        self.assertIn(
+            '<h2 id="reporttkt-summary-here" data-reporttkt-heading="2">Summary &lt;here&gt;</h2>',
+            html,
+        )
         self.assertIn('<strong>Revenue</strong>', html)
         self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt;', html)
         self.assertIn('<ol><li>North</li><li>South &amp; West</li></ol>', html)
@@ -58,8 +61,12 @@ class WriterTests(unittest.TestCase):
         with report.section('Outer'), report.section('Inner'):
             report.markdown('Text')
         html = self.writer.render(report.document)
-        self.assertIn('<h1 id="reporttkt-outer">Outer</h1>', html)
-        self.assertIn('<h2 id="reporttkt-inner">Inner</h2>', html)
+        self.assertIn(
+            '<h1 id="reporttkt-outer" data-reporttkt-heading="1">Outer</h1>', html
+        )
+        self.assertIn(
+            '<h2 id="reporttkt-inner" data-reporttkt-heading="2">Inner</h2>', html
+        )
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'report.html'
             self.assertEqual(self.writer.write(report.document, path), path)

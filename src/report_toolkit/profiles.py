@@ -22,7 +22,7 @@ class RenderingProfile:
     include_toc_title: bool = True
     stylesheet: Literal['theme', 'layout'] = 'theme'
     artifact_controls: bool = True
-    toc_positions: tuple[str, ...] = ('top', 'sidebar')
+    toc_positions: tuple[str, ...] = ('top', 'sidebar', 'reader')
     element_classes: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -47,9 +47,9 @@ class RenderingProfile:
         if not isinstance(self.toc_positions, tuple):
             raise TypeError('toc_positions must be a tuple')
         if not self.toc_positions or any(
-            p not in ('top', 'sidebar') for p in self.toc_positions
+            p not in ('top', 'sidebar', 'reader') for p in self.toc_positions
         ):
-            raise ValueError('toc_positions must contain top and/or sidebar')
+            raise ValueError('toc_positions must contain top, sidebar, and/or reader')
         if not isinstance(self.element_classes, Mapping):
             raise TypeError('element_classes must be a mapping')
         classes = {}
@@ -82,7 +82,10 @@ class RenderingProfile:
 _PROFILES = {
     'rich': RenderingProfile(name='rich'),
     'portable': RenderingProfile(
-        name='portable', chart_mode='svg', artifact_controls=False
+        name='portable',
+        chart_mode='svg',
+        artifact_controls=False,
+        toc_positions=('top', 'sidebar'),
     ),
     'content': RenderingProfile(
         name='content',

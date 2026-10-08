@@ -145,15 +145,15 @@ artifact objects remain shared. Heading groups retain their existing boundaries.
 
 ```python
 report.to_tree() -> str
-report.to_html(*, fragment=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None, profile='rich') -> str
-report.write(path, *, fragment=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None, profile='rich') -> pathlib.Path
+report.to_html(*, fragment=False, pretty=False, toc=False, toc_depth=6, collapsible_toc=False, numbered_headings=False, toc_position='top', style=None, profile='rich') -> str
+report.write(path, *, fragment=False, pretty=False, toc=False, toc_depth=6, collapsible_toc=False, numbered_headings=False, toc_position='top', style=None, profile='rich') -> pathlib.Path
 ```
 
 `to_tree()` formats the hierarchy, abbreviated text, lists, and artifact types
 and captions without rendering analytical objects.
 
 `to_html()` renders a complete HTML document by default. `fragment=True` returns
-scoped CSS, the report body, and artifact interaction JavaScript when needed,
+scoped CSS, the report body, and navigation/artifact interaction JavaScript when needed,
 without the HTML document wrapper.
 
 `pretty=False` (the default) produces compact Reportkit markup. `pretty=True`
@@ -173,22 +173,47 @@ The TOC includes structural section headings up to this absolute level. Report
 titles, panel labels, and Markdown/artifact-internal headings are excluded.
 Empty TOCs are omitted. Section anchors are unique and deterministic per render.
 
+TOCs are fully expanded by default. `collapsible_toc=True` enables
+keyboard-accessible Expand/Collapse buttons for entries with children and a
+**Collapse all** control in reader mode when branches exist. The option must be
+a boolean (`TypeError` otherwise), even when `toc=False`.
+
+Active-section tracking and collapse controls require JavaScript and the `rich`
+profile or a custom profile with `stylesheet='theme'` and
+`chart_mode='interactive'`. Tracking remains enabled with either
+`collapsible_toc` setting; headings beyond `toc_depth` activate their nearest
+included ancestor. Portable and content TOCs remain fully expanded. Without
+JavaScript and when printing, all TOC entries are visible and controls are hidden.
+
 `numbered_headings=True` adds hierarchical numbers (`1.`, `1.1.`, `2.`) to
 structural headings and matching TOC entries. Numbering defaults to off, works
 without a TOC, and does not change anchors or the document model. Skipped heading
 levels do not introduce zero components. The value must be a boolean
 (`TypeError` otherwise).
 
-`toc_position` accepts `'top'` (default) or `'sidebar'` (`ValueError`
+`toc_position` accepts `'top'` (default), `'sidebar'`, or `'reader'` (`ValueError`
 otherwise), even when `toc=False`. With a top TOC, every structural heading
 includes an ↑ backlink, including headings beyond `toc_depth`. No backlinks
 are rendered if the TOC is empty or disabled.
 
-The sidebar sits outside the main content card, remains sticky on wide screens,
-and scrolls independently when its entries exceed the viewport height. Below
-1100px it moves above the card and remains fully visible, scrolling naturally
-with the page. No toggle or JavaScript is needed. Print output also shows the
-complete TOC without scroll limits. These options work with `fragment=True`.
+`'sidebar'` places the TOC beside the content on wide screens and above it on
+narrow screens. Top and sidebar TOCs support `fragment=True`, subject to the
+profile's `toc_positions`.
+
+`'reader'` requires `toc=True`, `fragment=False`, and a profile that allows reader
+positioning with `stylesheet='theme'`, `chart_mode='interactive'`, and
+`content_only=False`. Invalid combinations raise `ValueError`; the built-in
+portable and content profiles do not support reader mode. See
+[Rendering profiles](rendering-profiles.md) for the capability comparison.
+
+Reader mode provides a title and section breadcrumb bar, a TOC toggle, a
+light/dark theme switch, and a Standard/Wide width control. The TOC starts open
+on desktop and closed as a drawer on narrow screens. Standard (the default) and
+Wide use 100% and 125% of the theme's configured content width, limited by the
+viewport. Sidebar and width changes preserve the reading position. Theme,
+sidebar, width, and collapse choices reset on reload; width returns to Standard.
+The initial appearance follows [`Style.mode`](themes.md#built-in-presentation).
+An empty TOC still retains the reader bar and its theme and width controls.
 
 ## Template constructors
 
@@ -304,7 +329,7 @@ Shorthand `{{ chart }}` uses default options.
 ## HTMLWriter
 
 ```python
-HTMLWriter(*, registry=None, inline_altair=False, pretty=False, toc=False, toc_depth=6, numbered_headings=False, toc_position='top', style=None, profile='rich')
+HTMLWriter(*, registry=None, inline_altair=False, pretty=False, toc=False, toc_depth=6, collapsible_toc=False, numbered_headings=False, toc_position='top', style=None, profile='rich')
 writer.render(document, *, fragment=False) -> str
 writer.write(document, path, *, fragment=False) -> pathlib.Path
 ```
@@ -330,7 +355,7 @@ get_profile(name) -> RenderingProfile
 RenderingProfile(*, name, chart_mode='interactive', content_only=False,
                  include_metadata=True, include_toc_title=True,
                  stylesheet='theme', artifact_controls=True,
-                 toc_positions=('top', 'sidebar'), element_classes={})
+                 toc_positions=('top', 'sidebar', 'reader'), element_classes={})
 profile.with_overrides(*, name, **changes) -> RenderingProfile
 ```
 

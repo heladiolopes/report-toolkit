@@ -14,9 +14,13 @@ The default is `rich`.
 
 | Profile | Output | Charts | Styling and navigation |
 | --- | --- | --- | --- |
-| `rich` | Page or fragment | Interactive Altair and Plotly | Themes, artifact controls, top or sidebar TOC |
+| `rich` | Page or fragment | Interactive Altair and Plotly | Themes, artifact controls, top/sidebar TOC, or full-page reader |
 | `portable` | Page or fragment | Static SVG for Altair and Plotly | Themes, no artifact controls, top or sidebar TOC |
 | `content` | Always a fragment | Same chart HTML as rich | Minimal scoped layout CSS, no artifact controls, top TOC only |
+
+Reader positioning requires a full page with `toc=True`; see the
+[API Reference](api-reference.md#inspection-and-output) for exact profile and
+fragment constraints.
 
 All profiles preserve sections, panels, columns, captions, numbered headings,
 and the existing `toc=False` default. Rich and portable render report metadata
@@ -95,7 +99,7 @@ portable images use data URLs, whose contents are opaque to this processing.
 | `include_toc_title` | `True` | Render the visible TOC title; `False` in content |
 | `stylesheet` | `'theme'` | `'theme'` or minimal `'layout'` CSS |
 | `artifact_controls` | `True` | Include report expansion/zoom runtime |
-| `toc_positions` | `('top', 'sidebar')` | Nonempty tuple of allowed positions |
+| `toc_positions` | `('top', 'sidebar', 'reader')` | Nonempty tuple of allowed positions |
 | `element_classes` | `{}` | Lowercase HTML tag names mapped to tuples of class tokens |
 
 SVG profiles must disable artifact controls. Class tokens must be nonempty

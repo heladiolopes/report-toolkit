@@ -36,7 +36,7 @@ from .themes.style import _resolve_style
 
 _logger = logging.getLogger(__name__)
 _Outline = dict[Section, tuple[int, str, str]]
-_TOCEntry = tuple[str, list['_TOCEntry']]
+_TOCEntry = tuple[str, str, list['_TOCEntry']]
 
 
 class _Payload(str):
@@ -68,10 +68,15 @@ def _style_id(style: Style) -> str:
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
 
 
-def _stylesheet(style: Style, *, fragment: bool) -> str:
+def _stylesheet(style: Style, *, fragment: bool, reader: bool = False) -> str:
     # :where keeps specificity low enough for Pandas Styler's explicit rules.
     selector = f'.reporttkt:where([data-reporttkt-theme="{_style_id(style)}"])'
-    base = re.sub(r'\.reporttkt(?![\w-])', lambda match: selector, _base_css())
+    base_css = _base_css()
+    if reader:
+        base_css += '\n' + files('report_toolkit').joinpath(
+            'resources/reader.css'
+        ).read_text(encoding='utf-8')
+    base = re.sub(r'\.reporttkt(?![\w-])', lambda match: selector, base_css)
 
     def variables(tokens: Mapping[str, str], mode: str) -> str:
         declarations = '\n'.join(
@@ -97,6 +102,19 @@ def _stylesheet(style: Style, *, fragment: bool) -> str:
             + '\n}'
         )
     css += '\n' + style.theme.css.replace('&', selector)
+    if reader:
+        for palette_mode in ('light', 'dark'):
+            declarations = '\n'.join(
+                f'--reporttkt-{key.replace("_", "-")}: {value};'
+                for key, value in sorted(getattr(style.palette, palette_mode).items())
+            )
+            css += (
+                f'\n{selector}[data-reader-theme="{palette_mode}"] '
+                f'{{ {declarations} color-scheme: {palette_mode}; }}'
+                f'\nbody[data-reader-theme="{palette_mode}"] '
+                f'{{ background: {getattr(style.palette, palette_mode)["page_background"]}; '
+                f'color-scheme: {palette_mode}; }}'
+            )
     # Prevent a CSS string from terminating the surrounding HTML style element.
     return css.replace('<', r'\3c ')
 
@@ -197,13 +215,16 @@ class HTMLWriter:
         Indent Reportkit's structural markup with two spaces.
     toc : bool, optional
         Include a table of contents for structural sections.
+    collapsible_toc : bool, optional
+        Enable branch controls in interactive themed TOCs (default False).
     toc_depth : int, optional
         Maximum absolute section level included in the TOC, from 1 to 6.
     numbered_headings : bool, optional
         Prefix structural headings and matching TOC entries with hierarchical
         numbers.
-    toc_position : {'top', 'sidebar'}, optional
-        Place the TOC above the report or in a sidebar.
+    toc_position : {'top', 'sidebar', 'reader'}, optional
+        Place the TOC above the report, in a sidebar, or in a full-page
+        reader layout. Reader mode requires toc=True and a themed interactive profile.
 
     Raises
     ------
@@ -224,11 +245,15 @@ class HTMLWriter:
         pretty: bool = False,
         toc: bool = False,
         toc_depth: int = 6,
+        collapsible_toc: bool = False,
         numbered_headings: bool = False,
-        toc_position: Literal['top', 'sidebar'] = 'top',
+        toc_position: Literal['top', 'sidebar', 'reader'] = 'top',
     ) -> None:
         if not isinstance(pretty, bool):
             raise TypeError('pretty must be a boolean')
+        if not isinstance(collapsible_toc, bool):
+            raise TypeError('collapsible_toc must be a boolean')
+        self.collapsible_toc = collapsible_toc
         self.pretty = pretty
         if not isinstance(toc, bool):
             raise TypeError('toc must be a boolean')
@@ -240,13 +265,24 @@ class HTMLWriter:
             raise ValueError('toc_depth must be an integer from 1 to 6')
         if not isinstance(numbered_headings, bool):
             raise TypeError('numbered_headings must be a boolean')
-        if toc_position not in ('top', 'sidebar'):
-            raise ValueError("toc_position must be 'top' or 'sidebar'")
+        if toc_position not in ('top', 'sidebar', 'reader'):
+            raise ValueError("toc_position must be 'top', 'sidebar', or 'reader'")
         self.profile = _resolve_profile(profile)
         if toc_position not in self.profile.toc_positions:
             raise ValueError(
                 f'Profile {self.profile.name!r} does not support {toc_position!r} TOC positioning'
             )
+        if toc_position == 'reader':
+            if not toc:
+                raise ValueError('reader mode requires toc=True')
+            if (
+                self.profile.content_only
+                or self.profile.stylesheet != 'theme'
+                or self.profile.chart_mode != 'interactive'
+            ):
+                raise ValueError(
+                    'reader mode requires a themed interactive full-page profile'
+                )
         if inline_altair and self.profile.chart_mode == 'svg':
             raise ValueError('inline_altair cannot be used with SVG profiles')
         self.numbered_headings = numbered_headings
@@ -308,11 +344,15 @@ class HTMLWriter:
         """
         if not isinstance(document, Document):
             raise TypeError('HTMLWriter.render expects a Document')
+        if fragment and self.toc_position == 'reader':
+            raise ValueError('reader mode does not support fragments')
         fragment = fragment or self.profile.content_only
         depth = 0 if fragment else 2
         content = self._render_document(document, depth)
         css = (
-            _stylesheet(self.style, fragment=fragment)
+            _stylesheet(
+                self.style, fragment=fragment, reader=self.toc_position == 'reader'
+            )
             if self.profile.stylesheet == 'theme'
             else _layout_css()
         )
@@ -325,6 +365,23 @@ class HTMLWriter:
                 .read_text(encoding='utf-8')
             )
             runtime = f'<script>{script}</script>'
+        if (
+            self._navigation_enabled
+            and self.toc
+            and (
+                self.toc_position == 'reader'
+                or any(
+                    level <= self.toc_depth
+                    for level, _, _ in self._outline(document).values()
+                )
+            )
+        ):
+            script = (
+                files('report_toolkit')
+                .joinpath('resources/navigation.js')
+                .read_text(encoding='utf-8')
+            )
+            runtime += f'<script>{script}</script>'
         if fragment:
             html = ('\n' if self.pretty else '').join(
                 part for part in (stylesheet, content, runtime) if part
@@ -410,7 +467,8 @@ class HTMLWriter:
             if navigation and self.toc_position == 'top'
             else ''
         )
-        sidebar = bool(navigation and self.toc_position == 'sidebar')
+        reader = self.toc_position == 'reader'
+        sidebar = bool(navigation and self.toc_position in ('sidebar', 'reader'))
         article_depth = depth + int(sidebar)
         body = [
             self._render_node(node, outline, backlink, article_depth + 1)
@@ -441,6 +499,107 @@ class HTMLWriter:
             '</article>',
             article_depth,
         )
+        if reader:
+            title = (
+                escape(document.title or 'Report')
+                if self.profile.include_metadata
+                else 'Report'
+            )
+
+            def control(name: str, label: str, icons: str, attributes: str = '') -> str:
+                return (
+                    f'<button class="{name}" type="button" aria-label="{label}"{attributes}>'
+                    + icons
+                    + f'<span class="report-reader-tooltip" role="tooltip" hidden>{label}</span>'
+                    '</button>'
+                )
+
+            def icon(name: str, paths: str, *, hidden: bool = False) -> str:
+                return (
+                    f'<svg data-reader-icon="{name}" viewBox="0 0 24 24" '
+                    'fill="none" stroke="currentColor" stroke-width="1.75" '
+                    'stroke-linecap="round" stroke-linejoin="round" '
+                    'aria-hidden="true" focusable="false"'
+                    + (' hidden' if hidden else '')
+                    + f'>{paths}</svg>'
+                )
+
+            toggle = (
+                control(
+                    'report-reader-toggle',
+                    'Hide table of contents',
+                    icon('menu', '<path d="M4 6h16M4 12h16M4 18h16"/>'),
+                    ' aria-controls="reporttkt_sidebar" aria-expanded="true"',
+                )
+                if navigation
+                else ''
+            )
+            theme = control(
+                'report-theme-toggle',
+                'Switch to dark mode',
+                icon('moon', '<path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/>')
+                + icon(
+                    'sun',
+                    '<circle cx="12" cy="12" r="4"/>'
+                    '<path d="M12 2v2m0 16v2M2 12h2m16 0h2'
+                    'M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42'
+                    'M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>',
+                    hidden=True,
+                ),
+            )
+            width = control(
+                'report-width-toggle',
+                'Content width: Standard. Switch to Wide.',
+                ''.join(
+                    icon(
+                        f'width-{mode}',
+                        f'<path d="M{left} 4v16M{right} 4v16"/>'
+                        f'<path d="M{left + 3} 8h{right - left - 6}'
+                        f'M{left + 3} 12h{right - left - 6}'
+                        f'M{left + 3} 16h{right - left - 6}"/>',
+                        hidden=mode != 'standard',
+                    )
+                    for mode, left, right in (
+                        ('standard', 4, 20),
+                        ('wide', 2, 22),
+                    )
+                ),
+            )
+            bar = (
+                '<div class="report-reader-bar"><div class="report-reader-bar-inner">'
+                + toggle
+                + f'<div class="report-reader-label"><div class="report-reader-title">{title}</div>'
+                '<nav class="report-breadcrumbs" aria-label="Section breadcrumbs"></nav></div>'
+                + width
+                + theme
+                + '</div></div>'
+            )
+            header_controls = control(
+                'report-reader-close',
+                'Close table of contents',
+                icon('close', '<path d="m6 6 12 12M6 18 18 6"/>'),
+            )
+            if 'class="report-toc-toggle"' in navigation:
+                header_controls += control(
+                    'report-reader-collapse',
+                    'Collapse all sections',
+                    icon('collapse', '<path d="m7 9 5-5 5 5M7 15l5 5 5-5"/>'),
+                )
+            navigation = navigation.replace('<!--reader-controls-->', header_controls)
+            side = (
+                '<div class="report-sidebar" id="reporttkt_sidebar">'
+                + navigation
+                + '</div>'
+                if navigation
+                else ''
+            )
+            return self._block(
+                f'<div class="reporttkt report-layout report-reader"{theme_attribute} '
+                f'data-reader-mode="{self.style.mode}">',
+                [bar, '<div class="report-reader-backdrop"></div>', side, content],
+                '</div>',
+                depth,
+            )
         if sidebar:
             return self._block(
                 f'<div class="reporttkt report-layout"{theme_attribute}>',
@@ -496,6 +655,13 @@ class HTMLWriter:
         visit(document)
         return outline
 
+    @property
+    def _navigation_enabled(self) -> bool:
+        return (
+            self.profile.stylesheet == 'theme'
+            and self.profile.chart_mode == 'interactive'
+        )
+
     def _render_toc(self, outline: _Outline) -> str:
         # Each entry holds its link and child entries; the stack tracks ancestors.
         entries: list[_TOCEntry] = []
@@ -506,21 +672,41 @@ class HTMLWriter:
             while stack[-1][0] >= level:
                 stack.pop()
             children: list[_TOCEntry] = []
+            button = (
+                '<button class="report-toc-toggle" type="button" aria-expanded="true" '
+                f'aria-label="Collapse {escape(label, quote=True)}" hidden="hidden">'
+                + (
+                    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+                    'stroke-width="1.75" aria-hidden="true" focusable="false">'
+                    '<path d="m6 9 6 6 6-6"/></svg></button>'
+                    if self.toc_position == 'reader'
+                    else '<span aria-hidden="true">⌄</span></button>'
+                )
+                if self._navigation_enabled and self.collapsible_toc
+                else ''
+            )
             link = f'<a href="#{anchor}">{escape(label)}</a>'
-            stack[-1][1].append((link, children))
+            # Retain direct-child links for depth-based typography.
+            stack[-1][1].append((link, button, children))
             stack.append((level, children))
         if not entries:
             return ''
 
-        def render_entries(items: list[_TOCEntry]) -> str:
+        def render_entries(items: list[_TOCEntry], depth: int = 0) -> str:
             return (
                 '<ul>'
                 + ''.join(
-                    '<li>'
+                    (
+                        '<li style="--reporttkt-toc-indent: '
+                        + f'{min(depth, 2) * 0.75:g}rem">'
+                        if self.toc_position == 'reader'
+                        else '<li>'
+                    )
                     + link
-                    + (render_entries(children) if children else '')
+                    + (button if children else '')
+                    + (render_entries(children, depth + 1) if children else '')
                     + '</li>'
-                    for link, children in items
+                    for link, button, children in items
                 )
                 + '</ul>'
             )
@@ -530,8 +716,21 @@ class HTMLWriter:
             if self.profile.include_toc_title
             else ''
         )
+        if self.toc_position == 'reader':
+            title = (
+                '<div class="report-reader-toc-header">'
+                + title
+                + '<!--reader-controls--></div>'
+            )
+        attributes = (
+            f' data-reporttkt-navigation="{str(self.collapsible_toc).lower()}"'
+            if self._navigation_enabled
+            else ''
+        )
         return (
-            '<nav class="report-toc" id="reporttkt_toc" tabindex="-1" aria-label="Table of contents">'
+            '<nav'
+            + attributes
+            + ' class="report-toc" id="reporttkt_toc" tabindex="-1" aria-label="Table of contents">'
             + title
             + render_entries(entries)
             + '</nav>'
@@ -614,7 +813,7 @@ class HTMLWriter:
             return self._block(
                 '<section class="report-section">',
                 [
-                    f'<h{heading} id="{anchor}">{escape(label)}{backlink}</h{heading}>',
+                    f'<h{heading} id="{anchor}" data-reporttkt-heading="{heading}">{escape(label)}{backlink}</h{heading}>',
                     *children,
                 ],
                 '</section>',

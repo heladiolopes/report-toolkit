@@ -293,22 +293,27 @@ Palettes are `slate`, `azure`, `parchment`, and `ember`; each supports `light`,
 See [Themes](themes.md) to customize structural themes and paired color palettes.
 
 
-## Number headings and move the TOC to a sidebar
+## Choose report navigation
 
 ```python
 report.write(
-    'report.html',
+    'reader.html',
     toc=True,
     numbered_headings=True,
-    toc_position='sidebar',
+    toc_position='reader',
+    style={'mode': 'auto'},
 )
 ```
 
-Heading numbers follow the report hierarchy and also appear in the TOC. Omit
-`numbered_headings` to keep headings unnumbered. Use `toc_position='top'` (the
-default) for a TOC below the report metadata with ↑ links from headings back to
-the TOC.
+Use reader mode for section breadcrumbs and controls for the TOC, appearance,
+and content width. Heading numbers follow the report hierarchy and appear in
+the TOC; omit `numbered_headings` to keep headings unnumbered.
 
-Long sidebar TOCs scroll independently of the report on wide screens. On narrow
-screens, the TOC moves above the content card and scrolls naturally with the page.
-It stays fully visible without a toggle or JavaScript.
+Choose `toc_position='top'` (the default) to put the TOC below the metadata with
+↑ backlinks from headings. Choose `'sidebar'` to put it beside the content on
+wide screens and above it on narrow screens.
+
+TOCs are fully expanded by default. Add `collapsible_toc=True` to enable branch
+controls and reader mode's **Collapse all** control. See the
+[API Reference](api-reference.md#inspection-and-output) for profile and fragment
+constraints, control availability, and reload defaults.

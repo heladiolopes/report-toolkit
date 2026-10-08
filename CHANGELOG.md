@@ -5,6 +5,10 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Rich HTML navigation with collapsible TOCs, scrollspy, active-path highlighting, and a reader mode (`toc_position='reader'`) featuring a fixed title/breadcrumb bar, theme switching, Standard/Wide width controls, centered layouts, and an accessible mobile drawer. Sidebar and width changes preserve reading position; Collapse all keeps branches closed until a TOC entry is selected. Reader mode requires `toc=True` and a themed interactive full page. TOCs are expanded by default; set `collapsible_toc=True` to enable branch controls and Collapse all; print and JavaScript-disabled outlines stay expanded.
+
 ### Changed
 
 - Removed generated theme gallery HTML from version control and ignored gallery output directories and Ruff caches; gallery generator scripts remain tracked.
@@ -42,3 +46,4 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [Unreleased]: https://github.com/heladiolopes/report-toolkit/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/heladiolopes/report-toolkit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/heladiolopes/report-toolkit/releases/tag/v0.1.0
+

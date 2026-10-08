@@ -62,7 +62,10 @@ class StructureTests(unittest.TestCase):
         # The writer respects the model, including explicitly constructed sections.
         direct = Section('Direct', level=1)
         child.append(direct)
-        self.assertIn('<h1 id="reporttkt-direct">Direct</h1>', report.to_html())
+        self.assertIn(
+            '<h1 id="reporttkt-direct" data-reporttkt-heading="1">Direct</h1>',
+            report.to_html(),
+        )
 
     def test_heading_transitions_and_intro(self):
         report = Report()
@@ -178,7 +181,7 @@ class NavigationTests(unittest.TestCase):
                     )
                     self.assertEqual(html.count('href="#reporttkt-sales-growth"'), 1)
                     self.assertIn(
-                        '<h1 id="reporttkt-sales-growth">Sales &amp; growth '
+                        '<h1 id="reporttkt-sales-growth" data-reporttkt-heading="1">Sales &amp; growth '
                         '<a class="report-toc-backlink"',
                         html,
                     )

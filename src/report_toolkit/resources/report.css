@@ -20,12 +20,23 @@
 .reporttkt .report-panel { min-width: 0; overflow-x: auto; background: var(--reporttkt-panel-background); padding: var(--reporttkt-panel-padding); }
 .reporttkt .report-panel-title { color: var(--reporttkt-heading); font-weight: 650; margin-bottom: .75rem; }
 .reporttkt .report-toc { margin: 1.5rem 0; padding: 1rem 1.5rem; background: var(--reporttkt-toc-background); border-radius: var(--reporttkt-radius); color: var(--reporttkt-toc-text); font-family: var(--reporttkt-toc-font-family); line-height: var(--reporttkt-toc-line-height); }
-.reporttkt .report-toc a { color: var(--reporttkt-toc-accent); text-decoration: none; }
+.reporttkt .report-toc a { display: block; overflow-wrap: anywhere; padding-inline: .5rem; color: var(--reporttkt-toc-accent); text-decoration: none; }
 .reporttkt .report-toc a:hover, .reporttkt .report-toc a:focus-visible { color: var(--reporttkt-accent-hover); text-decoration: underline; }
 .reporttkt .report-toc a:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 2px; }
 .reporttkt .report-toc li + li { margin-top: 0; }
 .reporttkt .report-toc-title { font-weight: var(--reporttkt-h4-weight); }
-.reporttkt .report-toc ul { padding-left: 1.5rem; margin: revert; }
+.reporttkt .report-toc ul { list-style: none; padding: 0; margin: 0; }
+.reporttkt .report-toc ul ul { padding-inline-start: 1rem; }
+.reporttkt .report-toc-title + ul { margin-top: .5rem; }
+.reporttkt .report-toc > ul > li + li { margin-top: .5rem; }
+/* Style links by rendered depth, including reports with skipped heading levels. */
+.reporttkt .report-toc > ul > li > a { font-size: 1em; padding-block: .3rem; }
+.reporttkt .report-toc ul ul > li > a { font-size: .95em; padding-block: .25rem; }
+.reporttkt .report-toc ul ul ul > li > a { font-size: .9em; padding-block: .2rem; }
+.reporttkt .report-toc ul ul ul ul > li > a { font-size: .875em; padding-block: .175rem; }
+.reporttkt .report-toc ul ul ul ul ul > li > a { font-size: .85em; padding-block: .15rem; }
+.reporttkt .report-toc ul ul ul ul ul ul > li > a { font-size: .825em; padding-block: .125rem; }
+.reporttkt .report-toc a[aria-current="location"] { font-weight: 700; background: var(--reporttkt-surface); background: color-mix(in srgb, var(--reporttkt-toc-accent) 4%, var(--reporttkt-toc-background)); border-radius: .25rem; box-shadow: inset 3px 0 0 var(--reporttkt-toc-accent), 0 1px 2px rgb(0 0 0 / .03); }
 .reporttkt .report-artifact { margin: var(--reporttkt-figure-margin); min-width: 0; overflow-x: auto; }
 .reporttkt figcaption { color: var(--reporttkt-muted); font-size: var(--reporttkt-caption-size); line-height: var(--reporttkt-caption-line-height); margin-top: .5rem; }
 .reporttkt .reporttkt-figure-image { display: block; max-width: 100%; height: auto; }
@@ -103,4 +114,18 @@
     .reporttkt .report-artifact-viewport { height: auto; max-height: none; overflow: visible; }
     .reporttkt .report-artifact .report-artifact-space { width: auto; height: auto; overflow: visible; }
     .reporttkt .report-artifact .report-artifact-content { position: static; transform: none; max-width: 100%; }
+}
+
+/* Controls occupy a shared gutter, keeping parent and leaf labels aligned. */
+.reporttkt .report-toc[data-reporttkt-navigation="true"] li { position: relative; }
+.reporttkt .report-toc[data-reporttkt-navigation="true"] li > a { padding-inline-start: 1.75rem; overflow-wrap: anywhere; }
+.reporttkt .report-toc-toggle { display: none; position: absolute; inset-inline-start: 0; top: .15rem; width: 1.5rem; height: 1.5rem; padding: 0; border: 0; background: transparent; color: var(--reporttkt-toc-accent); font: inherit; cursor: pointer; }
+.reporttkt .report-toc[data-reporttkt-navigation-ready] .report-toc-toggle:not([hidden]) { display: grid; place-items: center; }
+.reporttkt .report-toc-toggle[aria-expanded="false"] span { transform: rotate(-90deg); }
+.reporttkt .report-toc-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 2px; }
+.reporttkt .report-toc ul[hidden] { display: none; }
+@media print {
+    .reporttkt .report-toc ul[hidden] { display: block; }
+    .reporttkt .report-toc[data-reporttkt-navigation-ready] .report-toc-toggle:not([hidden]) { display: none; }
+    .reporttkt .report-toc a[aria-current="location"] { font-weight: inherit; background: transparent; box-shadow: none; }
 }

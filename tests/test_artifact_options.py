@@ -714,3 +714,47 @@ def test_full_width_custom_artifact_preserves_proportions(page, width, height):
     page.get_by_role('button', name='Expand', exact=True).click()
     assert_native_size(page, expanded, width, height)
     assert dialog.locator('output').text_content() == '100%'
+
+
+def test_reader_width_modes_resize_artifacts_and_columns(page):
+    report = Report('Width fixtures')
+    report.heading(1, 'Content')
+    report.add(box(1600, 400))
+    report.add(
+        Markup('<table><tr><td>First</td><td>Second</td></tr></table>'), width='full'
+    )
+    image = (
+        '<img class="reporttkt-figure-image" width="1600" height="400" '
+        'src="data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" '
+        'width="1600" height="400"%3E%3C/svg%3E">'
+    )
+    report.add(Markup(image), width='full')
+    with report.columns(2):
+        report.paragraph('Column content ' * 10)
+        report.markdown('```text\n' + 'long code ' * 80 + '\n```')
+    page.set_viewport_size({'width': 1800, 'height': 900})
+    load(page, report, toc=True, toc_position='reader')
+    for sidebar in (True, False):
+        if not sidebar:
+            page.locator('.report-reader-toggle').click()
+        for _ in range(2):
+            page.wait_for_timeout(100)
+            figures = page.locator('.report-artifact')
+            native = figures.nth(0).locator('.report-artifact-content').bounding_box()
+            assert native['width'] / native['height'] == pytest.approx(4, abs=0.01)
+            for index, selector in ((1, 'table'), (2, 'img')):
+                figure = figures.nth(index)
+                assert figure.locator(selector).bounding_box()[
+                    'width'
+                ] == pytest.approx(
+                    figure.locator('.report-artifact-viewport').bounding_box()['width'],
+                    abs=1,
+                )
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.locator('.report-width-toggle').click()
+    page.set_viewport_size({'width': 320, 'height': 900})
+    for _ in range(2):
+        page.wait_for_timeout(100)
+        assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        assert page.locator('pre').evaluate('(el) => el.scrollWidth > el.clientWidth')
+        page.locator('.report-width-toggle').click()

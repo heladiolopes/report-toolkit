@@ -44,9 +44,12 @@ where needed to maintain at least 4.5:1 contrast against the built-in page,
 report, secondary, and table-header surfaces. Custom colors are not adjusted.
 
 `auto` emits light colors normally, switching colors and the browser's
-`color-scheme` under `prefers-color-scheme: dark`. It needs no JavaScript,
-network access, or reader toggle. Explicit modes stay fixed. Structure and
-typography are identical across modes and palettes.
+`color-scheme` under `prefers-color-scheme: dark`. It needs no JavaScript
+or network access. Explicit modes stay fixed in top and sidebar layouts.
+`Style.mode` sets the reader's initial appearance, with `auto` following the
+system until a manual light/dark override. Reloading clears that override and
+restores the selected mode.
+Structure and typography are identical across modes and palettes.
 
 ## Custom themes and palettes
 
