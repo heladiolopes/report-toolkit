@@ -1,6 +1,6 @@
 [project]
 name = "report-toolkit"
-version = "0.2.0"
+version = "0.3.0"
 description = "Compose analytical reports in Python and render them as HTML"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -11,6 +11,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Text Processing :: Markup :: HTML",
 ]
+
+[project.urls]
+Homepage = "https://github.com/heladiolopes/report-toolkit"
+Repository = "https://github.com/heladiolopes/report-toolkit"
+Changelog = "https://github.com/heladiolopes/report-toolkit/blob/master/CHANGELOG.md"
 
 [project.optional-dependencies]
 pandas = ["pandas>=2"]
@@ -42,3 +47,4 @@ indent-style = "space"
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "**/{tests,docs,tools}/*" = ["E402"]
+
