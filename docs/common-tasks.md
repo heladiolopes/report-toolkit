@@ -20,9 +20,12 @@ report.add(
 )
 ```
 
-Requires the `pandas` extra. Both DataFrame and Styler are supported; Styler
-preserves formatting and its own table caption. The report caption appears
-beneath the artifact.
+Requires the `pandas` extra and Jinja2. From a checkout, run your script with
+`uv run --extra pandas --with jinja2 python your_report.py`. In an existing
+environment, install both with `pip install 'report-toolkit[pandas]' jinja2`.
+The `all` extra includes Jinja2 through Altair. Both DataFrame and Styler are
+supported; Styler preserves formatting and its own table caption. The report
+caption appears beneath the artifact.
 
 ## Add an Altair chart
 
@@ -218,15 +221,23 @@ report.add(chart, width='full', expand='always')
 report.add(figure, expand='always', caption='Expand to inspect details')
 ```
 
-Artifacts keep their native width by default, including tables. `width="full"`
-scales width and height together, preserving the artifact's proportions and
-layout. Inline artifacts display their full height. Artifacts wider than their
-viewport scroll horizontally and automatically offer an Expand icon at the
+Artifacts keep their native width by default, including tables. With the default
+`rich` profile and JavaScript enabled, `width="full"` scales width and height
+together, preserving the artifact's proportions and layout. Inline artifacts
+display their full height. Artifacts wider than their viewport scroll
+horizontally and automatically offer an Expand icon at the
 bottom-right of the visible artifact area. Use `expand="never"` to suppress it. The
 enlarged view centers the visualization and includes Close, Zoom out, Zoom in,
 and Reset icons. Zoom is available only in this preview and does not change the
 inline artifact's size. Every opening starts at native size (100%), including
 full-width artifacts; Reset also restores native 100%.
+
+The `portable` and `content` profiles omit the artifact runtime, so they provide
+no expansion or zoom controls. Full-width tables reflow across the available
+width instead of scaling proportionally. Full-width images retain their aspect
+ratio; interactive charts in `content` keep their library's sizing behavior.
+The same CSS fallback applies when JavaScript is disabled in `rich`.
+See [Rendering profiles](rendering-profiles.md) for profile capabilities.
 
 The same options work in explicit template tags:
 
@@ -282,7 +293,7 @@ Palettes are `slate`, `azure`, `parchment`, and `ember`; each supports `light`,
 See [Themes](themes.md) to customize structural themes and paired color palettes.
 
 
-### Number headings and move the TOC to a sidebar
+## Number headings and move the TOC to a sidebar
 
 ```python
 report.write(
@@ -301,16 +312,3 @@ the TOC.
 Long sidebar TOCs scroll independently of the report on wide screens. On narrow
 screens, the TOC moves above the content card and scrolls naturally with the page.
 It stays fully visible without a toggle or JavaScript.
-
-### Run browser navigation tests
-
-Browser tests are optional and skip if Playwright or Chromium is unavailable.
-Install and run them without adding a runtime dependency:
-
-```sh
-uv run --with playwright python -m playwright install chromium
-uv run --with playwright pytest tests/test_navigation_options.py -q
-```
-
-These tests exercise long TOCs, desktop and mobile layouts,
-print layout, and navigation in full documents and fragments.

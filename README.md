@@ -92,6 +92,21 @@ example integration test. Optional integration tests skip when dependencies are 
 Version tags run tests, Ruff lint, and a format check before the release workflow
 builds and publishes to PyPI.
 
+### Browser navigation tests
+
+Browser tests are optional and skip if Playwright or Chromium is unavailable.
+Install and run them without adding a runtime dependency:
+
+```sh
+uv run --with playwright python -m playwright install chromium
+uv run --with playwright pytest tests/test_navigation_options.py -q
+```
+
+These tests exercise long TOCs, desktop and mobile layouts, print layout, and
+navigation in full documents and fragments.
+
+### Styling resources
+
 Theming code lives in `src/report_toolkit/themes/`: structural defaults belong in
 `theme.py`, color values in `palette.py`, and configuration normalization in
 `style.py`. Edit `src/report_toolkit/resources/report.css` for static report CSS;
@@ -108,8 +123,8 @@ report.write('report.html', pretty=True)  # Compact markup is the default.
 ```
 
 Tables and charts use native width by default and display their full height.
-Artifacts that overflow horizontally offer a bottom-right Expand button opening
-a centered expanded view with zoom controls and a Close icon. Zoom is available
-only in the expanded preview.
+With the default `rich` profile and JavaScript enabled, artifacts that overflow
+horizontally offer a bottom-right Expand button opening a centered expanded view
+with zoom controls and a Close icon. Zoom is available only in the expanded preview.
+The `portable` and `content` profiles omit expansion and zoom controls.
 See [artifact options](docs/api-reference.md#analytical-artifacts) for details.
-

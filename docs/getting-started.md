@@ -7,6 +7,9 @@ Run these commands from a report-toolkit checkout:
 uv sync --extra pandas
 ```
 
+Pandas table rendering also requires Jinja2, which the `pandas` extra does not
+install. The run command below adds it with `--with jinja2`.
+
 Save the following as `first_report.py` in the checkout:
 
 ```python
@@ -44,7 +47,7 @@ print(output.resolve())
 Run it and open the printed file path in your browser:
 
 ```bash
-uv run --extra pandas python first_report.py
+uv run --extra pandas --with jinja2 python first_report.py
 ```
 
 The report title and metadata appear above the table of contents. `heading()`

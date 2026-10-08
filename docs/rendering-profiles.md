@@ -28,6 +28,12 @@ Its host supplies typography, colors, and table styling; explicit Pandas Styler
 CSS remains embedded. `style` is still validated but is used only by profiles
 whose `stylesheet` is `theme`.
 
+Proportional artifact scaling requires the `rich` profile's runtime and
+JavaScript enabled. In `portable` and `content`, `width='full'` uses CSS sizing:
+tables reflow across the available width, and images retain their aspect ratio.
+Interactive charts in `content` keep their library's sizing behavior.
+Neither profile provides artifact expansion or zoom controls.
+
 ## Portable charts
 
 Install the optional exporters:

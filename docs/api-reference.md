@@ -71,6 +71,8 @@ For non-strings, stores the object and returns an artifact node. Supported
 integrations are Pandas DataFrame and Styler, Altair charts, Matplotlib figures,
 and Plotly figures, with their optional dependencies installed. Objects are
 rendered at output time; unsupported types raise `TypeError` during rendering.
+Pandas table rendering requires Jinja2 as well as the `pandas` extra; see
+[Pandas setup](common-tasks.md#add-a-pandas-table).
 
 `caption` is a string or `None`, rendered as escaped text below the artifact.
 Invalid caption types raise `TypeError`. A string `value` inserts trusted HTML
@@ -81,13 +83,15 @@ are accepted for raw HTML without applying artifact layout.
 | Option | Behavior |
 | --- | --- |
 | `width="native"` | Keep intrinsic image/table sizing and chart dimensions. This is the default; tables no longer stretch automatically. |
-| `width="full"` | Scale the complete artifact proportionally to the available column width, preserving its aspect ratio, labels, and layout. Works for charts, images, tables, and custom adapters. |
+| `width="full"` | With the `rich` artifact runtime, scale the complete artifact proportionally to the available column width, preserving its aspect ratio, labels, and layout. Without that runtime, use CSS sizing as described below. |
 | `center=True` | Center artifacts that fit within their viewport by default. Set `False` to align them to the left. Oversized content remains reachable from the left edge. |
-| `expand="auto"` | Offer an Expand icon when content overflows. `"always"` always offers it; `"never"` disables it. |
+| `expand="auto"` | With the `rich` artifact runtime, offer an Expand icon when content overflows. `"always"` always offers it; `"never"` disables it. Profiles without artifact controls ignore this option. |
 
 Invalid width/expansion choices raise `ValueError`; non-boolean centering
 values raise `TypeError`. Inline artifacts display their full height and scroll
-horizontally when needed. The Expand icon sits at the bottom-right of the visible
+horizontally when needed. The following expansion and proportional sizing
+behavior requires JavaScript and a profile with `artifact_controls=True`, as in
+the default `rich` profile. The Expand icon sits at the bottom-right of the visible
 artifact area. Expansion opens a themed dialog fitted to the browser window
 without shifting the report;
 Close or Escape restores the existing chart and keyboard focus. The enlarged
@@ -103,10 +107,12 @@ content starts scrolled to its center and remains available for manual panning.
 Full-width sizing fits the inline artifact to its viewport without stretching
 it horizontally. Its height changes by the same
 factor as its width. The artifact fills the available width.
-Without JavaScript, full-width images retain their aspect ratio and tables
-fall back to reflowing across the available width.
-
-Without JavaScript, artifacts remain scrollable and controls are absent.
+The `portable` and `content` profiles omit the artifact runtime. Full-width
+images retain their aspect ratio and tables reflow across the available width;
+interactive charts in `content` keep their library's sizing behavior.
+Artifacts remain scrollable, and expansion and zoom controls are absent.
+The same CSS fallback applies when JavaScript is disabled in `rich`.
+See [Rendering profiles](rendering-profiles.md) for profile capabilities.
 Printing hides controls and displays content at its native scale.
 
 ### Layout contexts
