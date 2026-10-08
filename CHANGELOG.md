@@ -5,6 +5,10 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Removed generated theme gallery HTML from version control and ignored gallery output directories and Ruff caches; gallery generator scripts remain tracked.
+
 ### Fixed
 
 - Template tags now support line breaks between tokens, including artifact options and layout tags.

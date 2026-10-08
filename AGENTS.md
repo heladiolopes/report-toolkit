@@ -80,6 +80,13 @@ src/report_toolkit/
 - Update user-facing documentation when public behavior or APIs change.
 - Add comments or docstrings where they explain non-obvious design decisions; avoid comments that merely restate the code.
 
+## Changelog
+
+- Update `CHANGELOG.md` under `[Unreleased]` for relevant changes, including features, bug fixes, breaking changes, and significant documentation, dependency, packaging, or development-workflow updates.
+- Use the appropriate Keep a Changelog category, such as `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`, following the existing format.
+- Keep entries concise and describe the effect on users or contributors. Include migration guidance when a change breaks existing behavior.
+- Update an existing entry when refining the same change rather than adding duplicate notes. Minor typos and routine internal refactors without observable effects do not require an entry.
+
 ## Validation
 
 For normal changes, the expected validation is:
@@ -88,4 +95,3 @@ For normal changes, the expected validation is:
 2. `uv run ruff check .`
 3. `uv run ruff format --check .`
 4. `make build` when the change affects packaging, dependencies, or distribution behavior.
-
