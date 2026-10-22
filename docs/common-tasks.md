@@ -132,8 +132,31 @@ report.add('<p>Strings passed to add() are also trusted HTML.</p>')
 ```
 
 Only insert HTML you trust; these methods do not escape it. Strings cannot have
-artifact captions. Templates escape HTML and currently have no trusted HTML tag.
-The paired examples therefore demonstrate shared display features only.
+artifact captions.
+
+In a Markdown template, use an explicit standalone tag:
+
+```markdown
+# Results
+
+{% raw_html custom_html %}
+```
+
+Load the external HTML in Python and pass its contents through `context`:
+
+```python
+from pathlib import Path
+from report_toolkit import Report
+
+report = Report.from_template(
+    'report.md',
+    context={'custom_html': Path('custom.html').read_text(encoding='utf-8')},
+)
+```
+
+The tag inserts the string unchanged at that position, including inside panels
+and columns. It does not load files or process template syntax in the HTML.
+Ordinary `{{ custom_html }}` substitutions still escape HTML.
 
 ## Combine reports
 

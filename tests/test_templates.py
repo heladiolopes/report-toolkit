@@ -14,6 +14,7 @@ from report_toolkit import (
     HTMLWriter,
     Markdown,
     Panel,
+    RawHTML,
     RenderedArtifact,
     Report,
     Section,
@@ -40,6 +41,73 @@ class TemplateTests(unittest.TestCase):
         registry = AdapterRegistry()
         registry.register(_Chart, _Adapter())
         return registry
+
+    def test_raw_html_preserves_content_and_layout_position(self):
+        content = (
+            '<div data-custom="yes">\n  <strong>Custom & HTML</strong>\n'
+            '{{ missing }} {% panel "Literal" %}\n</div>'
+        )
+        for tag in ('{% raw_html custom_html %}', '{%\nraw_html\ncustom_html\n%}'):
+            with self.subTest(tag=tag):
+                report = Report.from_template_string(
+                    'Before\n' + tag + '\nAfter\n'
+                    '{% columns 2 %}\n' + tag + '\n'
+                    '{% panel "Custom" %}\n' + tag + '\n'
+                    '{% endpanel %}\n{% endcolumns %}',
+                    context={'custom_html': content},
+                )
+                children = report.document.children
+                self.assertEqual(
+                    [type(node) for node in children],
+                    [Markdown, RawHTML, Markdown, Columns],
+                )
+                self.assertEqual(children[1].content, content)
+                self.assertEqual(children[3].children[0].content, content)
+                self.assertEqual(children[3].children[1].children[0].content, content)
+                html = report.to_html()
+                self.assertEqual(html.count(content), 3)
+                self.assertLess(html.index('Before'), html.index(content))
+                self.assertLess(html.index(content), html.index('After'))
+
+    def test_raw_html_empty_strings_escaping_and_literal_code(self):
+        report = Report.from_template_string(
+            '{% raw_html empty %}\n\n{{ custom_html }}\n\n'
+            '`{% raw_html missing %}`\n\n'
+            '```markdown\n{% raw_html missing %}\n```\n\n'
+            '    {% raw_html missing %}\n',
+            context={'empty': '', 'custom_html': '<strong>Custom</strong>'},
+        )
+        self.assertEqual(report.document.children[0].content, '')
+        html = report.to_html()
+        self.assertIn('&lt;strong&gt;Custom&lt;/strong&gt;', html)
+        self.assertNotIn('<strong>Custom</strong>', html)
+        self.assertEqual(html.count('{% raw_html missing %}'), 3)
+
+    def test_raw_html_errors_have_file_locations(self):
+        cases = [
+            ('{% raw_html missing %}', {}, 'Missing raw_html variable'),
+            *[
+                ('{% raw_html value %}', {'value': value}, 'must be a string')
+                for value in (None, 42, True, _Chart())
+            ],
+            ('{% raw_html %}', {}, 'invalid template tag'),
+            ('{% raw_html value.other %}', {}, 'invalid template tag'),
+            ('{% raw_html "value" %}', {}, 'invalid template tag'),
+            ('{% raw_html value caption="No" %}', {}, 'invalid template tag'),
+            ('{% raw_html value', {}, 'Malformed template tag'),
+            ('{% raw_html value %} trailing', {}, 'Malformed template tag'),
+            ('Text {% raw_html value %}', {}, 'own line'),
+            ('- {% raw_html value %}', {}, 'inside lists or blockquotes'),
+            ('> {% raw_html value %}', {}, 'inside lists or blockquotes'),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'report.md'
+            for source, context, message in cases:
+                with self.subTest(source=source, context=context):
+                    path.write_text('\n' + source, encoding='utf-8')
+                    with self.assertRaisesRegex(TemplateError, message) as raised:
+                        Report.from_template(path, context=context)
+                    self.assertIn(f'{path}:2:', str(raised.exception))
 
     def test_composition_matches_python_and_defers_rendering(self):
         chart = _Chart()

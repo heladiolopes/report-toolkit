@@ -238,6 +238,7 @@ Additional Python composition after loading starts at the document root.
 | `{{ name }}` in narrative | Inserts a scalar as literal text. |
 | `{{ chart }}` on its own line | Inserts an analytical object without a caption. |
 | `{% artifact chart caption="Revenue for {{ period }}" %}` | Inserts an analytical object with an optional caption and layout options. |
+| `{% raw_html custom_html %}` | Inserts a trusted HTML string from context without escaping. |
 | `{% columns 2 %}` … `{% endcolumns %}` | Creates a column layout. |
 | `{% panel "Revenue for {{ period }}" %}` … `{% endpanel %}` | Groups content under a panel label. |
 
@@ -288,8 +289,18 @@ The first heading is not the report title. Headings inside lists or blockquotes
 remain ordinary Markdown. Ordinary Markdown lists, code, links, and blockquotes
 are preserved; reference definitions have document-wide scope.
 
+Use `{% raw_html custom_html %}` in its own block to insert trusted HTML, including
+inside panels and columns. The argument must be a simple context key whose value
+is a string; empty strings are allowed. The content is inserted unchanged, without
+processing any template syntax inside it. Missing keys and non-string values raise
+`TemplateError` with the source location. Load external files in Python and pass
+their contents through `context`; the tag does not load paths. This tag performs
+no escaping, so only pass HTML you trust. It cannot appear inline, in lists, or in
+blockquotes.
+
 Code blocks, inline code, and raw HTML syntax are not template instructions.
-Raw HTML is escaped when rendered. Escape an opening delimiter to display it
+HTML written directly in Markdown or inserted with `{{ name }}` is escaped when
+rendered. Escape an opening delimiter to display it
 literally: `\{{ name }}` or `\{% columns 2 %}`.
 
 Templates do not support Python evaluation, loops, conditionals, filters,

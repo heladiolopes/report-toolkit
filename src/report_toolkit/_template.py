@@ -393,6 +393,7 @@ class _Template:
                         continue
                     columns = re.fullmatch(r'columns\s+([1-9][0-9]*)', instruction)
                     panel = re.fullmatch(r'panel\s+("(?:[^"\\]|\\.)*")', instruction)
+                    raw_html = re.fullmatch(r'raw_html\s+(' + _NAME + r')', instruction)
                     artifact = re.fullmatch(
                         r'artifact\s+(' + _NAME + r')(.*)',
                         instruction,
@@ -410,6 +411,16 @@ class _Template:
                         scope = scopes.enter_context(ExitStack())
                         scope.enter_context(context)
                         frames.append((name, scope, line))
+                    elif raw_html:
+                        name = raw_html[1]
+                        if name not in self.context:
+                            self.error(f'Missing raw_html variable: {name}', line)
+                        value = self.context[name]
+                        if not isinstance(value, str):
+                            self.error(
+                                f'raw_html variable {name} must be a string', line
+                            )
+                        report.raw_html(value)
                     elif artifact:
                         name = artifact[1]
                         if name not in self.context or self.context[name] is None:

@@ -5,6 +5,10 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Markdown templates support `{% raw_html name %}` to insert trusted HTML strings from context, including external HTML loaded in Python.
+
 ## [0.3.0] - 2026-10-08
 
 ### Added

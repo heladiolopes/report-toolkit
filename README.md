@@ -57,7 +57,8 @@ uv run --extra all python examples/template_report.py
 Each prints its report tree and output path. Open `examples/sales_report.html`
 and `examples/template_report.html` in a browser. Altair and Plotly charts
 require network access for their JavaScript. Raw HTML is covered in the
-[recipes](docs/common-tasks.md#insert-trusted-html), since templates escape it.
+[recipes](docs/common-tasks.md#insert-trusted-html), including the explicit
+`raw_html` template tag for trusted HTML.
 
 ## Themes
 
