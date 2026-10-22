@@ -25,9 +25,12 @@ def build_report() -> Report:
                     'System preference support',
                 ]
             )
-        with report.panel('Example data'):
-            report.raw_html(
-                '<table><thead><tr><th>Month</th><th>Revenue</th></tr></thead><tbody><tr><td>March</td><td>$12,400</td></tr><tr><td>April</td><td>$17,200</td></tr></tbody></table>'
+        with report.panel('Markdown table'):
+            report.markdown(
+                '| Month | Revenue |\n'
+                '| :--- | ---: |\n'
+                '| March | $12,400 |\n'
+                '| **April** | **$17,200** |\n'
             )
     report.heading(2, 'Details')
     report.markdown(

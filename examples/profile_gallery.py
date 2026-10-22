@@ -29,9 +29,12 @@ def main():
                 .encode(x='month:N', y='value:Q')
             )
             report.add(chart, caption='Monthly values')
-        with report.panel('Table'):
-            report.raw_html(
-                '<table><tr><th>Month</th><th>Value</th></tr><tr><td>Jan</td><td>12</td></tr><tr><td>Feb</td><td>15</td></tr></table>'
+        with report.panel('Markdown table'):
+            report.markdown(
+                '| Month | Value |\n'
+                '| :--- | ---: |\n'
+                '| Jan | 12 |\n'
+                '| **Feb** | **15** |\n'
             )
     profiles = [get_profile(name) for name in ('rich', 'portable', 'content')]
     profiles.append(

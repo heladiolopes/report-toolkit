@@ -57,7 +57,7 @@ class NotebookWriter:
                 'install report-toolkit[notebook]'
             ) from exc
 
-        markdown = mistune.create_markdown(escape=True)
+        markdown = mistune.create_markdown(escape=True, plugins=['table'])
 
         def html(content: str) -> None:
             ipdisplay.display(ipdisplay.HTML(content))

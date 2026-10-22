@@ -297,7 +297,7 @@ class HTMLWriter:
             if registry is not None
             else default_registry(inline_altair=inline_altair)
         )
-        self._markdown = mistune.create_markdown(escape=True)
+        self._markdown = mistune.create_markdown(escape=True, plugins=['table'])
 
     def _block(
         self, opening: str, children: list[str], closing: str, depth: int

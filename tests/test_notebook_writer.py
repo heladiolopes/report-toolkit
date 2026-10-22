@@ -46,6 +46,19 @@ def notebook_modules():
     return ipdisplay, widgets
 
 
+def test_markdown_tables_in_notebook_display():
+    ipdisplay, _ = notebook_modules()
+    report = Report.from_template_string(
+        '| Metric | Value |\n| --- | ---: |\n| **Revenue** | 12 |\n'
+    )
+    with patch.object(ipdisplay, 'display') as display:
+        report.display()
+    html = display.call_args.args[0].data
+    assert '<table>' in html
+    assert '<td><strong>Revenue</strong></td>' in html
+    assert '<td style="text-align:right">12</td>' in html
+
+
 def test_native_artifacts_and_plain_text_structure():
     ipdisplay, _ = notebook_modules()
     artifact = object()  # Native display accepts objects without an HTML adapter.

@@ -124,6 +124,17 @@ List strings are literal text. `paragraph()` uses the same Markdown rendering as
 `markdown()`. HTML in Markdown is escaped. Use `heading()` for headings that
 should participate in document structure and the TOC.
 
+Pipe tables work in Markdown templates, `markdown()`, and notebook display.
+Use colons in the separator row to align columns:
+
+```python
+report.markdown("""\
+| Metric | Value |
+| :--- | ---: |
+| **Revenue** | 12 |
+""")
+```
+
 ## Insert trusted HTML
 
 ```python

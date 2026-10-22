@@ -15,6 +15,14 @@ Twenty-four months, four regions, and three product categories tell a connected 
 
 The business generated **{{ total_revenue }}** in revenue from **{{ total_orders }} orders**, producing **{{ total_profit }}** in profit. The aggregate profit margin was **{{ profit_margin }}**. Revenue grew **{{ annual_growth }}** in 2025 compared with 2024.
 
+| Metric | Value | Coverage |
+| :--- | ---: | :---: |
+| **Revenue** | {{ total_revenue }} | 2024–2025 |
+| Orders | {{ total_orders }} | 2024–2025 |
+| Profit | {{ total_profit }} | 2024–2025 |
+| Profit margin | {{ profit_margin }} | 2024–2025 |
+| Revenue growth | {{ annual_growth }} | 2025 vs. 2024 |
+
 {% columns 3 %}
 {% panel "Revenue mix · Plotly" %}
 {% artifact product_donut caption="Small · 280 × 220 px. Hover over a slice to identify its category and contribution." %}

@@ -5,6 +5,10 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Markdown pipe tables now render as tables in HTML and notebook output, including templates, with column alignment and inline formatting.
+
 ### Added
 
 - Native Jupyter notebook display through `Report.display()` and `NotebookWriter`, with column layouts, an example notebook, and an optional `notebook` extra (also included in `all`).

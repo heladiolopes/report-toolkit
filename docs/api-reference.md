@@ -63,9 +63,10 @@ with spaces, collapses whitespace, and applies title case. Otherwise spelling
 is preserved. Invalid levels (including booleans) raise `ValueError`; non-string
 titles/content and non-boolean `normalize` raise `TypeError`.
 
-Markdown supports standard text, links, lists, blockquotes, code, and separators;
-raw HTML is escaped. Markdown headings render but do not create structural
-sections or TOC entries when passed directly to `markdown()`.
+Markdown supports standard text, links, lists, blockquotes, code, separators, and
+pipe tables with column alignment; raw HTML is escaped. Markdown headings render
+but do not create structural sections or TOC entries when passed directly to
+`markdown()`.
 
 ### Lists
 
@@ -312,8 +313,8 @@ use panels when several prose elements should occupy a single grid cell.
 Markdown headings, including Setext headings, create structural sections and
 TOC entries. Their titles use plain text extracted from emphasis and links.
 The first heading is not the report title. Headings inside lists or blockquotes
-remain ordinary Markdown. Ordinary Markdown lists, code, links, and blockquotes
-are preserved; reference definitions have document-wide scope.
+remain ordinary Markdown. Ordinary Markdown lists, code, links, blockquotes, and
+pipe tables are preserved; reference definitions have document-wide scope.
 
 Use `{% raw_html custom_html %}` in its own block to insert trusted HTML, including
 inside panels and columns. The argument must be a simple context key whose value

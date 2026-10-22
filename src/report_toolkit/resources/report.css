@@ -41,6 +41,7 @@
 .reporttkt figcaption { color: var(--reporttkt-muted); font-size: var(--reporttkt-caption-size); line-height: var(--reporttkt-caption-line-height); margin-top: .5rem; }
 .reporttkt .reporttkt-figure-image { display: block; max-width: 100%; height: auto; }
 .reporttkt table:where(:not(.vg-tooltip *)) { border-collapse: collapse; width: 100%; font-size: var(--reporttkt-table-size); line-height: var(--reporttkt-table-line-height); }
+.reporttkt table:where(:not(.report-artifact *, .vg-tooltip *)) { margin: var(--reporttkt-paragraph-margin); }
 .reporttkt th:where(:not(.vg-tooltip *)), .reporttkt td:where(:not(.vg-tooltip *)) { border: var(--reporttkt-table-border-width) solid var(--reporttkt-border); border-bottom: 1px solid var(--reporttkt-border); padding: var(--reporttkt-cell-padding); text-align: left; }
 .reporttkt th:where(:not(.vg-tooltip *)) { background: var(--reporttkt-table-header); font-weight: 650; }
 .reporttkt pre:where(:not(.vg-tooltip *)) { line-height: var(--reporttkt-code-line-height); overflow-x: auto; padding: var(--reporttkt-pre-padding); background: var(--reporttkt-pre-background); border-radius: var(--reporttkt-pre-radius); margin: var(--reporttkt-pre-margin); }
