@@ -125,6 +125,7 @@ List strings are literal text. `paragraph()` uses the same Markdown rendering as
 should participate in document structure and the TOC.
 
 Pipe tables work in Markdown templates, `markdown()`, and notebook display.
+In themed HTML output, tables fit their content and are centered by default.
 Use colons in the separator row to align columns:
 
 ```python

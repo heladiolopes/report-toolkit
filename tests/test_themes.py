@@ -57,7 +57,7 @@ def test_default_inputs_preserve_appearance(report):
         'shadow_geometry': '0 18px 42px',
         'title_size': '2.5rem',
         'table_border_width': '1px',
-        'cell_padding': '.25rem .75rem',
+        'cell_padding': '.25rem 1rem',
         'background': '#ffffff',
         'page_background': '#f5f5f5',
         'text': '#262626',

@@ -28,7 +28,7 @@ _THEME_DEFAULTS = {
     'column_gap': '1.5rem',
     'caption_size': '.875rem',
     'table_size': '1em',
-    'cell_padding': '.25rem .75rem',
+    'cell_padding': '.25rem 1rem',
     'figure_margin': '1.5rem 0',
     'panel_padding': '0',
     'shadow_geometry': '0 18px 42px',
