@@ -1,7 +1,7 @@
 # API Reference
 
-Import `Report`, `HTMLWriter`, and `TemplateError` from `report_toolkit`. This reference
-covers composition and HTML output. Internal document types and adapter extension
+Import `Report`, `HTMLWriter`, `NotebookWriter`, and `TemplateError` from `report_toolkit`. This reference
+covers composition, HTML output, and notebook display. Internal document types and adapter extension
 machinery are outside its scope. See [Common Tasks](common-tasks.md) for recipes.
 
 ## Report
@@ -20,6 +20,32 @@ excluded from the TOC. An omitted
 title produces no visible report title and a browser title of `Report`; content
 headings never supply a fallback. `report.document` is the document accepted by
 `HTMLWriter`; direct model construction is not covered here.
+
+### Notebook display
+
+```python
+report.display()
+NotebookWriter().display(report.document)
+```
+
+Both display the report in the current notebook and return `None`. Install
+`report-toolkit[notebook]`; missing IPython or ipywidgets raises `ImportError`
+with installation instructions. The `all` extra also includes these dependencies.
+
+Artifacts are passed unchanged to IPython display, using the notebook's native
+formatters rather than HTML adapters. Tables and charts depend on their library's
+notebook configuration. Captions, artifact width, centering, and expansion options
+are ignored. No themes, TOCs, navigation, or automatic display hook are applied.
+
+Report metadata, section headings, and panel labels are retained as plain text
+in unstyled HTML. Dates use ISO format. Markdown escapes embedded HTML as with
+HTML output; explicit raw HTML remains trusted. Lists retain nesting and ordering.
+
+Columns use an ipywidgets grid with equal-width cells. Each immediate child is
+one cell; additional children wrap. Panels and sections keep their contents
+together, and nested columns are supported. This requires a notebook frontend
+with widget support; artifacts keep their native dimensions within the cells.
+No notebook file is exported.
 
 ### Headings and text
 

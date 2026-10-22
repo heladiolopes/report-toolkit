@@ -35,6 +35,28 @@ report.write('sales.html', toc=True)
 
 Open `sales.html` in a browser.
 
+## Jupyter notebooks
+
+Install `report-toolkit[notebook]` (or run `uv sync --extra notebook` from a
+checkout), then call `report.display()` in a notebook cell:
+
+```python
+report = Report('Notebook review')
+with report.columns(2):
+    report.markdown('**First column**')
+    report.markdown('**Second column**')
+report.display()
+```
+
+Artifacts use native IPython display, including objects without HTML adapters.
+Columns require a frontend with ipywidgets support. Text and metadata use notebook
+defaults; captions, artifact sizing, centering, expansion, themes, and navigation
+are omitted. This displays the report in the current notebook; it does not export
+an `.ipynb` file.
+
+See [the example notebook](examples/notebook_report.ipynb) for a small report
+with a Pandas table, Matplotlib and Altair charts, lists, and text in columns.
+
 ## Documentation
 
 Start with [Getting Started](docs/getting-started.md), use

@@ -571,6 +571,17 @@ class Report:
 
         return format_tree(self.document)
 
+    def display(self) -> None:
+        """Display this report in a Jupyter notebook.
+
+        Requires ``report-toolkit[notebook]`` and a widget-capable frontend.
+        Artifacts use native IPython display. Columns retain their layout;
+        captions, sizing, centering, and expansion options are ignored.
+        """
+        from .writers import NotebookWriter
+
+        NotebookWriter().display(self.document)
+
     def to_html(
         self,
         *,

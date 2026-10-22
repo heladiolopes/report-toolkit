@@ -24,6 +24,7 @@ from .model import (
 from .profiles import RenderingProfile, get_profile
 from .themes import Palette, Style, Theme, get_palette, get_theme
 from .writer import HTMLWriter
+from .writers import NotebookWriter
 
 __all__ = [
     'Adapter',
@@ -36,6 +37,7 @@ __all__ = [
     'List',
     'Markdown',
     'Node',
+    'NotebookWriter',
     'Palette',
     'Panel',
     'ProfileAwareAdapter',
