@@ -14,6 +14,7 @@ from uuid import uuid4
 
 import mistune
 from mistune import BlockParser, BlockState
+from mistune.plugins.table import table
 
 _NAME = r'[A-Za-z_][A-Za-z0-9_]*'
 _SCALARS = (str, int, float, bool, Decimal, date, datetime)
@@ -81,6 +82,8 @@ class _Template:
         self.offset = 0
         self.variables = {}
         self.resolved = {}
+        self.filters = {}
+        self.table_variables = set()
         self.prefix = 'REPORTKIT' + uuid4().hex + 'VAR'
         self.marker = re.compile(self.prefix + r'\d+END')
 
@@ -158,15 +161,28 @@ class _Template:
 
     def value(self, marker):
         expression, line = self.variables[marker]
-        match = re.fullmatch(r'\{\{\s*(' + _NAME + r')\s*\}\}', expression)
+        match = re.fullmatch(
+            r'\{\{\s*(' + _NAME + r')\s*((?:\|\s*' + _NAME + r'\s*)*)\}\}',
+            expression,
+        )
         if not match:
-            self.error('Expected {{ name }} with a simple context key', line)
+            self.error(
+                'Expected {{ name }} with a simple context key and optional | filter names',
+                line,
+            )
         name = match[1]
+        filters = [part.strip() for part in match[2].split('|')[1:]]
+        for filter_name in filters:
+            if filter_name not in {'quote', 'strong', 'em', 'code'}:
+                self.error(f'Unknown template filter: {filter_name}', line)
+        self.filters[marker] = filters
         if name not in self.context:
             self.error(f'Missing template variable: {name}', line)
         value = self.context[name]
         if value is None:
             self.error(f'Template variable {name} cannot be None', line)
+        if filters and not isinstance(value, _SCALARS):
+            self.error('Template filters require a scalar value', line)
         return value
 
     def scalar(self, marker):
@@ -179,7 +195,52 @@ class _Template:
         return value.isoformat() if isinstance(value, (date, datetime)) else str(value)
 
     def text(self, text):
-        return self.marker.sub(lambda m: self.scalar(m.group()), text)
+        return self.marker.sub(lambda m: self.filtered(m.group(), markdown=False), text)
+
+    def filtered(self, marker, *, markdown):
+        value = (
+            self.resolved[marker] if marker in self.resolved else self.scalar(marker)
+        )
+        if markdown:
+            value = ' '.join(value.split())
+
+        def escape(text):
+            return ''.join(
+                '\\' + char if char in string.punctuation else char for char in text
+            )
+
+        literal = value
+        rendered = escape(value)
+        for name in self.filters[marker]:
+            if name == 'quote':
+                literal = '"' + literal + '"'
+                rendered = '\\"' + rendered + '\\"'
+            elif markdown and literal:
+                if name == 'code':
+                    # A longer delimiter and padding preserve embedded backticks.
+                    size = (
+                        max((len(run) for run in re.findall(r'`+', literal)), default=0)
+                        + 1
+                    )
+                    delimiter = '`' * size
+                    padding = (
+                        ' ' if literal.startswith('`') or literal.endswith('`') else ''
+                    )
+                    literal = delimiter + padding + literal + padding + delimiter
+                    rendered = literal
+                    if marker in self.table_variables:
+                        # Table cells split before inline code is parsed. Escape
+                        # pipes and their preceding backslashes reversibly.
+                        rendered = re.sub(
+                            r'(\\*)\|',
+                            lambda m: '\\' * (2 * len(m[1]) + 1) + '|',
+                            rendered,
+                        )
+                else:
+                    delimiter = '**' if name == 'strong' else '*'
+                    literal = delimiter + literal + delimiter
+                    rendered = delimiter + rendered + delimiter
+        return rendered if markdown else literal
 
     def restore(self, text):
         def replace(match):
@@ -187,16 +248,12 @@ class _Template:
             if key in self.resolved:
                 # Escape Markdown punctuation, including HTML delimiters.
                 # Narrative whitespace follows Markdown's prose conventions.
-                value = ' '.join(self.resolved[key].split())
-                return ''.join(
-                    '\\' + char if char in string.punctuation else char
-                    for char in value
-                )
+                return self.filtered(key, markdown=True)
             return self.variables[key][0]
 
         return self.marker.sub(replace, text)
 
-    def inspect(self, tokens, line):
+    def inspect(self, tokens, line, in_table=False):
         html_elements = []
         for token in tokens:
             kind = token['type']
@@ -236,10 +293,12 @@ class _Template:
                     'Template blocks cannot appear inside lists or blockquotes', line
                 )
             if 'children' in token:
-                self.inspect(token['children'], line)
+                self.inspect(token['children'], line, in_table or kind == 'table')
             elif 'text' in token:
                 self.inspect(
-                    mistune.InlineParser()(token['text'], self.state.env), line
+                    mistune.InlineParser()(token['text'], self.state.env),
+                    line,
+                    in_table,
                 )
             elif kind == 'text':
                 raw = token['raw']
@@ -247,6 +306,8 @@ class _Template:
                     self.error('Template tags must occupy their own line', line)
                 for match in self.marker.finditer(raw):
                     key = match.group()
+                    if in_table:
+                        self.table_variables.add(key)
                     self.resolved[key] = self.scalar(key)
             for value in token.get('attrs', {}).values():
                 if isinstance(value, str) and self.marker.search(value):
@@ -266,8 +327,10 @@ class _Template:
                 elif token['type'] == 'text':
                     result.append(
                         self.marker.sub(
-                            lambda m: self.resolved.get(
-                                m.group(), self.variables[m.group()][0]
+                            lambda m: (
+                                self.filtered(m.group(), markdown=False)
+                                if m.group() in self.resolved
+                                else self.variables[m.group()][0]
                             ),
                             unescape(token.get('raw', '')),
                         )
@@ -288,6 +351,7 @@ class _Template:
         if not source.endswith('\n'):
             source += '\n'
         parser = _SourceParser()
+        mistune.Markdown(block=parser, plugins=[table])
 
         def directive(block, match, state):
             # Closing delimiters inside JSON strings are literal text.

@@ -239,9 +239,12 @@ report = Report.from_template_string(
 
 Prepare calculations, table styling, and display values in Python. Write
 narrative and layout in the template. Scalars are inserted as literal text;
-formatting belongs in the template. Analytical objects must appear on their own
+formatting belongs in the template. Use `{{ value | quote }}`, `{{ value | strong }}`,
+`{{ value | em }}`, or `{{ value | code }}` to format scalar substitutions.
+Chain filters in order, such as `{{ value | quote | strong }}` for bold quoted
+text. Analytical objects must appear on their own
 line as `{{ chart }}` or an artifact tag. Templates do not evaluate Python or
-support loops, conditionals, filters, indexing, attribute access, or includes.
+support loops, conditionals, custom filters, indexing, attribute access, or includes.
 See the [template reference](api-reference.md#template-syntax) for complete rules.
 
 The [template example](../examples/template_report.py) and

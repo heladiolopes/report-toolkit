@@ -11,6 +11,7 @@ This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Markdown template scalar substitutions support `quote`, `strong`, `em`, and `code` filters with left-to-right chaining; headings, captions, and panel labels retain plain text.
 - Native Jupyter notebook display through `Report.display()` and `NotebookWriter`, with column layouts, an example notebook, and an optional `notebook` extra (also included in `all`).
 - Markdown templates support `{% raw_html name %}` to insert trusted HTML strings from context, including external HTML loaded in Python.
 

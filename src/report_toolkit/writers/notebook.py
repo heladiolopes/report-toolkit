@@ -5,8 +5,6 @@ from __future__ import annotations
 from datetime import date, datetime
 from html import escape
 
-import mistune
-
 from ..model import (
     Artifact,
     Columns,
@@ -19,6 +17,7 @@ from ..model import (
     RawHTML,
     Section,
 )
+from ._markdown import create_markdown
 
 
 def _list_html(items: tuple, ordered: bool) -> str:
@@ -57,7 +56,7 @@ class NotebookWriter:
                 'install report-toolkit[notebook]'
             ) from exc
 
-        markdown = mistune.create_markdown(escape=True, plugins=['table'])
+        markdown = create_markdown()
 
         def html(content: str) -> None:
             ipdisplay.display(ipdisplay.HTML(content))

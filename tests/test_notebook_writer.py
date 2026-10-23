@@ -59,6 +59,19 @@ def test_markdown_tables_in_notebook_display():
     assert '<td style="text-align:right">12</td>' in html
 
 
+def test_template_filters_in_notebook_display():
+    ipdisplay, _ = notebook_modules()
+    report = Report.from_template_string(
+        '{{ value | quote | strong }}\n\n| Value |\n| --- |\n| {{ value | code }} |\n',
+        context={'value': r'A\|B'},
+    )
+    with patch.object(ipdisplay, 'display') as display:
+        report.display()
+    html = display.call_args.args[0].data
+    assert r'<strong>&quot;A\|B&quot;</strong>' in html
+    assert r'<td><code>A\|B</code></td>' in html
+
+
 def test_native_artifacts_and_plain_text_structure():
     ipdisplay, _ = notebook_modules()
     artifact = object()  # Native display accepts objects without an HTML adapter.

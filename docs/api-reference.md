@@ -263,6 +263,10 @@ Additional Python composition after loading starts at the document root.
 | Syntax | Meaning |
 | --- | --- |
 | `{{ name }}` in narrative | Inserts a scalar as literal text. |
+| `{{ name | quote }}` | Wraps a scalar in straight double quotation marks. |
+| `{{ name | strong }}` | Displays a scalar in bold. |
+| `{{ name | em }}` | Displays a scalar in italics. |
+| `{{ name | code }}` | Displays a scalar as inline code. |
 | `{{ chart }}` on its own line | Inserts an analytical object without a caption. |
 | `{% artifact chart caption="Revenue for {{ period }}" %}` | Inserts an analytical object with an optional caption and layout options. |
 | `{% raw_html custom_html %}` | Inserts a trusted HTML string from context without escaping. |
@@ -275,6 +279,18 @@ string conversion. Format currencies and percentages in Python. Narrative
 whitespace in inserted values collapses to single spaces. Markdown punctuation
 and HTML delimiters are escaped; values cannot introduce template instructions
 and are substituted only once. Unused context keys are allowed.
+
+Filters apply after scalar conversion and may be chained from left to right:
+`{{ name | quote | strong }}` displays **"hello"** for a value of `hello`.
+`{{ name | strong | code }}` displays the literal Markdown `**hello**` as code;
+`{{ name | code | strong }}` displays bold inline code. Values remain literal:
+their Markdown punctuation and HTML do not become active markup. Empty values
+produce no styling; `quote` still adds a pair of quotation marks. Inline code
+supports embedded backticks. Headings, captions, and panel labels remain plain
+text: `quote` adds quotation marks, while styling filters have no effect.
+Filters accept no arguments and cannot be applied to analytical objects.
+Unknown filter names and malformed chains raise `TemplateError` with the source
+location. Whitespace around `|` is optional.
 
 Scalars may appear in prose, headings, list items, and link labels. Variables
 in link destinations, link attributes, and reference definitions are unsupported.
@@ -330,7 +346,7 @@ HTML written directly in Markdown or inserted with `{{ name }}` is escaped when
 rendered. Escape an opening delimiter to display it
 literally: `\{{ name }}` or `\{% columns 2 %}`.
 
-Templates do not support Python evaluation, loops, conditionals, filters,
+Templates do not support Python evaluation, loops, conditionals, custom filters,
 attribute access, indexing, includes, or Markdown-valued substitutions.
 
 ### YAML front matter

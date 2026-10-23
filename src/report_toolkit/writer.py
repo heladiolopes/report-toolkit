@@ -15,8 +15,6 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Literal
 
-import mistune
-
 from .adapters import AdapterRegistry, default_registry
 from .model import (
     Artifact,
@@ -33,6 +31,7 @@ from .model import (
 from .profiles import RenderingProfile, _resolve_profile
 from .themes import Style
 from .themes.style import _resolve_style
+from .writers._markdown import create_markdown
 
 _logger = logging.getLogger(__name__)
 _Outline = dict[Section, tuple[int, str, str]]
@@ -297,7 +296,7 @@ class HTMLWriter:
             if registry is not None
             else default_registry(inline_altair=inline_altair)
         )
-        self._markdown = mistune.create_markdown(escape=True, plugins=['table'])
+        self._markdown = create_markdown()
 
     def _block(
         self, opening: str, children: list[str], closing: str, depth: int
